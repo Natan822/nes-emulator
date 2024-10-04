@@ -40,8 +40,11 @@ public:
 	OPCODE table[0xFF]{};
 
 	void loadROM(std::string filePath);
+	void cycle();
 
 private:
+
+	void execute();
 
 	void push(uint8_t value);
 	uint8_t pop();

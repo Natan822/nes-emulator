@@ -12,6 +12,8 @@ CPU::CPU() {
 		table[i] = &CPU::OP_EA;
 	}
 
+	pc = PRG_START_ADDRESS;
+
 	// Fill opcodes table
 	table[0x00] = &CPU::OP_00NN;
 	table[0x01] = &CPU::OP_01NN;
@@ -204,6 +206,14 @@ void CPU::loadROM(std::string filePath) {
 	}
 
 	delete[] buffer;
+}
+
+void CPU::cycle() {
+	execute();
+}
+
+void CPU::execute() {
+	(this->*table[memory[pc]])();
 }
 
 void CPU::push(uint8_t value) {

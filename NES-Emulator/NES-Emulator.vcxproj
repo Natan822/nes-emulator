@@ -130,6 +130,7 @@
     <ClCompile Include="src\CPU\AddressingModes.cpp" />
     <ClCompile Include="src\CPU\CPU.cpp" />
     <ClCompile Include="src\CPU\Instructions.cpp" />
+    <ClCompile Include="src\Main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\CPU\CPU.h" />
