@@ -4,7 +4,9 @@ class CPU {
 	const int CARTRIDGE_START_ADDRESS = 0x4018u;
 	const int STACK_START_ADDRESS = 0x1FF;
 
-	typedef uint8_t(CPU::* CPUTable)();
+	const int PRG_START_ADDRESS = 0x8000;
+
+	typedef void(CPU::* OPCODE)();
 
 public:
 	// Registers
@@ -28,10 +30,19 @@ public:
 	// Memory
 	uint8_t memory[0xFFFF + 1]{};
 
+	uint8_t prgSize{}; // PRG ROM size in 16 KiB units
+	uint8_t chrSize{}; // CHR ROM size in 8 KiB units(0 = board uses CHR RAM)
+
 	CPU();
 	~CPU();
 
+	// Table of opcodes
+	OPCODE table[0xFF]{};
+
+	void loadROM(std::string filePath);
+
 private:
+
 	void push(uint8_t value);
 	uint8_t pop();
 
@@ -303,4 +314,6 @@ private:
 	void OP_84NN(); // Zero Page
 	void OP_94NN(); // Zero Page, X
 	void OP_8CNN00(); // Absolute
+
+
 };

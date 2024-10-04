@@ -910,7 +910,9 @@ void CPU::OP_5ENN00() {
 	pc += 3;
 }
 
-void CPU::OP_EA() {}
+void CPU::OP_EA() {
+	pc += 2;
+}
 
 void CPU::ORA(uint8_t value) {
 	aReg |= value;
