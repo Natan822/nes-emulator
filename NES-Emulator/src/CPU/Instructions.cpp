@@ -3,11 +3,15 @@
 
 void CPU::ADC(uint8_t value) {
 
-	int16_t result = value + aReg;
+	uint16_t result = value + aReg;
+	if (getFlag('C'))
+	{
+		result++;
+	}
 
 	setFlag('C', result > 0xFF);
 	setFlag('Z', result == 0);
-	setFlag('N', result < 0);
+	setFlag('N', result & 0x80);
 
 	// Set V flag to 1 if signals of value and aReg are the same but signal of result is different, which means the signal of result is wrong
 	setFlag('V', (~(xReg ^ value) & (result ^ xReg) & 0x80));
@@ -280,7 +284,7 @@ void CPU::OP_2CNN00() {
 
 void CPU::BRANCH(uint8_t value) {
 	int8_t signedValue = static_cast<int8_t>(value);
-	pc += signedValue;
+	pc += (signedValue + 2);
 }
 
 void CPU::OP_90NN() {
@@ -348,6 +352,17 @@ void CPU::OP_D0NN() {
 	}
 }
 
+void CPU::OP_10NN() {
+	if (!getFlag('N'))
+	{
+		BRANCH(memory[pc + 1]);
+	}
+	else
+	{
+		pc += 2;
+	}
+}
+
 void CPU::OP_50NN() {
 	// Overflow flag = 1
 	if (status & 0x40)
@@ -376,18 +391,28 @@ void CPU::OP_70NN() {
 void CPU::OP_00NN() {
 	setFlag('B', 1);
 
-	push(pc + 2);
+	uint16_t address = pc + 2;
+
+	push(address >> 8);
+	push(address & 0xFF);
+
+	setFlag('B', 0);
 	push(status);
+
+	uint8_t lowByte = memory[0xFFFE];
+	uint8_t highByte = memory[0xFFFF];
+
+	pc = (highByte << 8) | (lowByte);
 }
 
 void CPU::CMP(uint8_t value) {
-	int16_t result = aReg - value;
+	uint16_t result = aReg - value;
 
 	setFlag('C', aReg >= value);
 
 	setFlag('Z', result == 0);
 
-	setFlag('N', result < 0);
+	setFlag('N', result & 0x80);
 }
 
 void CPU::OP_C9NN() {
@@ -715,10 +740,10 @@ void CPU::OP_20NN00() {
 
 	uint16_t address = (highByte << 8) | lowByte;
 
-	// Push high-byte of return address
-	push((pc + 3) >> 8);
-	// Push low-byte of return address
-	push((pc + 3) & 0x00FF);
+	// Push high-byte of return address - 1
+	push((pc + 2) >> 8);
+	// Push low-byte of return address - 1
+	push((pc + 2) & 0x00FF);
 
 	JMP(address);
 }
@@ -774,7 +799,7 @@ void CPU::OP_B9NN00() {
 
 void CPU::OP_A1NN() {
 	uint8_t value = indirectX();
-
+	 
 	LDA(value);
 	pc += 2;
 }
@@ -875,6 +900,8 @@ void CPU::LSR(uint8_t* value) {
 	setFlag('C', bitZero);
 
 	(*value) >>= 1;
+	setFlag('N', (*value) & 0x80);
+	setFlag('Z', (*value) == 0);
 }
 
 void CPU::OP_4A() {
@@ -911,7 +938,7 @@ void CPU::OP_5ENN00() {
 }
 
 void CPU::OP_EA() {
-	pc += 2;
+	pc += 1;
 }
 
 void CPU::ORA(uint8_t value) {
@@ -1142,6 +1169,8 @@ void CPU::OP_7ENN00() {
 
 void CPU::OP_40() {
 	status = pop();
+	setFlag('B', 0);
+	status |= 0x24;
 
 	uint8_t pcLowByte = pop();
 	uint8_t pcHighByte = pop();
@@ -1155,7 +1184,7 @@ void CPU::OP_60() {
 	uint8_t pcHighByte = pop();
 
 	uint16_t pcAddress = (pcHighByte << 8) | pcLowByte;
-	pc = pcAddress;
+	pc = pcAddress + 1;
 }
 
 void CPU::SBC(uint8_t value) {
@@ -1316,6 +1345,8 @@ void CPU::OP_08() {
 
 void CPU::OP_28() {
 	status = pop();
+	setFlag('B', 0);
+	status |= 0x20;
 	pc += 1;
 }
 
