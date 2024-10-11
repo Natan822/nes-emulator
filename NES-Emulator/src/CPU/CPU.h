@@ -1,10 +1,14 @@
 #pragma once
+
+#include <string>
+
 class CPU {
 
 	const int CARTRIDGE_START_ADDRESS = 0x4018u;
-	const int STACK_START_ADDRESS = 0x1FF;
-
 	const int PRG_START_ADDRESS = 0x8000;
+
+	const int STACK_START_ADDRESS = 0xFD;
+	const int STACK_BOTTOM_ADDRESS = 0x100;
 
 	typedef void(CPU::* OPCODE)();
 
@@ -30,17 +34,21 @@ public:
 	// Memory
 	uint8_t memory[0xFFFF + 1]{};
 
-	uint8_t prgSize{}; // PRG ROM size in 16 KiB units
-	uint8_t chrSize{}; // CHR ROM size in 8 KiB units(0 = board uses CHR RAM)
+	int prgSize{}; // PRG ROM size in 16 KiB units
+	int chrSize{}; // CHR ROM size in 8 KiB units(0 = board uses CHR RAM)
 
 	CPU();
 	~CPU();
 
 	// Table of opcodes
-	OPCODE table[0xFF]{};
+	OPCODE table[0xFF + 1]{};
+
+	int cycles{};
 
 	void loadROM(std::string filePath);
 	void cycle();
+
+	void printInfo();
 
 private:
 
@@ -118,7 +126,7 @@ private:
 	void OP_2CNN00(); // Absolute
 
 	// BRANCH
-	void BRANCH(uint8_t value); // General BRANCH instruction
+	void BRANCH();  // General BRANCH instruction
 	void OP_90NN(); // Branch on carry = 0
 	void OP_B0NN(); // Branch on carry = 1
 	void OP_F0NN(); // Branch on zero = 1

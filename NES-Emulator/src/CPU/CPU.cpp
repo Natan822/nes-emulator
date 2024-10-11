@@ -2,17 +2,20 @@
 #include <stdint.h>
 #include <string>
 
+#include <iostream>
+
 #include "CPU.h"
 
 CPU::CPU() {
-	sp = STACK_START_ADDRESS;
+	sp = STACK_START_ADDRESS & 0xFF;
 
-	for (int i = 0; i < 0xFF; i++)
+	for (int i = 0; i < 0xFF + 1; i++)
 	{
 		table[i] = &CPU::OP_EA;
 	}
 
-	pc = PRG_START_ADDRESS;
+	status = 0x24;
+	pc = 0xC000;
 
 	// Fill opcodes table
 	table[0x00] = &CPU::OP_00NN;
@@ -168,6 +171,8 @@ CPU::CPU() {
 	table[0xFE] = &CPU::OP_FENN00;
 }
 
+CPU::~CPU() {}
+
 void CPU::loadROM(std::string filePath) {
 	std::ifstream file(filePath, std::ios::binary | std::ios::ate);
 
@@ -183,8 +188,8 @@ void CPU::loadROM(std::string filePath) {
 	file.read(buffer, size);
 	file.close();
 
-	prgSize = static_cast<uint8_t>(static_cast<unsigned char>(buffer[4]));
-	chrSize = static_cast<uint8_t>(static_cast<unsigned char>(buffer[5]));
+	prgSize = static_cast<int>(static_cast<unsigned char>(buffer[4]));
+	chrSize = static_cast<int>(static_cast<unsigned char>(buffer[5]));
 
 	if (prgSize == 2)
 	{
@@ -213,17 +218,33 @@ void CPU::cycle() {
 }
 
 void CPU::execute() {
+	printInfo();
+
+	// Every instruction takes at least 2 cycles
+	cycles += 2;
+
 	(this->*table[memory[pc]])();
+
+}
+
+void CPU::printInfo() {
+	std::cout << std::hex << pc << " " << static_cast<int>(memory[pc]) << std::endl;
+	std::cout << "A:" << static_cast<int>(aReg);
+	std::cout << " X:" << static_cast<int>(xReg);
+	std::cout << " Y:" << static_cast<int>(yReg);
+	std::cout << " P:" << static_cast<int>(status);
+	std::cout << " SP:" <<  static_cast<int>(sp);
+	std::cout << " CYC:" << std::dec << cycles << std::endl;
 }
 
 void CPU::push(uint8_t value) {
-	memory[sp] = value;
+	memory[sp + STACK_BOTTOM_ADDRESS] = value;
 	sp--;
 }
 
 uint8_t CPU::pop() {
 	sp++;
-	return memory[sp];
+	return memory[sp + STACK_BOTTOM_ADDRESS];
 }
 
 void CPU::setFlag(char flag, uint8_t value) {

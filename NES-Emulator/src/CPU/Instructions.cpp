@@ -10,11 +10,11 @@ void CPU::ADC(uint8_t value) {
 	}
 
 	setFlag('C', result > 0xFF);
-	setFlag('Z', result == 0);
+	setFlag('Z', (result & 0xFF) == 0);
 	setFlag('N', result & 0x80);
 
 	// Set V flag to 1 if signals of value and aReg are the same but signal of result is different, which means the signal of result is wrong
-	setFlag('V', (~(xReg ^ value) & (result ^ xReg) & 0x80));
+	setFlag('V', (~(aReg ^ value) & (result ^ aReg) & 0x80));
 
 	aReg = result & 0xFF;
 }
@@ -160,7 +160,7 @@ void CPU::OP_31NN() {
 }
 
 void CPU::ASL(uint8_t* value) {
-	// Most Significant Byte
+	// Most Significant Bit
 	uint8_t msb = (*value & 0x80) >> 7;
 	// Clear carry flag
 	status &= ~0x1;
@@ -189,6 +189,11 @@ void CPU::ASL(uint8_t* value) {
 		status &= ~0x80;
 	}
 
+	// Not ASL Accumulator
+	if (memory[pc] != 0xA)
+	{
+		cycles += 2;
+	}
 }
 
 void CPU::OP_0A() {
@@ -199,38 +204,33 @@ void CPU::OP_0A() {
 }
 
 void CPU::OP_06NN() {
-	uint8_t address = memory[pc + 1];
-	uint8_t* value = &(memory[address]);
+	uint8_t* value = zeroPagePtr();
 	ASL(value);
 
 	pc += 2;
 }
 void CPU::OP_16NN() {
-	uint8_t address = memory[pc + 1];
-	uint8_t* value = &(memory[address + xReg]);
+	uint8_t* value = zeroPageXPtr();
 	ASL(value);
 
 	pc += 2;
 }
 void CPU::OP_0ENN00() {
-	uint8_t lowByte = memory[pc + 1];
-	uint8_t highByte = memory[pc + 2];
-
-	uint16_t address = highByte << 8 + lowByte;
-	uint8_t* value = &(memory[address]);
+	uint8_t* value = absolutePtr();
 	ASL(value);
 
 	pc += 3;
 }
 
 void CPU::OP_1ENN00() {
-	uint8_t lowByte = memory[pc + 1];
-	uint8_t highByte = memory[pc + 2];
-
-	uint16_t address = highByte << 8 + lowByte;
-	uint8_t* value = &(memory[address + xReg]);
+	uint8_t* value = absoluteXPtr();
 	ASL(value);
 
+	// Make sure ASL(absolute, X) takes 7 cycles even if page crossing doesn't occur
+	if ((memory[pc + 1] + xReg) <= 0xFF)
+	{
+		cycles++;
+	}
 	pc += 3;
 }
 
@@ -282,110 +282,97 @@ void CPU::OP_2CNN00() {
 	pc += 3;
 }
 
-void CPU::BRANCH(uint8_t value) {
-	int8_t signedValue = static_cast<int8_t>(value);
-	pc += (signedValue + 2);
+void CPU::BRANCH() {
+	cycles++;
+
+	int8_t signedBranchValue = static_cast<int8_t>(memory[pc - 1]);
+
+	// Page boundary crossed
+	if (((pc & 0xFF) + signedBranchValue) > 0xFF)
+	{
+		cycles++;
+	}
+
+	pc += signedBranchValue;
 }
 
 void CPU::OP_90NN() {
-	// Carry flag = 1
-	if (status & 0x1)
-	{
-		pc += 2;
-	}
+	pc += 2;
+
 	// Carry flag = 0
-	else
+	if (!getFlag('C'))
 	{
-		BRANCH(memory[pc + 1]);
+		BRANCH();
 	}
 }
 
 void CPU::OP_B0NN() {
+	pc += 2;
+
 	// Carry flag = 1
 	if (status & 0x1)
 	{
-		BRANCH(memory[pc + 1]);
-	}
-	// Carry flag = 0
-	else
-	{
-		pc += 2;
+		BRANCH();
 	}
 }
 
 void CPU::OP_F0NN() {
+	pc += 2;
+
 	// Zero flag = 1
 	if (status & 0x2)
 	{
-		BRANCH(memory[pc + 1]);
-	}
-	// Zero flag = 0
-	else
-	{
-		pc += 2;
+		BRANCH();
 	}
 }
 
 void CPU::OP_30NN() {
+	pc += 2;
+
 	// Negative flag = 1
 	if (status & 0x80)
 	{
-		BRANCH(memory[pc + 1]);
-	}
-	// Negative flag = 0
-	else
-	{
-		pc += 2;
+		BRANCH();
 	}
 }
 
 void CPU::OP_D0NN() {
-	// Zero flag = 1
-	if (status & 0x2)
-	{
-		pc += 2;
-	}
+	pc += 2;
+
 	// Zero flag = 0
-	else
+	if (!getFlag('Z'))
 	{
-		BRANCH(memory[pc + 1]);
+		BRANCH();
 	}
 }
 
 void CPU::OP_10NN() {
+	pc += 2;
+
+	// Negative flag = 0
 	if (!getFlag('N'))
 	{
-		BRANCH(memory[pc + 1]);
-	}
-	else
-	{
-		pc += 2;
+		BRANCH();
 	}
 }
 
 void CPU::OP_50NN() {
-	// Overflow flag = 1
-	if (status & 0x40)
-	{
-		pc += 2;
-	}
+	pc += 2;
+
 	// Overflow flag = 0
-	else
+	if (!getFlag('V'))
 	{
-		BRANCH(memory[pc + 1]);
+		BRANCH();
 	}
 }
 
 void CPU::OP_70NN() {
+	pc += 2;
+
 	// Overflow flag = 1
 	if (status & 0x40)
 	{
-		BRANCH(memory[pc + 1]);
-	}
-	// Overflow flag = 0
-	else
-	{
-		pc += 2;
+		BRANCH();
 	}
 }
 void CPU::OP_00NN() {
@@ -403,6 +390,7 @@ void CPU::OP_00NN() {
 	uint8_t highByte = memory[0xFFFF];
 
 	pc = (highByte << 8) | (lowByte);
+	cycles += 5;
 }
 
 void CPU::CMP(uint8_t value) {
@@ -410,7 +398,7 @@ void CPU::CMP(uint8_t value) {
 
 	setFlag('C', aReg >= value);
 
-	setFlag('Z', result == 0);
+	setFlag('Z', (result & 0xFF) == 0);
 
 	setFlag('N', result & 0x80);
 }
@@ -471,13 +459,13 @@ void CPU::OP_D1NN() {
 }
 
 void CPU::CPX(uint8_t value) {
-	int16_t result = xReg - value;
+	uint16_t result = xReg - value;
 
 	setFlag('C', xReg >= value);
 
-	setFlag('Z', result == 0);
+	setFlag('Z', (result & 0xFF) == 0);
 
-	setFlag('N', result < 0);
+	setFlag('N', result & 0x80);
 }
 
 void CPU::OP_E0NN() {
@@ -502,13 +490,13 @@ void CPU::OP_ECNN00() {
 }
 
 void CPU::CPY(uint8_t value) {
-	int16_t result = yReg - value;
+	uint16_t result = yReg - value;
 
 	setFlag('C', yReg >= value);
 
-	setFlag('Z', result == 0);
+	setFlag('Z', (result & 0xFF) == 0);
 
-	setFlag('N', result < 0);
+	setFlag('N', result & 0x80);
 }
 
 void CPU::OP_C0NN() {
@@ -536,7 +524,9 @@ void CPU::DEC(uint8_t* value) {
 	(*value)--;
 
 	setFlag('N', (*value & 0x80));
-	setFlag('Z', (*value == 0));
+	setFlag('Z', ((*value & 0xFF) == 0));
+
+	cycles += 2;
 }
 
 void CPU::OP_C6NN() {
@@ -564,6 +554,11 @@ void CPU::OP_DENN00() {
 	uint8_t* value = absoluteXPtr();
 	DEC(value);
 
+	// Make sure DEC(absolute, X) always takes 7 cycles even if page crossing doesn't occur
+	if ((memory[pc + 1] + xReg) <= 0xFF)
+	{
+		cycles++;
+	}
 	pc += 3;
 }
 
@@ -668,7 +663,9 @@ void CPU::INC(uint8_t* value) {
 	(*value)++;
 
 	setFlag('N', (*value & 0x80));
-	setFlag('Z', (*value == 0));
+	setFlag('Z', ((*value & 0xFF) == 0));
+
+	cycles += 2;
 }
 
 void CPU::OP_E6NN() {
@@ -696,6 +693,11 @@ void CPU::OP_FENN00() {
 	uint8_t* value = absoluteXPtr();
 	INC(value);
 
+	// Make sure INC(absolute, X) always takes 7 cycles even if page crossing doesn't occur
+	if ((memory[pc + 1] + xReg) <= 0xFF)
+	{
+		cycles++;
+	}
 	pc += 3;
 }
 
@@ -709,6 +711,8 @@ void CPU::OP_4CNN00() {
 
 	uint16_t address = (highByte << 8) | lowByte;
 	JMP(address);
+
+	cycles++;
 }
 
 void CPU::OP_6CNN00() {
@@ -732,6 +736,8 @@ void CPU::OP_6CNN00() {
 		address = (highByte << 8) | lowByte;
 	}
 	JMP(address);
+
+	cycles += 3;
 }
 
 void CPU::OP_20NN00() {
@@ -746,13 +752,14 @@ void CPU::OP_20NN00() {
 	push((pc + 2) & 0x00FF);
 
 	JMP(address);
+	cycles += 4;
 }
 
 void CPU::LDA(uint8_t value) {
 	aReg = value;
 
-	setFlag('N', value & 0x80);
-	setFlag('Z', value == 0);
+	setFlag('N', aReg & 0x80);
+	setFlag('Z', aReg == 0);
 }
 
 void CPU::OP_A9NN() {
@@ -814,8 +821,8 @@ void CPU::OP_B1NN() {
 void CPU::LDX(uint8_t value) {
 	xReg = value;
 
-	setFlag('N', value & 0x80);
-	setFlag('Z', value == 0);
+	setFlag('N', xReg & 0x80);
+	setFlag('Z', xReg == 0);
 }
 
 void CPU::OP_A2NN() {
@@ -856,8 +863,8 @@ void CPU::OP_BENN00() {
 void CPU::LDY(uint8_t value) {
 	yReg = value;
 
-	setFlag('N', value & 0x80);
-	setFlag('Z', value == 0);
+	setFlag('N', yReg & 0x80);
+	setFlag('Z', yReg == 0);
 }
 
 void CPU::OP_A0NN() {
@@ -902,6 +909,12 @@ void CPU::LSR(uint8_t* value) {
 	(*value) >>= 1;
 	setFlag('N', (*value) & 0x80);
 	setFlag('Z', (*value) == 0);
+
+	// Not LSR Accumulator
+	if (memory[pc] != 0x4A)
+	{
+		cycles += 2;
+	}
 }
 
 void CPU::OP_4A() {
@@ -911,8 +924,8 @@ void CPU::OP_4A() {
 
 void CPU::OP_46NN() {
 	uint8_t* value = zeroPagePtr();
-	
 	LSR(value);
+
 	pc += 2;
 }
 
@@ -925,15 +938,20 @@ void CPU::OP_56NN() {
 
 void CPU::OP_4ENN00() {
 	uint8_t* value = absolutePtr();
-
 	LSR(value);
+
 	pc += 3;
 }
 
 void CPU::OP_5ENN00() {
 	uint8_t* value = absoluteXPtr();
-
 	LSR(value);
+
+	// Make sure LSR(absolute, X) always takes 7 cycles even if page crossing doesn't occur
+	if ((memory[pc + 1] + xReg) <= 0xFF)
+	{
+		cycles++;
+	}
 	pc += 3;
 }
 
@@ -1087,6 +1105,12 @@ void CPU::ROL(uint8_t* value) {
 
 	setFlag('N', (*value) & 0x80);
 	setFlag('Z', (*value) == 0);
+
+	// Not ROL Accumulator
+	if (memory[pc] != 0x2A)
+	{
+		cycles += 2;
+	}
 }
 
 void CPU::OP_2A() {
@@ -1119,6 +1143,11 @@ void CPU::OP_3ENN00() {
 	uint8_t* value = absoluteXPtr();
 	ROL(value);
 
+	// Make sure ROL(absolute, X) always takes 7 cycles even if page crossing doesn't occur
+	if ((memory[pc + 1] + xReg) <= 0xFF)
+	{
+		cycles++;
+	}
 	pc += 3;
 }
 
@@ -1132,6 +1161,12 @@ void CPU::ROR(uint8_t* value) {
 	setFlag('C', bitZero);
 	setFlag('N', (*value) & 0x80);
 	setFlag('Z', (*value) == 0);
+
+	// Not ROR Accumulator
+	if (memory[pc] != 0x6A)
+	{
+		cycles += 2;
+	}
 }
 
 void CPU::OP_6A() {
@@ -1164,6 +1199,11 @@ void CPU::OP_7ENN00() {
 	uint8_t* value = absoluteXPtr();
 	ROR(value);
 
+	// Make sure ROR(absolute, X) takes 7 cycles even if page crossing doesn't occur
+	if ((memory[pc + 1] + xReg) <= 0xFF)
+	{
+		cycles++;
+	}
 	pc += 3;
 }
 
@@ -1177,6 +1217,7 @@ void CPU::OP_40() {
 
 	uint16_t pcAddress = (pcHighByte << 8) | pcLowByte;
 	pc = pcAddress;
+	cycles += 4;
 }
 
 void CPU::OP_60() {
@@ -1185,15 +1226,16 @@ void CPU::OP_60() {
 
 	uint16_t pcAddress = (pcHighByte << 8) | pcLowByte;
 	pc = pcAddress + 1;
+	cycles += 4;
 }
 
 void CPU::SBC(uint8_t value) {
 	uint8_t reverseCarry = !getFlag('C');
-	int16_t result = aReg - value - reverseCarry;
+	uint16_t result = aReg - value - reverseCarry;
 
 	setFlag('C', result <= 0xFF);
-	setFlag('Z', result == 0);
-	setFlag('N', result < 0);
+	setFlag('Z', (result & 0xFF) == 0);
+	setFlag('N', result & 0x80);
 	
 	// If signals of aReg and value are different, the signal of result must be the same as aReg. Otherwise V flag is set to 1
 	setFlag('V', ((aReg ^ value) & (aReg ^ result) & 0x80));
@@ -1286,6 +1328,11 @@ void CPU::OP_9DNN00() {
 	uint8_t* value = absoluteXPtr();
 	STA(value);
 
+	// Make sure STA(absolute, X) takes 5 cycles even if page crossing doesn't occur
+	if ((memory[pc + 1] + xReg) <= 0xFF)
+	{
+		cycles++;
+	}
 	pc += 3;
 }
 
@@ -1293,6 +1340,7 @@ void CPU::OP_99NN00() {
 	uint8_t* value = absoluteYPtr();
 	STA(value);
 
+	cycles++;
 	pc += 3;
 }
 
@@ -1307,6 +1355,7 @@ void CPU::OP_91NN() {
 	uint8_t* value = indirectYPtr();
 	STA(value);
 
+	cycles++;
 	pc += 2;
 }
 
@@ -1326,7 +1375,9 @@ void CPU::OP_BA() {
 
 void CPU::OP_48() {
 	push(aReg);
+
 	pc += 1;
+	cycles++;
 }
 
 void CPU::OP_68() {
@@ -1336,18 +1387,24 @@ void CPU::OP_68() {
 	setFlag('Z', aReg == 0);
 
 	pc += 1;
+	cycles += 2;
 }
 
 void CPU::OP_08() {
 	push(status);
+
 	pc += 1;
+	cycles++;
 }
 
 void CPU::OP_28() {
 	status = pop();
-	setFlag('B', 0);
+
 	status |= 0x20;
+	setFlag('B', 0);
+
 	pc += 1;
+	cycles += 2;
 }
 
 void CPU::STX(uint8_t* value) {
