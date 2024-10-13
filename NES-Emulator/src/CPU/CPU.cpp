@@ -224,7 +224,14 @@ void CPU::execute() {
 	cycles += 2;
 
 	(this->*table[memory[pc]])();
+}
 
+void CPU::reset() {
+	aReg = 0;
+	xReg = 0;
+	yReg = 0;
+	status = 0x20;
+	pc = RESET_VECTOR_ADDRESS;
 }
 
 void CPU::printInfo() {

@@ -10,6 +10,8 @@ class CPU {
 	const int STACK_START_ADDRESS = 0xFD;
 	const int STACK_BOTTOM_ADDRESS = 0x100;
 
+	const int RESET_VECTOR_ADDRESS = 0xFFFC;
+
 	typedef void(CPU::* OPCODE)();
 
 public:
@@ -53,6 +55,7 @@ public:
 private:
 
 	void execute();
+	void reset();
 
 	void push(uint8_t value);
 	uint8_t pop();
