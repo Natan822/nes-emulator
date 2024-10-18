@@ -931,8 +931,8 @@ void CPU::OP_46NN() {
 
 void CPU::OP_56NN() {
 	uint8_t* value = zeroPageXPtr();
-
 	LSR(value);
+
 	pc += 2;
 }
 

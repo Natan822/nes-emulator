@@ -33,7 +33,7 @@ public:
 		0 = Carry
 	*/
 
-	// Memory
+	// Address Space
 	uint8_t memory[0xFFFF + 1]{};
 
 	int prgSize{}; // PRG ROM size in 16 KiB units

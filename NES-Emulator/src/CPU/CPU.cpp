@@ -17,6 +17,8 @@ CPU::CPU() {
 	status = 0x24;
 	pc = 0xC000;
 
+	cycles = 7;
+
 	// Fill opcodes table
 	table[0x00] = &CPU::OP_00NN;
 	table[0x01] = &CPU::OP_01NN;
