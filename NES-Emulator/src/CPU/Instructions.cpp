@@ -385,6 +385,7 @@ void CPU::OP_00NN() {
 
 	setFlag('B', 0);
 	push(status);
+	setFlag('I', 1);
 
 	uint8_t lowByte = memory[0xFFFE];
 	uint8_t highByte = memory[0xFFFF];
