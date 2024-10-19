@@ -213,9 +213,25 @@ void CPU::loadROM(std::string filePath) {
 	}
 
 	delete[] buffer;
+
+	uint8_t lowByteStartAddress = memory[RESET_VECTOR_ADDRESS];
+	uint8_t highByteStartAddress = memory[RESET_VECTOR_ADDRESS + 1];
+
+	uint16_t startAddress = (highByteStartAddress << 8) | lowByteStartAddress;
+	//pc = startAddress;
 }
 
 void CPU::cycle() {
+	if (irqInterrupt && !getFlag('I'))
+	{
+		handleInterrupt('I');
+		cycles += 7;
+	}
+	if (memory[PPUCTRL] & 0x80)
+	{
+		handleInterrupt('N');
+		cycles += 7;
+	}
 	execute();
 }
 
@@ -234,6 +250,44 @@ void CPU::reset() {
 	yReg = 0;
 	status = 0x20;
 	pc = RESET_VECTOR_ADDRESS;
+}
+
+void CPU::handleInterrupt(char interruptType) {
+	uint8_t lowBytePc = pc & 0xFF;
+	uint8_t highBytePc = pc >> 8;
+
+	push(highBytePc);
+	push(lowBytePc);
+	push(status);
+
+	setFlag('I', 1);
+	switch (interruptType)
+	{
+	// IRQ interrupt
+	case 'I':
+		uint8_t lowByteVectorAddress = memory[IRQ_VECTOR_ADDRESS];
+		uint8_t highByteVectorAddress = memory[IRQ_VECTOR_ADDRESS + 1];
+		uint16_t vectorAddress = (highByteVectorAddress << 8) | lowByteVectorAddress;
+		pc = vectorAddress;
+		
+		break;
+
+	// NMI interrupt
+	case 'N':
+		uint8_t lowByteVectorAddress = memory[NMI_VECTOR_ADDRESS];
+		uint8_t highByteVectorAddress = memory[NMI_VECTOR_ADDRESS + 1];
+		uint16_t vectorAddress = (highByteVectorAddress << 8) | lowByteVectorAddress;
+		pc = vectorAddress;
+
+		break;
+
+	// BRK interrupt
+	/*
+		BRK is handled by OP_00NN()
+	*/
+	default:
+		break;
+	}
 }
 
 void CPU::printInfo() {

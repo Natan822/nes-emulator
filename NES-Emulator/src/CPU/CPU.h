@@ -2,15 +2,28 @@
 
 #include <string>
 
+//PPU REGISTERS ADDRESSES
+#define PPUCTRL 0x2000
+#define PPUMASK 0x2001
+#define PPUSTATUS 0x2002
+#define OAMADDR 0x2003
+#define OAMDATA 0x2004
+#define PPUSCROLL 0x2005
+#define PPUADDR 0x2006
+#define PPUDATA 0x2007
+#define OAMDMA 0x4014
+
 class CPU {
 
 	const int CARTRIDGE_START_ADDRESS = 0x4018u;
 	const int PRG_START_ADDRESS = 0x8000;
-
+	
 	const int STACK_START_ADDRESS = 0xFD;
 	const int STACK_BOTTOM_ADDRESS = 0x100;
-
+	
 	const int RESET_VECTOR_ADDRESS = 0xFFFC;
+	const int IRQ_VECTOR_ADDRESS = 0xFFFE;
+	const int NMI_VECTOR_ADDRESS = 0xFFFA;
 
 	typedef void(CPU::* OPCODE)();
 
@@ -38,7 +51,7 @@ public:
 
 	int prgSize{}; // PRG ROM size in 16 KiB units
 	int chrSize{}; // CHR ROM size in 8 KiB units(0 = board uses CHR RAM)
-
+	
 	CPU();
 	~CPU();
 
@@ -46,6 +59,7 @@ public:
 	OPCODE table[0xFF + 1]{};
 
 	int cycles{};
+	bool irqInterrupt{};
 
 	void loadROM(std::string filePath);
 	void cycle();
@@ -56,6 +70,7 @@ private:
 
 	void execute();
 	void reset();
+	void handleInterrupt(char interruptType);
 
 	void push(uint8_t value);
 	uint8_t pop();

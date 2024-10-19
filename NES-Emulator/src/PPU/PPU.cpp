@@ -7,15 +7,15 @@
 #include <iostream>
 
 PPU::PPU(CPU& cpu) {
-	ppuCtrl = &cpu.memory[0x2000];
-	ppuMask = &cpu.memory[0x2001];
-	ppuStatus = &cpu.memory[0x2002];
-	oamAddr = &cpu.memory[0x2003];
-	oamData = &cpu.memory[0x2004];
-	ppuScroll = &cpu.memory[0x2005];
-	ppuAddr = &cpu.memory[0x2006];
-	ppuData = &cpu.memory[0x2007];
-	oamDma = &cpu.memory[0x4014];
+	ppuCtrl = &cpu.memory[PPUCTRL];
+	ppuMask = &cpu.memory[PPUMASK];
+	ppuStatus = &cpu.memory[PPUSTATUS];
+	oamAddr = &cpu.memory[OAMADDR];
+	oamData = &cpu.memory[OAMDATA];
+	ppuScroll = &cpu.memory[PPUSCROLL];
+	ppuAddr = &cpu.memory[PPUADDR];
+	ppuData = &cpu.memory[PPUDATA];
+	oamDma = &cpu.memory[OAMDMA];
 }
 PPU::~PPU() {}
 
