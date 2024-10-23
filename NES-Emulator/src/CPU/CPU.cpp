@@ -304,6 +304,10 @@ void CPU::writeMemory(uint16_t address, uint8_t data) {
 	memory[address] = data;
 }
 
+uint8_t CPU::readMemory(uint16_t address) {
+	return memory[address];
+}
+
 void CPU::push(uint8_t value) {
 	memory[sp + STACK_BOTTOM_ADDRESS] = value;
 	sp--;
