@@ -900,6 +900,8 @@ void CPU::LSR(uint16_t address) {
 	setFlag('C', bitZero);
 	setFlag('N', value & 0x80);
 	setFlag('Z', value == 0);
+
+	cycles += 2;
 }
 
 void CPU::OP_4A() {
@@ -1096,6 +1098,8 @@ void CPU::ROL(uint16_t address) {
 
 	setFlag('N', value & 0x80);
 	setFlag('Z', value == 0);
+
+	cycles += 2;
 }
 
 void CPU::OP_2A() {
@@ -1154,6 +1158,8 @@ void CPU::ROR(uint16_t address) {
 	setFlag('C', bitZero);
 	setFlag('N', value & 0x80);
 	setFlag('Z', value == 0);
+
+	cycles += 2;
 }
 
 void CPU::OP_6A() {

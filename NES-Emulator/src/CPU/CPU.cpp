@@ -265,22 +265,24 @@ void CPU::handleInterrupt(char interruptType) {
 	{
 	// IRQ interrupt
 	case 'I':
+	{
 		uint8_t lowByteVectorAddress = memory[IRQ_VECTOR_ADDRESS];
 		uint8_t highByteVectorAddress = memory[IRQ_VECTOR_ADDRESS + 1];
 		uint16_t vectorAddress = (highByteVectorAddress << 8) | lowByteVectorAddress;
 		pc = vectorAddress;
-		
-		break;
 
+		break;
+	}
 	// NMI interrupt
 	case 'N':
+	{
 		uint8_t lowByteVectorAddress = memory[NMI_VECTOR_ADDRESS];
 		uint8_t highByteVectorAddress = memory[NMI_VECTOR_ADDRESS + 1];
 		uint16_t vectorAddress = (highByteVectorAddress << 8) | lowByteVectorAddress;
 		pc = vectorAddress;
 
 		break;
-
+	}
 	// BRK interrupt
 	/*
 		BRK is handled by OP_00NN()
