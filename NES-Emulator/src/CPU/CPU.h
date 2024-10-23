@@ -85,28 +85,28 @@ private:
 	uint8_t* immediatePtr();
 
 	uint8_t zeroPage();
-	uint8_t* zeroPagePtr();
+	uint16_t zeroPagePtr();
 
 	uint8_t zeroPageX();
-	uint8_t* zeroPageXPtr();
+	uint16_t zeroPageXPtr();
 
 	uint8_t zeroPageY();
-	uint8_t* zeroPageYPtr();
+	uint16_t zeroPageYPtr();
 
 	uint8_t absolute();
-	uint8_t* absolutePtr();
+	uint16_t absolutePtr();
 
 	uint8_t absoluteX();
-	uint8_t* absoluteXPtr();
+	uint16_t absoluteXPtr();
 
 	uint8_t absoluteY();
-	uint8_t* absoluteYPtr();
+	uint16_t absoluteYPtr();
 
 	uint8_t indirectX();
-	uint8_t* indirectXPtr();
+	uint16_t indirectXPtr();
 
 	uint8_t indirectY();
-	uint8_t* indirectYPtr();
+	uint16_t indirectYPtr();
 
 	// Instructions
 	// ADC
