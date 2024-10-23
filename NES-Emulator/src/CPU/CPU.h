@@ -66,7 +66,7 @@ public:
 
 	void printInfo();
 
-	void writeMemory(uint16_t address, uint8_t data);
+	uint8_t writeMemory(uint16_t address, uint8_t data);
 	uint8_t readMemory(uint16_t address);
 private:
 
@@ -133,7 +133,7 @@ private:
 	void OP_31NN(); // Indirect, Y
 
 	// ASL
-	void ASL(uint8_t* value); // General ASL instruction
+	void ASL(uint16_t address); // General ASL instruction
 	void OP_0A(); // Accumulator
 	void OP_06NN(); // Zero Page
 	void OP_16NN(); // Zero Page, X
@@ -183,7 +183,7 @@ private:
 	void OP_CCNN00(); // Absolute
 
 	// DEC(decrement memory)
-	void DEC(uint8_t* value); // General DEC instruction
+	void DEC(uint16_t address); // General DEC instruction
 	void OP_C6NN(); // Zero Page
 	void OP_D6NN(); // Zero Page, X
 	void OP_CENN00(); // Absolute

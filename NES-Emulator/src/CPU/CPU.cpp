@@ -300,8 +300,9 @@ void CPU::printInfo() {
 	std::cout << " CYC:" << std::dec << cycles << std::endl;
 }
 
-void CPU::writeMemory(uint16_t address, uint8_t data) {
+uint8_t CPU::writeMemory(uint16_t address, uint8_t data) {
 	memory[address] = data;
+	return data;
 }
 
 uint8_t CPU::readMemory(uint16_t address) {
