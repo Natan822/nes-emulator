@@ -300,6 +300,10 @@ void CPU::printInfo() {
 	std::cout << " CYC:" << std::dec << cycles << std::endl;
 }
 
+void CPU::writeMemory(uint16_t address, uint8_t data) {
+	memory[address] = data;
+}
+
 void CPU::push(uint8_t value) {
 	memory[sp + STACK_BOTTOM_ADDRESS] = value;
 	sp--;

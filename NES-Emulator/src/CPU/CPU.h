@@ -66,6 +66,7 @@ public:
 
 	void printInfo();
 
+	void writeMemory(uint16_t address, uint8_t data);
 private:
 
 	void execute();
