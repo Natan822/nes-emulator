@@ -210,7 +210,7 @@ private:
 	void OP_F8(); // SED(Set Decimal)    
 
 	// INC(increment memory)
-	void INC(uint8_t* value); // General INC instruction
+	void INC(uint16_t address); // General INC instruction
 	void OP_E6NN(); // Zero Page
 	void OP_F6NN(); // Zero Page, X
 	void OP_EENN00(); // Absolute
@@ -252,7 +252,7 @@ private:
 	void OP_BCNN00(); // Absolute, X
 
 	// LSR(shift right one position and original bit 0 is stored at carry)
-	void LSR(uint8_t* value);
+	void LSR(uint16_t address);
 	void OP_4A(); // Accumulator
 	void OP_46NN(); // Zero Page
 	void OP_56NN(); // Zero Page, X
@@ -284,7 +284,7 @@ private:
 	void OP_C8(); // INY(Increment Y)    
 
 	// ROL(shifts all bits left, bit 0 = carry, carry = original bit 7)
-	void ROL(uint8_t* value); // General ROL instruction
+	void ROL(uint16_t address); // General ROL instruction
 	void OP_2A(); // Accumulator  
 	void OP_26NN(); // Zero Page    
 	void OP_36NN(); // Zero Page, X
@@ -292,7 +292,7 @@ private:
 	void OP_3ENN00(); // Absolute, X   
 
 	// ROR(shifts all bits right, bit 7 = carry, carry = original bit 0)
-	void ROR(uint8_t* value); // General ROR instruction
+	void ROR(uint16_t address); // General ROR instruction
 	void OP_6A(); // Accumulator	
 	void OP_66NN(); // Zero Page	
 	void OP_76NN(); // Zero Page, X	
@@ -317,7 +317,7 @@ private:
 	void OP_F1NN(); // Indirect, Y
 
 	// STA(Store accumulator in memory)
-	void STA(uint8_t* value); // General STA instruction
+	void STA(uint16_t address); // General STA instruction
 	void OP_85NN(); // Zero Page
 	void OP_95NN(); // Zero Page, X
 	void OP_8DNN00(); // Absolute
@@ -335,16 +335,14 @@ private:
 	void OP_28(); // PLP(Pull processor status)  
 
 	// STX(Store X in memory)
-	void STX(uint8_t* value); // General STX instruction
+	void STX(uint16_t address); // General STX instruction
 	void OP_86NN(); // Zero Page
 	void OP_96NN(); // Zero Page, Y
 	void OP_8ENN00(); // Absolute
 
 	// STY(Store Y in memory)
-	void STY(uint8_t* value); // General STY instruction
+	void STY(uint16_t address); // General STY instruction
 	void OP_84NN(); // Zero Page
 	void OP_94NN(); // Zero Page, X
 	void OP_8CNN00(); // Absolute
-
-
 };
