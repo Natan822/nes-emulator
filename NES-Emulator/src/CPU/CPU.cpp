@@ -7,7 +7,7 @@
 #include "CPU.h"
 #include "../PPU/PPU.h"
 
-CPU::CPU() {
+CPU::CPU(PPU& ppu) : ppu(ppu) {
 	sp = STACK_START_ADDRESS & 0xFF;
 
 	for (int i = 0; i < 0xFF + 1; i++)
@@ -172,10 +172,6 @@ CPU::CPU() {
 	table[0xF9] = &CPU::OP_F9NN00;
 	table[0xFD] = &CPU::OP_FDNN00;
 	table[0xFE] = &CPU::OP_FENN00;
-}
-
-CPU::CPU(PPU& ppu) : CPU() {
-	this->ppu = ppu;
 }
 
 CPU::~CPU() {}

@@ -1,9 +1,10 @@
 #pragma once
 #include <string>
-#include "../CPU/CPU.h"
 
 const int VIDEO_HEIGHT = 240;
 const int VIDEO_WIDTH = 256;
+
+class CPU;
 
 class PPU {
 public:
@@ -32,7 +33,6 @@ public:
 	void loadPatternTable();
 
 	PPU();
-	PPU(CPU& cpu);
 	~PPU();
 	
 	uint8_t writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu);

@@ -10,17 +10,6 @@ PPU::PPU() {
 	isHighByte = true;
 }
 
-PPU::PPU(CPU& cpu) : PPU() {
-	ppuCtrl = &cpu.memory[PPUCTRL];
-	ppuMask = &cpu.memory[PPUMASK];
-	ppuStatus = &cpu.memory[PPUSTATUS];
-	oamAddr = &cpu.memory[OAMADDR];
-	oamData = &cpu.memory[OAMDATA];
-	ppuScroll = &cpu.memory[PPUSCROLL];
-	ppuAddr = &cpu.memory[PPUADDR];
-	ppuData = &cpu.memory[PPUDATA];
-	oamDma = &cpu.memory[OAMDMA];
-}
 PPU::~PPU() {}
 
 void PPU::loadROM(std::string filePath) {
