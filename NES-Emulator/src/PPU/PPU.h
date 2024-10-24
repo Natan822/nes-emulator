@@ -40,4 +40,6 @@ public:
 private:
 	bool isHighByte{};
 	uint16_t vramAddress{};
+
+	void vramIncrease(CPU* cpu);
 };

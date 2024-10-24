@@ -112,15 +112,7 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 
 	case PPUDATA:
 		cpu->writeMemory(vramAddress, data);
-		// Check VRAM address increment mode
-		if (cpu->memory[PPUCTRL] & 0x4)
-		{
-			vramAddress += 32;
-		}
-		else
-		{
-			vramAddress++;
-		}
+		vramIncrease(cpu);
 		break;
 
 	case OAMDMA:
@@ -159,15 +151,7 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
 		break;
 
 	case PPUDATA:
-		// Check VRAM address increment mode
-		if (cpu->memory[PPUCTRL] & 0x4)
-		{
-			vramAddress += 32;
-		}
-		else
-		{
-			vramAddress++;
-		}
+		vramIncrease(cpu);
 		break;
 
 	case OAMDMA:
@@ -178,4 +162,17 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
 	}
 
 	return cpu->memory[address];
+}
+
+void PPU::vramIncrease(CPU* cpu) {
+	// Check VRAM address increment mode
+	if (cpu->memory[PPUCTRL] & 0x4)
+	{
+		vramAddress += 32;
+	}
+	else
+	{
+		vramAddress++;
+	}
+	vramAddress &= 0x3FFF;
 }
