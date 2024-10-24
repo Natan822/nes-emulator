@@ -313,6 +313,10 @@ uint8_t CPU::writeMemory(uint16_t address, uint8_t data) {
 }
 
 uint8_t CPU::readMemory(uint16_t address) {
+	if ((address >= 0x2000 && address <= 0x2007) || address == 0x4014)
+	{
+		return ppu.readMemoryPpu(address, this);
+	}
 	return memory[address];
 }
 

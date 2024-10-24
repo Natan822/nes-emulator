@@ -36,6 +36,7 @@ public:
 	~PPU();
 	
 	uint8_t writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu);
+	uint8_t readMemoryPpu(uint16_t address, CPU* cpu);
 private:
 	bool isHighByte{};
 	uint16_t vramAddress{};
