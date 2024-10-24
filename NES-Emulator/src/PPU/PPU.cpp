@@ -115,11 +115,11 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 		// Check VRAM address increment mode
 		if (cpu->memory[PPUCTRL] & 0x4)
 		{
-			vramAddress++;
+			vramAddress += 32;
 		}
 		else
 		{
-			vramAddress += 32;
+			vramAddress++;
 		}
 		break;
 
@@ -162,11 +162,11 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
 		// Check VRAM address increment mode
 		if (cpu->memory[PPUCTRL] & 0x4)
 		{
-			vramAddress++;
+			vramAddress += 32;
 		}
 		else
 		{
-			vramAddress += 32;
+			vramAddress++;
 		}
 		break;
 
