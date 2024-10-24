@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "CPU.h"
+#include "../PPU/PPU.h"
 
 CPU::CPU() {
 	sp = STACK_START_ADDRESS & 0xFF;
@@ -173,6 +174,10 @@ CPU::CPU() {
 	table[0xFE] = &CPU::OP_FENN00;
 }
 
+CPU::CPU(PPU& ppu) : CPU() {
+	this->ppu = ppu;
+}
+
 CPU::~CPU() {}
 
 void CPU::loadROM(std::string filePath) {
@@ -303,6 +308,10 @@ void CPU::printInfo() {
 }
 
 uint8_t CPU::writeMemory(uint16_t address, uint8_t data) {
+	if ((address >= 0x2000 && address <= 0x2007) || address == 0x4014)
+	{
+		return ppu.writeMemoryPpu(address, data, this);
+	}
 	memory[address] = data;
 	return data;
 }

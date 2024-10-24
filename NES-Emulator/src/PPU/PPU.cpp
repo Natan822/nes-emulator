@@ -6,7 +6,11 @@
 
 #include <iostream>
 
-PPU::PPU(CPU& cpu) {
+PPU::PPU() {
+	isHighByte = true;
+}
+
+PPU::PPU(CPU& cpu) : PPU() {
 	ppuCtrl = &cpu.memory[PPUCTRL];
 	ppuMask = &cpu.memory[PPUMASK];
 	ppuStatus = &cpu.memory[PPUSTATUS];
@@ -82,4 +86,61 @@ void PPU::loadPatternTable() {
 		}
 		spriteCount++;
 	}
+}
+
+uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
+	switch (address)
+	{
+	case PPUCTRL:
+		break;
+
+	case PPUMASK:
+		break;
+
+	case PPUSTATUS:
+		break;
+
+	case OAMADDR:
+		break;
+
+	case OAMDATA:
+		break;
+
+	case PPUSCROLL:
+		break;
+
+	case PPUADDR:
+		if (isHighByte)
+		{
+			vramAddress = (vramAddress & 0xFF) | (data << 8);
+		}
+		else
+		{
+			vramAddress = (vramAddress & 0xFF00) | data;
+		}
+		isHighByte = !isHighByte;
+		break;
+
+	case PPUDATA:
+		cpu->writeMemory(vramAddress, data);
+		// Check VRAM address increment mode
+		if (cpu->memory[PPUCTRL] & 0x4)
+		{
+			vramAddress++;
+		}
+		else
+		{
+			vramAddress += 32;
+		}
+		break;
+
+	case OAMDMA:
+		break;
+
+	default:
+		break;
+	}
+
+	cpu->memory[address] = data;
+	return data;
 }

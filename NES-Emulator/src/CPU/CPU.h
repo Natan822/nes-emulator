@@ -53,7 +53,10 @@ public:
 	int chrSize{}; // CHR ROM size in 8 KiB units(0 = board uses CHR RAM)
 	
 	CPU();
+	CPU(PPU& ppu);
 	~CPU();
+
+	PPU& ppu;
 
 	// Table of opcodes
 	OPCODE table[0xFF + 1]{};

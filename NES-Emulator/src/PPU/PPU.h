@@ -31,7 +31,12 @@ public:
 	// Load pattern table into video
 	void loadPatternTable();
 
+	PPU();
 	PPU(CPU& cpu);
 	~PPU();
+	
+	uint8_t writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu);
 private:
+	bool isHighByte{};
+	uint16_t vramAddress{};
 };
