@@ -95,6 +95,7 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 		break;
 
 	case OAMDATA:
+		cpu->memory[OAMADDR]++;
 		break;
 
 	case PPUSCROLL:
@@ -113,11 +114,18 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 		break;
 
 	case PPUDATA:
-		cpu->writeMemory(vramAddress, data);
+		this->memory[vramAddress] = data;
 		vramIncrease(cpu);
 		break;
 
 	case OAMDMA:
+		uint16_t sourceAddress = data << 8;
+		// Copies from source address to OAM
+		for (int byteIndex = 0; byteIndex < 256; byteIndex++)
+		{
+			this->memory[byteIndex] = cpu->memory[sourceAddress + byteIndex];
+		}
+		cpu->cycles += 513;
 		break;
 
 	default:
@@ -156,6 +164,7 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
 		break;
 
 	case PPUDATA:
+		data = this->memory[vramAddress];
 		vramIncrease(cpu);
 		break;
 
