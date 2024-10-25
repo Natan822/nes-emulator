@@ -119,6 +119,7 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 		break;
 
 	case OAMDMA:
+	{
 		uint16_t sourceAddress = data << 8;
 		// Copies from source address to OAM
 		for (int byteIndex = 0; byteIndex < 256; byteIndex++)
@@ -127,7 +128,7 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 		}
 		cpu->cycles += 513;
 		break;
-
+	}
 	default:
 		break;
 	}
