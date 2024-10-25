@@ -129,6 +129,7 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 }
 
 uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
+	uint8_t data = cpu->memory[address];
 	switch (address)
 	{
 	case PPUCTRL:
@@ -138,6 +139,8 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
 		break;
 
 	case PPUSTATUS:
+		// Clear vblank_flag on read
+		cpu->memory[address] &= ~0x80;
 		break;
 
 	case OAMADDR:
@@ -163,7 +166,7 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
 		break;
 	}
 
-	return cpu->memory[address];
+	return data;
 }
 
 void PPU::vramIncrease(CPU* cpu) {
