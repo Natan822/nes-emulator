@@ -228,7 +228,7 @@ void CPU::cycle() {
 		handleInterrupt('I');
 		cycles += 7;
 	}
-	if (memory[PPUCTRL] & 0x80)
+	if (nmiInterrupt)
 	{
 		handleInterrupt('N');
 		cycles += 7;

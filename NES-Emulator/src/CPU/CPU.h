@@ -63,7 +63,9 @@ public:
 	OPCODE table[0xFF + 1]{};
 
 	int cycles{};
+
 	bool irqInterrupt{};
+	bool nmiInterrupt{};
 
 	void loadROM(std::string filePath);
 	void cycle();

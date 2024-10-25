@@ -81,6 +81,8 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 	switch (address)
 	{
 	case PPUCTRL:
+		// Vblank NMI enable
+		cpu->nmiInterrupt = data & 0x80;
 		break;
 
 	case PPUMASK:
