@@ -21,6 +21,8 @@ public:
 
 	// Address Space
 	uint8_t memory[0x3FFF + 1]{};
+	// OAM Address Space
+	uint8_t oam[256];
 	// Display Screen
 	uint32_t video[VIDEO_WIDTH * VIDEO_HEIGHT]{};
 
