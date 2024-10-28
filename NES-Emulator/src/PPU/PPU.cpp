@@ -95,6 +95,9 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 		break;
 
 	case OAMDATA:
+		// Write to OAM
+		this->oam[cpu->memory[OAMADDR]] = data;
+		// Increment OAMADDR
 		cpu->memory[OAMADDR]++;
 		break;
 
