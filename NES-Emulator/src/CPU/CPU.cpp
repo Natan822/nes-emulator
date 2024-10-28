@@ -226,11 +226,13 @@ void CPU::cycle() {
 	if (irqInterrupt && !getFlag('I'))
 	{
 		handleInterrupt('I');
+		irqInterrupt = false;
 		cycles += 7;
 	}
 	if (nmiInterrupt)
 	{
 		handleInterrupt('N');
+		nmiInterrupt = false;
 		cycles += 7;
 	}
 	execute();
