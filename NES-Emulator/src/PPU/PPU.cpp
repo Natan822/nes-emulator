@@ -3,6 +3,7 @@
 #include <string>
 #include "../CPU/CPU.h"
 #include "PPU.h"
+#include "../Graphics/Graphics.h"
 
 #include <iostream>
 
@@ -36,12 +37,22 @@ void PPU::loadROM(std::string filePath) {
 	}
 
 	delete[] buffer;
+
+	// Temporary default palette table
+	this->memory[PALETTES_ADDRESS] = 0x0E;
+	for (int i = 1; i < 4; i++)
+	{
+		this->memory[PALETTES_ADDRESS + i] = 0x15 + i;
+	}
 }
 
 void PPU::loadPatternTable() {
 	int videoX = 0;
 	int videoY = 0;
 	int spriteCount = 0;
+
+	// Temporary hard-coded palette index value
+	const int paletteIndex = 0;
 	for (int spritePointer = 0; spritePointer < 0x1FFF; spritePointer += 0x10)
 	{
 		for (int byte = 0; byte < 8; byte++)
@@ -52,18 +63,15 @@ void PPU::loadPatternTable() {
 			uint8_t byteMask = 0x80;
 			for (int bit = 0; bit < 8; bit++)
 			{
-				uint8_t firstPlaneBit = firstPlaneByte & byteMask;
-				uint8_t secondPlaneBit = secondPlaneByte & byteMask;
+				uint8_t firstPlaneBit = (firstPlaneByte & byteMask) ? 1 : 0;
+				uint8_t secondPlaneBit = (secondPlaneByte & byteMask) ? 1 : 0;
 
-				if (firstPlaneBit || secondPlaneBit)
-				{
-					// Here "bit" works as an X offset and "byte" works as a Y offset for the sprite coordinates
-					video[videoX + bit + ((videoY + byte) * VIDEO_WIDTH)] = 0xFFFFFFFF;
-				}
-				else
-				{
-					video[videoX + bit + ((videoY + byte) * VIDEO_WIDTH)] = 0;
-				}
+				uint8_t pixelBits = (secondPlaneBit << 1) | firstPlaneBit;
+				uint8_t pixelValue = this->memory[PALETTES_ADDRESS + pixelBits];
+
+				// Here "bit" works as an X offset and "byte" works as a Y offset for the sprite coordinates
+				video[videoX + bit + ((videoY + byte) * VIDEO_WIDTH)] = colorsMapTable[pixelValue];
+
 				byteMask >>= 1;
 			}
 		}

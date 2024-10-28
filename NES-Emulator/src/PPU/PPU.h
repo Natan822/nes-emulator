@@ -4,6 +4,8 @@
 const int VIDEO_HEIGHT = 240;
 const int VIDEO_WIDTH = 256;
 
+const int PALETTES_ADDRESS = 0x3F00;
+
 class CPU;
 
 class PPU {
