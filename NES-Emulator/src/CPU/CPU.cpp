@@ -219,7 +219,7 @@ void CPU::loadROM(std::string filePath) {
 	uint8_t highByteStartAddress = memory[RESET_VECTOR_ADDRESS + 1];
 
 	uint16_t startAddress = (highByteStartAddress << 8) | lowByteStartAddress;
-	//pc = startAddress;
+	pc = startAddress;
 }
 
 void CPU::cycle() {
@@ -235,7 +235,13 @@ void CPU::cycle() {
 		nmiInterrupt = false;
 		cycles += 7;
 	}
+	int oldCycles = cycles;
 	execute();
+	ppu.cycles += (cycles - oldCycles) * 3;
+	if (ppu.cycles > 341)
+	{
+		ppu.cycles %= 341;
+	}
 }
 
 void CPU::execute() {
@@ -302,7 +308,10 @@ void CPU::printInfo() {
 	std::cout << " Y:" << static_cast<int>(yReg);
 	std::cout << " P:" << static_cast<int>(status);
 	std::cout << " SP:" <<  static_cast<int>(sp);
-	std::cout << " CYC:" << std::dec << cycles << std::endl;
+	std::cout << " PPUSC:" << std::dec << ppu.scanlines;
+	std::cout << " PPUCYC:" << ppu.cycles;
+	std::cout << " CYC:" << std::dec << cycles;
+	std::cout << std::endl;
 }
 
 uint8_t CPU::writeMemory(uint16_t address, uint8_t data) {

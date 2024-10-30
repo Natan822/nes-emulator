@@ -6,21 +6,16 @@ const int VIDEO_WIDTH = 256;
 
 const int PALETTES_ADDRESS = 0x3F00;
 
+const int NAMETABLE1_ADDRESS = 0x2000;
+const int NAMETABLE2_ADDRESS = 0x2400;
+const int NAMETABLE3_ADDRESS = 0x2800;
+const int NAMETABLE4_ADDRESS = 0x2C00;
+const int NAMETABLE_SIZE = 0x400;
+
 class CPU;
 
 class PPU {
 public:
-	// Registers
-	uint8_t* ppuCtrl;
-	uint8_t* ppuMask;
-	uint8_t* ppuStatus;
-	uint8_t* oamAddr;
-	uint8_t* oamData;
-	uint8_t* ppuScroll;
-	uint8_t* ppuAddr;
-	uint8_t* ppuData;
-	uint8_t* oamDma;
-
 	// Address Space
 	uint8_t memory[0x3FFF + 1]{};
 	// OAM Address Space
@@ -30,6 +25,12 @@ public:
 
 	int prgSize{}; // PRG ROM size in 16 KiB units
 	int chrSize{}; // CHR ROM size in 8 KiB units(0 = board uses CHR RAM)
+
+	// Address set by PPUADDR register
+	uint16_t vramAddress{};
+
+	int cycles{};
+	int scanlines{};
 
 	void loadROM(std::string filePath);
 
@@ -42,8 +43,12 @@ public:
 	uint8_t writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu);
 	uint8_t readMemoryPpu(uint16_t address, CPU* cpu);
 
-	uint16_t vramAddress{};
+	void renderFrame(CPU* cpu);
+	void renderScanline();
 private:
 	bool isHighByte{};
 	void vramIncrease(CPU* cpu);
+
+	void renderSprite(int spriteIndex, int* videoX, int* videoY);
+	void renderSprite(int spriteIndex, int videoX, int videoY);
 };

@@ -8,6 +8,7 @@
 #include <iostream>
 
 PPU::PPU() {
+	cycles = 21;
 	isHighByte = true;
 }
 
@@ -49,39 +50,10 @@ void PPU::loadROM(std::string filePath) {
 void PPU::loadPatternTable() {
 	int videoX = 0;
 	int videoY = 0;
-	int spriteCount = 0;
 
-	// Temporary hard-coded palette index value
-	const int paletteIndex = 0;
-	for (int spritePointer = 0; spritePointer < 0x1FFF; spritePointer += 0x10)
+	for (int spriteIndex = 0; spriteIndex < 0x1FF; spriteIndex++)
 	{
-		for (int byte = 0; byte < 8; byte++)
-		{
-			uint8_t firstPlaneByte = memory[spritePointer + byte];
-			uint8_t secondPlaneByte = memory[spritePointer + byte + 8];
-
-			uint8_t byteMask = 0x80;
-			for (int bit = 0; bit < 8; bit++)
-			{
-				uint8_t firstPlaneBit = (firstPlaneByte & byteMask) ? 1 : 0;
-				uint8_t secondPlaneBit = (secondPlaneByte & byteMask) ? 1 : 0;
-
-				uint8_t pixelBits = (secondPlaneBit << 1) | firstPlaneBit;
-				uint8_t pixelValue = this->memory[PALETTES_ADDRESS + pixelBits];
-
-				// Here "bit" works as an X offset and "byte" works as a Y offset for the sprite coordinates
-				video[videoX + bit + ((videoY + byte) * VIDEO_WIDTH)] = colorsMapTable[pixelValue];
-
-				byteMask >>= 1;
-			}
-		}
-		videoX += 8;
-		if (videoX >= VIDEO_WIDTH)
-		{
-			videoX = 0;
-			videoY += 8;
-		}
-		spriteCount++;
+		renderSprite(spriteIndex, &videoX, &videoY);
 	}
 }
 
@@ -203,4 +175,102 @@ void PPU::vramIncrease(CPU* cpu) {
 		vramAddress++;
 	}
 	vramAddress &= 0x3FFF;
+}
+
+void PPU::renderFrame(CPU* cpu) {
+	/*int videoX = 0;
+	int videoY = 0;
+
+	for (int address = 0; address < NAMETABLE_SIZE - 64; address++)
+	{
+		uint8_t spriteIndex = this->memory[address + NAMETABLE1_ADDRESS];
+		renderSprite(spriteIndex, &videoX, &videoY);
+	}*/
+	update(this->video, (sizeof(this->video[0]) * VIDEO_WIDTH));
+	cpu->memory[PPUSTATUS] |= 0x80;
+	cpu->nmiInterrupt = true;
+}
+
+void PPU::renderScanline() {
+	for (int videoX = 0; videoX < VIDEO_WIDTH; videoX += 8)
+	{
+		uint8_t spriteIndex = this->memory[NAMETABLE1_ADDRESS + videoX + ((scanlines / 8) * VIDEO_WIDTH)];
+		uint16_t addressSprite = spriteIndex * 16;
+
+		int videoY = scanlines % 8;
+
+		uint8_t firstPlaneByte = this->memory[addressSprite + videoY];
+		uint8_t secondPlaneByte = this->memory[addressSprite + videoY + 8];
+
+		uint8_t byteMask = 0x80;
+		for (int bit = 0; bit < 8; bit++)
+		{
+			uint8_t firstPlaneBit = (firstPlaneByte & byteMask) ? 1 : 0;
+			uint8_t secondPlaneBit = (secondPlaneByte & byteMask) ? 1 : 0;
+
+			uint8_t pixelBits = (secondPlaneBit << 1) | firstPlaneBit;
+			uint8_t pixelValue = this->memory[PALETTES_ADDRESS + pixelBits];
+
+			// Here "bit" works as an X offset and "byte" works as a Y offset for the sprite coordinates
+			video[videoX + bit + (scanlines * VIDEO_WIDTH)] = colorsMapTable[pixelValue];
+
+			byteMask >>= 1;
+		}
+
+	}
+	scanlines++;
+}
+
+void PPU::renderSprite(int spriteIndex, int* videoX, int* videoY) {
+	uint16_t addressSprite = spriteIndex * 16;
+	for (int byte = 0; byte < 8; byte++)
+	{
+		uint8_t firstPlaneByte = this->memory[addressSprite + byte];
+		uint8_t secondPlaneByte = this->memory[addressSprite + byte + 8];
+
+		uint8_t byteMask = 0x80;
+		for (int bit = 0; bit < 8; bit++)
+		{
+			uint8_t firstPlaneBit = (firstPlaneByte & byteMask) ? 1 : 0;
+			uint8_t secondPlaneBit = (secondPlaneByte & byteMask) ? 1 : 0;
+
+			uint8_t pixelBits = (secondPlaneBit << 1) | firstPlaneBit;
+			uint8_t pixelValue = this->memory[PALETTES_ADDRESS + pixelBits];
+
+			// Here "bit" works as an X offset and "byte" works as a Y offset for the sprite coordinates
+			video[*videoX + bit + ((*videoY + byte) * VIDEO_WIDTH)] = colorsMapTable[pixelValue];
+
+			byteMask >>= 1;
+		}
+	}
+	*videoX += 8;
+	if (*videoX >= VIDEO_WIDTH)
+	{
+		*videoX = 0;
+		*videoY += 8;
+	}
+}
+
+void PPU::renderSprite(int spriteIndex, int videoX, int videoY) {
+	uint16_t addressSprite = spriteIndex * 16;
+	for (int byte = 0; byte < 8; byte++)
+	{
+		uint8_t firstPlaneByte = this->memory[addressSprite + byte];
+		uint8_t secondPlaneByte = this->memory[addressSprite + byte + 8];
+
+		uint8_t byteMask = 0x80;
+		for (int bit = 0; bit < 8; bit++)
+		{
+			uint8_t firstPlaneBit = (firstPlaneByte & byteMask) ? 1 : 0;
+			uint8_t secondPlaneBit = (secondPlaneByte & byteMask) ? 1 : 0;
+
+			uint8_t pixelBits = (secondPlaneBit << 1) | firstPlaneBit;
+			uint8_t pixelValue = this->memory[PALETTES_ADDRESS + pixelBits];
+
+			// Here "bit" works as an X offset and "byte" works as a Y offset for the sprite coordinates
+			video[videoX + bit + ((videoY + byte) * VIDEO_WIDTH)] = colorsMapTable[pixelValue];
+
+			byteMask >>= 1;
+		}
+	}
 }
