@@ -28,6 +28,11 @@ public:
 	uint8_t regPpuData;
 	uint8_t regOamDma;
 
+	// Variables controlled by PPUCTRL
+	int baseNametableAddress{};
+	int spritePatternTableAddress{};
+	int backgroundPatternTableAddress{};
+
 	// Address Space
 	uint8_t memory[0x3FFF + 1]{};
 	// OAM Address Space
@@ -63,4 +68,6 @@ private:
 
 	void renderSprite(int spriteIndex, int* videoX, int* videoY);
 	void renderSprite(int spriteIndex, int videoX, int videoY);
+
+	void updatePPUCTRL();
 };

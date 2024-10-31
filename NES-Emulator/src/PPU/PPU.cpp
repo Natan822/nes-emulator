@@ -61,9 +61,8 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 	switch (address)
 	{
 	case PPUCTRL:
-		// Vblank NMI enable
-		cpu->nmiInterrupt = data & 0x80;
 		regPpuCtrl = data;
+		updatePPUCTRL();
 		break;
 
 	case PPUMASK:
@@ -198,17 +197,19 @@ void PPU::renderFrame(CPU* cpu) {
 	update(this->video, (sizeof(this->video[0]) * VIDEO_WIDTH));
 	cpu->memory[PPUSTATUS] |= 0x80;
 	regPpuStatus |= 0x80;
-	cpu->nmiInterrupt = true;
+
+	if (regPpuCtrl & 0x80)
+	{
+		cpu->nmiInterrupt = true;
+	}
 }
 
 void PPU::renderScanline() {
 	int nametableIndex = 0;
 	for (int videoX = 0; videoX < VIDEO_WIDTH; videoX += 8)
 	{
-		int NAMETABLE_ADDRESS;
-
-		uint8_t spriteIndex = this->memory[NAMETABLE1_ADDRESS + nametableIndex + ((scanlines / 8) * VIDEO_WIDTH/8)];
-		uint16_t addressSprite = spriteIndex * 16;
+		uint8_t spriteIndex = this->memory[baseNametableAddress + nametableIndex + ((scanlines / 8) * VIDEO_WIDTH/8)];
+		uint16_t addressSprite = (spriteIndex * 16) + backgroundPatternTableAddress;
 
 		int videoY = scanlines % 8;
 
@@ -286,4 +287,28 @@ void PPU::renderSprite(int spriteIndex, int videoX, int videoY) {
 			byteMask >>= 1;
 		}
 	}
+}
+
+void PPU::updatePPUCTRL() {
+	// Check base nametable address
+	switch (regPpuCtrl & 0x3)
+	{
+	case 0:
+		baseNametableAddress = NAMETABLE1_ADDRESS;
+		break;
+	case 1:
+		baseNametableAddress = NAMETABLE2_ADDRESS;
+		break;
+	case 2:
+		baseNametableAddress = NAMETABLE3_ADDRESS;
+		break;
+	case 3:
+		baseNametableAddress = NAMETABLE4_ADDRESS;
+		break;
+	}
+
+	// Check sprite pattern table address
+	spritePatternTableAddress = regPpuCtrl & 0x8 ? 0x1000 : 0;
+	// Check background pattern table address
+	backgroundPatternTableAddress = regPpuCtrl & 0x10 ? 0x1000 : 0;
 }
