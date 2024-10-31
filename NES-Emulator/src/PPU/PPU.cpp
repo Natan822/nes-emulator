@@ -63,15 +63,19 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 	case PPUCTRL:
 		// Vblank NMI enable
 		cpu->nmiInterrupt = data & 0x80;
+		regPpuCtrl = data;
 		break;
 
 	case PPUMASK:
+		regPpuMask = data;
 		break;
 
 	case PPUSTATUS:
+		regPpuStatus = data;
 		break;
 
 	case OAMADDR:
+		regOamAddr = data;
 		break;
 
 	case OAMDATA:
@@ -79,9 +83,11 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 		this->oam[cpu->memory[OAMADDR]] = data;
 		// Increment OAMADDR
 		cpu->memory[OAMADDR]++;
+		regOamAddr++;
 		break;
 
 	case PPUSCROLL:
+		regPpuScroll = data;
 		break;
 
 	case PPUADDR:
@@ -94,11 +100,13 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 			vramAddress = (vramAddress & 0xFF00) | data;
 		}
 		isHighByte = !isHighByte;
+		regPpuAddr = data;
 		break;
 
 	case PPUDATA:
 		this->memory[vramAddress] = data;
 		vramIncrease(cpu);
+		regPpuData = data;
 		break;
 
 	case OAMDMA:
@@ -110,6 +118,7 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 			this->oam[byteIndex] = cpu->memory[sourceAddress + byteIndex];
 		}
 		cpu->cycles += 513;
+		regOamDma = data;
 		break;
 	}
 	default:
@@ -188,6 +197,7 @@ void PPU::renderFrame(CPU* cpu) {
 	}*/
 	update(this->video, (sizeof(this->video[0]) * VIDEO_WIDTH));
 	cpu->memory[PPUSTATUS] |= 0x80;
+	regPpuStatus |= 0x80;
 	cpu->nmiInterrupt = true;
 }
 
@@ -195,6 +205,8 @@ void PPU::renderScanline() {
 	int nametableIndex = 0;
 	for (int videoX = 0; videoX < VIDEO_WIDTH; videoX += 8)
 	{
+		int NAMETABLE_ADDRESS;
+
 		uint8_t spriteIndex = this->memory[NAMETABLE1_ADDRESS + nametableIndex + ((scanlines / 8) * VIDEO_WIDTH/8)];
 		uint16_t addressSprite = spriteIndex * 16;
 

@@ -16,6 +16,18 @@ class CPU;
 
 class PPU {
 public:
+
+	// Registers
+	uint8_t regPpuCtrl;
+	uint8_t regPpuMask;
+	uint8_t regPpuStatus;
+	uint8_t regOamAddr;
+	uint8_t regOamData;
+	uint8_t regPpuScroll;
+	uint8_t regPpuAddr;
+	uint8_t regPpuData;
+	uint8_t regOamDma;
+
 	// Address Space
 	uint8_t memory[0x3FFF + 1]{};
 	// OAM Address Space
