@@ -223,6 +223,13 @@ void CPU::loadROM(std::string filePath) {
 }
 
 void CPU::cycle() {
+	int oldCycles = cycles;
+	execute();
+	ppu.cycles += (cycles - oldCycles) * 3;
+	if (ppu.cycles > 341)
+	{
+		ppu.cycles %= 341;
+	}
 	if (irqInterrupt && !getFlag('I'))
 	{
 		handleInterrupt('I');
@@ -235,17 +242,10 @@ void CPU::cycle() {
 		nmiInterrupt = false;
 		cycles += 7;
 	}
-	int oldCycles = cycles;
-	execute();
-	ppu.cycles += (cycles - oldCycles) * 3;
-	if (ppu.cycles > 341)
-	{
-		ppu.cycles %= 341;
-	}
 }
 
 void CPU::execute() {
-	printInfo();
+	//printInfo();
 
 	// Every instruction takes at least 2 cycles
 	cycles += 2;

@@ -134,7 +134,7 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
 		// Clear vblank_flag on read
 		cpu->memory[address] &= ~0x80;
 
-		isHighByte = false;
+		isHighByte = true;
 		break;
 
 	case OAMADDR:
@@ -192,9 +192,10 @@ void PPU::renderFrame(CPU* cpu) {
 }
 
 void PPU::renderScanline() {
+	int nametableIndex = 0;
 	for (int videoX = 0; videoX < VIDEO_WIDTH; videoX += 8)
 	{
-		uint8_t spriteIndex = this->memory[NAMETABLE1_ADDRESS + videoX + ((scanlines / 8) * VIDEO_WIDTH)];
+		uint8_t spriteIndex = this->memory[NAMETABLE1_ADDRESS + nametableIndex + ((scanlines / 8) * VIDEO_WIDTH/8)];
 		uint16_t addressSprite = spriteIndex * 16;
 
 		int videoY = scanlines % 8;
@@ -216,7 +217,7 @@ void PPU::renderScanline() {
 
 			byteMask >>= 1;
 		}
-
+		nametableIndex++;
 	}
 	scanlines++;
 }
