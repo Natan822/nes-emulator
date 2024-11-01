@@ -216,7 +216,7 @@ void PPU::renderScanline() {
 		uint8_t firstPlaneByte = this->memory[addressSprite + videoY];
 		uint8_t secondPlaneByte = this->memory[addressSprite + videoY + 8];
 
-		uint8_t palleteByte = 
+		uint8_t paletteByte = 
 			this->memory[(baseNametableAddress + ATTRIBUTE_TABLE_OFFSET) + (videoX / 32) + ((scanlines / 32) * 8)];
 
 		int xQuadrant = videoX % 32;
@@ -229,12 +229,12 @@ void PPU::renderScanline() {
 			// Top left pixel
 			if (yQuadrant < 16)
 			{
-				paletteIndex = (palleteByte) & 0x3;
+				paletteIndex = (paletteByte) & 0x3;
 			}
 			// Bottom left pixel
 			else
 			{
-				paletteIndex = (palleteByte >> 4) & 0x3;
+				paletteIndex = (paletteByte >> 4) & 0x3;
 			}
 		}
 		else
@@ -242,12 +242,12 @@ void PPU::renderScanline() {
 			// Top right pixel
 			if (yQuadrant < 16)
 			{
-				paletteIndex = (palleteByte >> 2) & 0x3;
+				paletteIndex = (paletteByte >> 2) & 0x3;
 			}
 			// Bottom right pixel
 			else
 			{
-				paletteIndex = (palleteByte >> 6) & 0x3;
+				paletteIndex = (paletteByte >> 6) & 0x3;
 			}
 		}
 		if (paletteIndex != 0)
