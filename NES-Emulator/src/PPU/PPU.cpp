@@ -141,7 +141,7 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
 	case PPUSTATUS:
 		// Clear vblank_flag on read
 		cpu->memory[address] &= ~0x80;
-
+		regPpuStatus &= ~0x80;
 		isHighByte = true;
 		break;
 
@@ -216,6 +216,44 @@ void PPU::renderScanline() {
 		uint8_t firstPlaneByte = this->memory[addressSprite + videoY];
 		uint8_t secondPlaneByte = this->memory[addressSprite + videoY + 8];
 
+		uint8_t palleteByte = 
+			this->memory[(baseNametableAddress + ATTRIBUTE_TABLE_OFFSET) + (videoX / 32) + ((scanlines / 32) * 32)];
+
+		int xQuadrant = videoX % 32;
+		int yQuadrant = scanlines % 32;
+
+		uint8_t paletteIndex = 0;
+
+		if (xQuadrant < 16)
+		{
+			// Top left pixel
+			if (yQuadrant < 16)
+			{
+				paletteIndex = (palleteByte) & 0x3;
+			}
+			// Bottom left pixel
+			else
+			{
+				paletteIndex = (palleteByte >> 4) & 0x3;
+			}
+		}
+		else
+		{
+			// Top right pixel
+			if (yQuadrant < 16)
+			{
+				paletteIndex = (palleteByte >> 2) & 0x3;
+			}
+			// Bottom right pixel
+			else
+			{
+				paletteIndex = (palleteByte >> 6) & 0x3;
+			}
+		}
+		if (paletteIndex != 0)
+		{
+			int a = 2;
+		}
 		uint8_t byteMask = 0x80;
 		for (int bit = 0; bit < 8; bit++)
 		{
@@ -223,9 +261,9 @@ void PPU::renderScanline() {
 			uint8_t secondPlaneBit = (secondPlaneByte & byteMask) ? 1 : 0;
 
 			uint8_t pixelBits = (secondPlaneBit << 1) | firstPlaneBit;
-			uint8_t pixelValue = this->memory[PALETTES_ADDRESS + pixelBits];
+			uint8_t pixelValue = this->memory[PALETTES_ADDRESS + pixelBits + (4 * paletteIndex)];
 
-			// Here "bit" works as an X offset and "byte" works as a Y offset for the sprite coordinates
+			// Here "bit" works as an X offset and "scanlines" works as a Y offset for the sprite coordinates
 			video[videoX + bit + (scanlines * VIDEO_WIDTH)] = colorsMapTable[pixelValue];
 
 			byteMask >>= 1;
