@@ -11,6 +11,7 @@ const int NAMETABLE2_ADDRESS = 0x2400;
 const int NAMETABLE3_ADDRESS = 0x2800;
 const int NAMETABLE4_ADDRESS = 0x2C00;
 const int NAMETABLE_SIZE = 0x400;
+const int ATTRIBUTE_TABLE_OFFSET = 960;
 
 class CPU;
 
@@ -18,15 +19,15 @@ class PPU {
 public:
 
 	// Registers
-	uint8_t regPpuCtrl;
-	uint8_t regPpuMask;
-	uint8_t regPpuStatus;
-	uint8_t regOamAddr;
-	uint8_t regOamData;
-	uint8_t regPpuScroll;
-	uint8_t regPpuAddr;
-	uint8_t regPpuData;
-	uint8_t regOamDma;
+	uint8_t regPpuCtrl{};
+	uint8_t regPpuMask{};
+	uint8_t regPpuStatus{};
+	uint8_t regOamAddr{};
+	uint8_t regOamData{};
+	uint8_t regPpuScroll{};
+	uint8_t regPpuAddr{};
+	uint8_t regPpuData{};
+	uint8_t regOamDma{};
 
 	// Variables controlled by PPUCTRL
 	int baseNametableAddress{};
