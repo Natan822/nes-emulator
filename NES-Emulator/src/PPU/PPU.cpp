@@ -217,7 +217,7 @@ void PPU::renderScanline() {
 		uint8_t secondPlaneByte = this->memory[addressSprite + videoY + 8];
 
 		uint8_t palleteByte = 
-			this->memory[(baseNametableAddress + ATTRIBUTE_TABLE_OFFSET) + (videoX / 32) + ((scanlines / 32) * 32)];
+			this->memory[(baseNametableAddress + ATTRIBUTE_TABLE_OFFSET) + (videoX / 32) + ((scanlines / 32) * 8)];
 
 		int xQuadrant = videoX % 32;
 		int yQuadrant = scanlines % 32;
