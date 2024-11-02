@@ -34,6 +34,12 @@ public:
 	int spritePatternTableAddress{};
 	int backgroundPatternTableAddress{};
 
+	// Variables controlled by PPUMASK
+	bool isGrayscale{};
+	bool isRedEmphasized{};
+	bool isGreenEmphasized{};
+	bool isBlueEmphasized{};
+
 	// Address Space
 	uint8_t memory[0x3FFF + 1]{};
 	// OAM Address Space
@@ -71,4 +77,12 @@ private:
 	void renderSprite(int spriteIndex, int videoX, int videoY);
 
 	void updatePPUCTRL();
+	void updatePPUMASK();
+
+	uint8_t getPaletteIndex(int xQuadrant, int yQuadrant, uint8_t paletteByte);
+	int getPixelColor(int pixelValue);
+
+	int emphasizeRed(int color);
+	int emphasizeGreen(int color);
+	int emphasizeBlue(int color);
 };

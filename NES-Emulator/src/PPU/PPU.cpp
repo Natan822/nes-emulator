@@ -67,6 +67,7 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 
 	case PPUMASK:
 		regPpuMask = data;
+		updatePPUMASK();
 		break;
 
 	case PPUSTATUS:
@@ -222,38 +223,8 @@ void PPU::renderScanline() {
 		int xQuadrant = videoX % 32;
 		int yQuadrant = scanlines % 32;
 
-		uint8_t paletteIndex = 0;
-
-		if (xQuadrant < 16)
-		{
-			// Top left pixel
-			if (yQuadrant < 16)
-			{
-				paletteIndex = (paletteByte) & 0x3;
-			}
-			// Bottom left pixel
-			else
-			{
-				paletteIndex = (paletteByte >> 4) & 0x3;
-			}
-		}
-		else
-		{
-			// Top right pixel
-			if (yQuadrant < 16)
-			{
-				paletteIndex = (paletteByte >> 2) & 0x3;
-			}
-			// Bottom right pixel
-			else
-			{
-				paletteIndex = (paletteByte >> 6) & 0x3;
-			}
-		}
-		if (paletteIndex != 0)
-		{
-			int a = 2;
-		}
+		uint8_t paletteIndex = getPaletteIndex(xQuadrant, yQuadrant, paletteByte);
+		
 		uint8_t byteMask = 0x80;
 		for (int bit = 0; bit < 8; bit++)
 		{
@@ -263,8 +234,10 @@ void PPU::renderScanline() {
 			uint8_t pixelBits = (secondPlaneBit << 1) | firstPlaneBit;
 			uint8_t pixelValue = this->memory[PALETTES_ADDRESS + pixelBits + (4 * paletteIndex)];
 
+			int pixelColor = getPixelColor(pixelValue);
+
 			// Here "bit" works as an X offset and "scanlines" works as a Y offset for the sprite coordinates
-			video[videoX + bit + (scanlines * VIDEO_WIDTH)] = colorsMapTable[pixelValue];
+			video[videoX + bit + (scanlines * VIDEO_WIDTH)] = pixelColor;
 
 			byteMask >>= 1;
 		}
@@ -349,4 +322,100 @@ void PPU::updatePPUCTRL() {
 	spritePatternTableAddress = regPpuCtrl & 0x8 ? 0x1000 : 0;
 	// Check background pattern table address
 	backgroundPatternTableAddress = regPpuCtrl & 0x10 ? 0x1000 : 0;
+}
+
+void PPU::updatePPUMASK() {
+	isGrayscale = regPpuMask & 0x1;
+	isRedEmphasized = regPpuMask & 0x20;
+	isGreenEmphasized = regPpuMask & 0x40;
+	isBlueEmphasized = regPpuMask & 0x80;
+}
+
+uint8_t PPU::getPaletteIndex(int xQuadrant, int yQuadrant, uint8_t paletteByte) {
+	uint8_t paletteIndex = 0;
+
+	if (xQuadrant < 16)
+	{
+		// Top left pixel
+		if (yQuadrant < 16)
+		{
+			paletteIndex = (paletteByte) & 0x3;
+		}
+		// Bottom left pixel
+		else
+		{
+			paletteIndex = (paletteByte >> 4) & 0x3;
+		}
+	}
+	else
+	{
+		// Top right pixel
+		if (yQuadrant < 16)
+		{
+			paletteIndex = (paletteByte >> 2) & 0x3;
+		}
+		// Bottom right pixel
+		else
+		{
+			paletteIndex = (paletteByte >> 6) & 0x3;
+		}
+	}
+	return paletteIndex;
+}
+
+int PPU::getPixelColor(int pixelValue) {
+	int pixelColor = 0;
+	if (isGrayscale)
+	{
+		pixelColor = colorsMapTable[pixelValue] & 0x30;
+	}
+	else
+	{
+		pixelColor = colorsMapTable[pixelValue];
+	}
+
+	if (isRedEmphasized)
+	{
+		pixelColor = emphasizeRed(pixelColor);
+	}
+	if (isGreenEmphasized)
+	{
+		pixelColor = emphasizeGreen(pixelColor);
+	}
+	if (isBlueEmphasized)
+	{
+		pixelColor = emphasizeBlue(pixelColor);
+	}
+
+	return pixelColor;
+}
+
+// Dim every color but red by 12.5%
+int PPU::emphasizeRed(int color) {
+	// Dim green
+	color = (color & 0xFF00FF) | ((int)(color * 0.875) & 0x00FF00);
+	// Dim blue
+	color = (color & 0xFFFF00) | ((int)(color * 0.875) & 0x0000FF);
+
+	return color;
+}
+
+// Dim every color but green by 12.5%
+int PPU::emphasizeGreen(int color) {
+	// Dim red
+	color = (color & 0x00FFFF) | ((int)(color * 0.875) & 0xFF0000);
+	// Dim blue
+	color = (color & 0xFFFF00) | ((int)(color * 0.875) & 0x0000FF);
+
+	return color;
+}
+
+// Dim every color but blue by 12.5%
+int PPU::emphasizeBlue(int color) {
+	// Dim red
+	color = (color & 0x00FFFF) | ((int)(color * 0.875) & 0xFF0000);
+	// Dim green
+	color = (color & 0xFF00FF) | ((int)(color * 0.875) & 0x00FF00);
+
+	return color;
 }
