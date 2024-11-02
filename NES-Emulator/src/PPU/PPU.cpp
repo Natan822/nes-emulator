@@ -187,14 +187,6 @@ void PPU::vramIncrease(CPU* cpu) {
 }
 
 void PPU::renderFrame(CPU* cpu) {
-	/*int videoX = 0;
-	int videoY = 0;
-
-	for (int address = 0; address < NAMETABLE_SIZE - 64; address++)
-	{
-		uint8_t spriteIndex = this->memory[address + NAMETABLE1_ADDRESS];
-		renderSprite(spriteIndex, &videoX, &videoY);
-	}*/
 	update(this->video, (sizeof(this->video[0]) * VIDEO_WIDTH));
 	cpu->memory[PPUSTATUS] |= 0x80;
 	regPpuStatus |= 0x80;
