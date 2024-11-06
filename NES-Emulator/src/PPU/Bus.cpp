@@ -116,7 +116,7 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
 
 	case PPUDATA:
 	{
-		uint8_t temp = readBuffer;
+		data = readBuffer;
 		if (vramAddress >= PALETTES_ADDRESS)
 		{
 			readBuffer = readPalettes();
@@ -125,7 +125,6 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
 		{
 			readBuffer = this->memory[vramAddress];
 		}
-		data = temp;
 		vramIncrease(cpu);
 		break;
 	}
