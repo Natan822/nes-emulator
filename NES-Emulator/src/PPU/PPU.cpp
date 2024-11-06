@@ -274,11 +274,6 @@ int PPU::emphasizeBlue(int color) {
 }
 
 int PPU::getNametableAddress() {
-	if (!fineY)
-	{
-		return baseNametableAddress;
-	}
-
 	if (fineY + scanlines >= 240)
 	{
 		return mirrorNametableAddress;
