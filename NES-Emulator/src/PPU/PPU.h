@@ -29,6 +29,17 @@ public:
 	uint8_t regPpuData{};
 	uint8_t regOamDma{};
 
+	// Mirroring type
+	enum Mirroring {
+		HORIZONTAL,
+		VERTICAL
+	};
+	Mirroring mirrorType{};
+	int mirrorNametableAddress{};
+
+	int fineY{};
+	int coarseY{};
+
 	// Variables controlled by PPUCTRL
 	int baseNametableAddress{};
 	int spritePatternTableAddress{};
@@ -66,6 +77,7 @@ public:
 	
 	uint8_t writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu);
 	uint8_t readMemoryPpu(uint16_t address, CPU* cpu);
+	uint8_t readBuffer{};
 
 	void renderFrame(CPU* cpu);
 	void renderScanline();
@@ -78,6 +90,7 @@ private:
 
 	void updatePPUCTRL();
 	void updatePPUMASK();
+	void updatePPUSCROLL();
 
 	uint8_t getPaletteIndex(int xQuadrant, int yQuadrant, uint8_t paletteByte);
 	int getPixelColor(int pixelValue);
@@ -85,4 +98,12 @@ private:
 	int emphasizeRed(int color);
 	int emphasizeGreen(int color);
 	int emphasizeBlue(int color);
+
+	int getNametableAddress();
+
+	void setPixel(int x, int y, int colorPixel);
+
+	void mirrorPalettes();
+	void writePalettes(uint8_t data);
+	uint8_t readPalettes();
 };

@@ -138,6 +138,7 @@
     <ClCompile Include="src\CPU\Instructions.cpp" />
     <ClCompile Include="src\Graphics\Graphics.cpp" />
     <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\PPU\Bus.cpp" />
     <ClCompile Include="src\PPU\PPU.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -29,6 +29,8 @@ void PPU::loadROM(std::string filePath) {
 	file.read(buffer, size);
 	file.close();
 
+	mirrorType = buffer[6] & 0x1 ? HORIZONTAL : VERTICAL;
+
 	prgSize = static_cast<int>(static_cast<unsigned char>(buffer[4]));
 
 	// Starts at 16 because the header bytes occupy the first 16 bytes
@@ -39,12 +41,12 @@ void PPU::loadROM(std::string filePath) {
 
 	delete[] buffer;
 
-	// Temporary default palette table
-	this->memory[PALETTES_ADDRESS] = 0x0E;
-	for (int i = 1; i < 4; i++)
-	{
-		this->memory[PALETTES_ADDRESS + i] = 0x15 + i;
-	}
+	//// Temporary default palette table
+	//this->memory[PALETTES_ADDRESS] = 0x0E;
+	//for (int i = 1; i < 4; i++)
+	//{
+	//	this->memory[PALETTES_ADDRESS + i] = 0x15 + i;
+	//}
 }
 
 void PPU::loadPatternTable() {
@@ -55,135 +57,6 @@ void PPU::loadPatternTable() {
 	{
 		renderSprite(spriteIndex, &videoX, &videoY);
 	}
-}
-
-uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
-	switch (address)
-	{
-	case PPUCTRL:
-		regPpuCtrl = data;
-		updatePPUCTRL();
-		break;
-
-	case PPUMASK:
-		regPpuMask = data;
-		updatePPUMASK();
-		break;
-
-	case PPUSTATUS:
-		regPpuStatus = data;
-		break;
-
-	case OAMADDR:
-		regOamAddr = data;
-		break;
-
-	case OAMDATA:
-		// Write to OAM
-		this->oam[cpu->memory[OAMADDR]] = data;
-		// Increment OAMADDR
-		cpu->memory[OAMADDR]++;
-		regOamAddr++;
-		break;
-
-	case PPUSCROLL:
-		regPpuScroll = data;
-		break;
-
-	case PPUADDR:
-		if (isHighByte)
-		{
-			vramAddress = (vramAddress & 0xFF) | (data << 8);
-		}
-		else
-		{
-			vramAddress = (vramAddress & 0xFF00) | data;
-		}
-		isHighByte = !isHighByte;
-		regPpuAddr = data;
-		break;
-
-	case PPUDATA:
-		this->memory[vramAddress] = data;
-		vramIncrease(cpu);
-		regPpuData = data;
-		break;
-
-	case OAMDMA:
-	{
-		uint16_t sourceAddress = data << 8;
-		// Copies from source address to OAM
-		for (int byteIndex = 0; byteIndex < 256; byteIndex++)
-		{
-			this->oam[byteIndex] = cpu->memory[sourceAddress + byteIndex];
-		}
-		cpu->cycles += 513;
-		regOamDma = data;
-		break;
-	}
-	default:
-		break;
-	}
-
-	cpu->memory[address] = data;
-	return data;
-}
-
-uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
-	uint8_t data = cpu->memory[address];
-	switch (address)
-	{
-	case PPUCTRL:
-		break;
-
-	case PPUMASK:
-		break;
-
-	case PPUSTATUS:
-		// Clear vblank_flag on read
-		cpu->memory[address] &= ~0x80;
-		regPpuStatus &= ~0x80;
-		isHighByte = true;
-		break;
-
-	case OAMADDR:
-		break;
-
-	case OAMDATA:
-		break;
-
-	case PPUSCROLL:
-		break;
-
-	case PPUADDR:
-		break;
-
-	case PPUDATA:
-		data = this->memory[vramAddress];
-		vramIncrease(cpu);
-		break;
-
-	case OAMDMA:
-		break;
-
-	default:
-		break;
-	}
-
-	return data;
-}
-
-void PPU::vramIncrease(CPU* cpu) {
-	// Check VRAM address increment mode
-	if (cpu->memory[PPUCTRL] & 0x4)
-	{
-		vramAddress += 32;
-	}
-	else
-	{
-		vramAddress++;
-	}
-	vramAddress &= 0x3FFF;
 }
 
 void PPU::renderFrame(CPU* cpu) {
@@ -199,10 +72,23 @@ void PPU::renderFrame(CPU* cpu) {
 
 void PPU::renderScanline() {
 	int nametableIndex = 0;
+	int nametableAddress = getNametableAddress();
+
+	int scanlinesFineY = scanlines + fineY;
 	for (int videoX = 0; videoX < VIDEO_WIDTH; videoX += 8)
 	{
-		uint8_t spriteIndex = this->memory[baseNametableAddress + nametableIndex + ((scanlines / 8) * VIDEO_WIDTH/8)];
-		uint16_t addressSprite = (spriteIndex * 16) + backgroundPatternTableAddress;
+		uint8_t tileIndex;
+		if (nametableAddress == mirrorNametableAddress)
+		{
+			tileIndex = 
+				this->memory[nametableAddress + nametableIndex + (((scanlines + fineY - 240) / 8) * VIDEO_WIDTH / 8)];
+		}
+		else 
+		{
+			tileIndex = 
+				this->memory[nametableAddress + nametableIndex + ((scanlinesFineY / 8) * VIDEO_WIDTH / 8)];
+		}
+		uint16_t addressSprite = (tileIndex * 16) + backgroundPatternTableAddress;
 
 		int videoY = scanlines % 8;
 
@@ -210,7 +96,7 @@ void PPU::renderScanline() {
 		uint8_t secondPlaneByte = this->memory[addressSprite + videoY + 8];
 
 		uint8_t paletteByte = 
-			this->memory[(baseNametableAddress + ATTRIBUTE_TABLE_OFFSET) + (videoX / 32) + ((scanlines / 32) * 8)];
+			this->memory[(nametableAddress + ATTRIBUTE_TABLE_OFFSET) + (videoX / 32) + ((scanlinesFineY / 32) * 8)];
 
 		int xQuadrant = videoX % 32;
 		int yQuadrant = scanlines % 32;
@@ -224,18 +110,24 @@ void PPU::renderScanline() {
 			uint8_t secondPlaneBit = (secondPlaneByte & byteMask) ? 1 : 0;
 
 			uint8_t pixelBits = (secondPlaneBit << 1) | firstPlaneBit;
+
 			uint8_t pixelValue = this->memory[PALETTES_ADDRESS + pixelBits + (4 * paletteIndex)];
-
+			if (pixelBits == 0)
+			{
+				pixelValue = this->memory[PALETTES_ADDRESS];
+			}
 			int pixelColor = getPixelColor(pixelValue);
-
-			// Here "bit" works as an X offset and "scanlines" works as a Y offset for the sprite coordinates
-			video[videoX + bit + (scanlines * VIDEO_WIDTH)] = pixelColor;
+			setPixel(videoX + bit, scanlines, pixelColor);
 
 			byteMask >>= 1;
 		}
 		nametableIndex++;
 	}
 	scanlines++;
+}
+
+void PPU::setPixel(int x, int y, int pixelColor) {
+	video[x + (y * VIDEO_WIDTH)] = pixelColor;
 }
 
 void PPU::renderSprite(int spriteIndex, int* videoX, int* videoY) {
@@ -290,37 +182,6 @@ void PPU::renderSprite(int spriteIndex, int videoX, int videoY) {
 			byteMask >>= 1;
 		}
 	}
-}
-
-void PPU::updatePPUCTRL() {
-	// Check base nametable address
-	switch (regPpuCtrl & 0x3)
-	{
-	case 0:
-		baseNametableAddress = NAMETABLE1_ADDRESS;
-		break;
-	case 1:
-		baseNametableAddress = NAMETABLE2_ADDRESS;
-		break;
-	case 2:
-		baseNametableAddress = NAMETABLE3_ADDRESS;
-		break;
-	case 3:
-		baseNametableAddress = NAMETABLE4_ADDRESS;
-		break;
-	}
-
-	// Check sprite pattern table address
-	spritePatternTableAddress = regPpuCtrl & 0x8 ? 0x1000 : 0;
-	// Check background pattern table address
-	backgroundPatternTableAddress = regPpuCtrl & 0x10 ? 0x1000 : 0;
-}
-
-void PPU::updatePPUMASK() {
-	isGrayscale = regPpuMask & 0x1;
-	isRedEmphasized = regPpuMask & 0x20;
-	isGreenEmphasized = regPpuMask & 0x40;
-	isBlueEmphasized = regPpuMask & 0x80;
 }
 
 uint8_t PPU::getPaletteIndex(int xQuadrant, int yQuadrant, uint8_t paletteByte) {
@@ -410,4 +271,17 @@ int PPU::emphasizeBlue(int color) {
 	color = (color & 0xFF00FF) | ((int)(color * 0.875) & 0x00FF00);
 
 	return color;
+}
+
+int PPU::getNametableAddress() {
+	if (!fineY)
+	{
+		return baseNametableAddress;
+	}
+
+	if (fineY + scanlines >= 240)
+	{
+		return mirrorNametableAddress;
+	}
+	return baseNametableAddress;
 }
