@@ -53,10 +53,6 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 		break;
 
 	case PPUDATA:
-		if (vramAddress == 0x20c5)
-		{
-			int a = 2;
-		}
 		if (vramAddress >= PALETTES_ADDRESS)
 		{
 			writePalettes(data);
@@ -238,9 +234,11 @@ void PPU::writePalettes(uint8_t data) {
 	if (vramAddress <= 0x3F1F)
 	{
 		// Backdrop color
-		if ((vramAddress & 0xFF) % 4 == 0)
+		if ((vramAddress & 0xF) % 4 == 0)
 		{
-			this->memory[PALETTES_ADDRESS] = data;
+			uint8_t lastDigit = vramAddress & 0xF;
+			this->memory[0x3F00 | lastDigit] = data;
+			this->memory[0x3F10 | lastDigit] = data;
 		}
 		else
 		{
