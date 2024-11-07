@@ -81,7 +81,7 @@ void PPU::renderScanline() {
 		if (nametableAddress == mirrorNametableAddress)
 		{
 			tileIndex = 
-				this->memory[nametableAddress + nametableIndex + (((scanlines + fineY - 240) / 8) * VIDEO_WIDTH / 8)];
+				this->memory[nametableAddress + nametableIndex + (((scanlinesFineY - 240) / 8) * VIDEO_WIDTH / 8)];
 		}
 		else 
 		{
@@ -95,9 +95,17 @@ void PPU::renderScanline() {
 		uint8_t firstPlaneByte = this->memory[addressSprite + videoY];
 		uint8_t secondPlaneByte = this->memory[addressSprite + videoY + 8];
 
-		uint8_t paletteByte = 
-			this->memory[(nametableAddress + ATTRIBUTE_TABLE_OFFSET) + (videoX / 32) + ((scanlinesFineY / 32) * 8)];
-
+		uint8_t paletteByte;
+		if (nametableAddress == mirrorNametableAddress)
+		{
+			paletteByte =
+				this->memory[(nametableAddress + ATTRIBUTE_TABLE_OFFSET) + (videoX / 32) + (((scanlinesFineY - 240) / 32) * 8)];
+		}
+		else
+		{
+			paletteByte =
+				this->memory[(nametableAddress + ATTRIBUTE_TABLE_OFFSET) + (videoX / 32) + ((scanlinesFineY / 32) * 8)];
+		}
 		int xQuadrant = videoX % 32;
 		int yQuadrant = scanlines % 32;
 

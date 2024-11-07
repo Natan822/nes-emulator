@@ -189,14 +189,16 @@ void PPU::updatePPUSCROLL() {
 	// First write
 	if (isHighByte)
 	{
-		coarseY = (coarseY & 0x7) | ((regPpuScroll & 0x3) << 2);
+		/* TODO:
+		   - coarseX and fineX
+		*/
 	}
 	// Second write
 	else
 	{
-		coarseY = (coarseY & 18) | ((regPpuScroll & 0xE0) >> 5);
+		coarseY = (regPpuScroll & 0xF8) >> 3;
+		fineY = (regPpuScroll & 0x7) + (coarseY * 8);
 	}
-	fineY = ((regPpuScroll & 0x70) >> 4) + (coarseY * 8);
 	isHighByte = !isHighByte;
 }
 
