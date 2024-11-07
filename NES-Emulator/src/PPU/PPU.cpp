@@ -107,7 +107,15 @@ void PPU::renderScanline() {
 				this->memory[(nametableAddress + ATTRIBUTE_TABLE_OFFSET) + (videoX / 32) + ((scanlinesFineY / 32) * 8)];
 		}
 		int xQuadrant = videoX % 32;
-		int yQuadrant = scanlines % 32;
+		int yQuadrant;
+		if (nametableAddress == mirrorNametableAddress)
+		{
+			yQuadrant = (scanlinesFineY - 240) % 32;
+		}
+		else
+		{
+			yQuadrant = scanlinesFineY % 32;
+		}
 
 		uint8_t paletteIndex = getPaletteIndex(xQuadrant, yQuadrant, paletteByte);
 		
@@ -125,6 +133,10 @@ void PPU::renderScanline() {
 				pixelValue = this->memory[PALETTES_ADDRESS];
 			}
 			int pixelColor = getPixelColor(pixelValue);
+			if (scanlines == 225 && fineY != 0 && pixelValue != 0x0f)
+			{
+				int a = 2;
+			}
 			setPixel(videoX + bit, scanlines, pixelColor);
 
 			byteMask >>= 1;
