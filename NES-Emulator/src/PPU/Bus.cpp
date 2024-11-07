@@ -232,10 +232,10 @@ void PPU::mirrorPalettes() {
 void PPU::writePalettes(uint8_t data) {
 	if (vramAddress <= 0x3F1F)
 	{
+		uint8_t lastDigit = vramAddress & 0xF;
 		// Backdrop color
-		if ((vramAddress & 0xF) % 4 == 0)
+		if (lastDigit % 4 == 0)
 		{
-			uint8_t lastDigit = vramAddress & 0xF;
 			this->memory[0x3F00 | lastDigit] = data;
 			this->memory[0x3F10 | lastDigit] = data;
 		}
