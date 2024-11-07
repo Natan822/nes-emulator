@@ -224,7 +224,7 @@ void PPU::mirrorPalettes() {
 		{
 			paletteIndex = 0;
 		}
-		this->memory[0x320 + i] = this->memory[PALETTES_ADDRESS + paletteIndex];
+		this->memory[0x3F20 + i] = this->memory[PALETTES_ADDRESS + paletteIndex];
 		paletteIndex++;
 	}
 }
