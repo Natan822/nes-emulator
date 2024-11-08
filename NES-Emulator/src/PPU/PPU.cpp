@@ -61,7 +61,7 @@ void PPU::loadPatternTable() {
 
 void PPU::renderFrame(CPU* cpu) {
 	renderOAM();
-	update(this->video, (sizeof(this->video[0]) * VIDEO_WIDTH));
+	Graphics::update(this->video, (sizeof(this->video[0]) * VIDEO_WIDTH));
 	cpu->memory[PPUSTATUS] |= 0x80;
 	regPpuStatus |= 0x80;
 
@@ -210,7 +210,7 @@ void PPU::renderSprite(int spriteIndex, int* videoX, int* videoY) {
 			uint8_t pixelValue = this->memory[PALETTES_ADDRESS + pixelBits];
 
 			// Here "bit" works as an X offset and "byte" works as a Y offset for the sprite coordinates
-			video[*videoX + bit + ((*videoY + byte) * VIDEO_WIDTH)] = colorsMapTable[pixelValue];
+			video[*videoX + bit + ((*videoY + byte) * VIDEO_WIDTH)] = Graphics::colorsMapTable[pixelValue];
 
 			byteMask >>= 1;
 		}
@@ -272,11 +272,11 @@ int PPU::getPixelColor(int pixelValue) {
 	int pixelColor = 0;
 	if (isGrayscale)
 	{
-		pixelColor = colorsMapTable[pixelValue] & 0x30;
+		pixelColor = Graphics::colorsMapTable[pixelValue] & 0x30;
 	}
 	else
 	{
-		pixelColor = colorsMapTable[pixelValue];
+		pixelColor = Graphics::colorsMapTable[pixelValue];
 	}
 
 	if (isRedEmphasized)
