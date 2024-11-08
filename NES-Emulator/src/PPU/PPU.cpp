@@ -95,15 +95,15 @@ void PPU::renderScanline() {
 		uint8_t firstPlaneByte = this->memory[addressSprite + videoY];
 		uint8_t secondPlaneByte = this->memory[addressSprite + videoY + 8];
 
-		uint8_t paletteByte;
+		uint8_t attributeByte;
 		if (nametableAddress == mirrorNametableAddress)
 		{
-			paletteByte =
+			attributeByte =
 				this->memory[(nametableAddress + ATTRIBUTE_TABLE_OFFSET) + (videoX / 32) + (((scanlinesFineY - 240) / 32) * 8)];
 		}
 		else
 		{
-			paletteByte =
+			attributeByte =
 				this->memory[(nametableAddress + ATTRIBUTE_TABLE_OFFSET) + (videoX / 32) + ((scanlinesFineY / 32) * 8)];
 		}
 		int xQuadrant = videoX % 32;
@@ -117,7 +117,7 @@ void PPU::renderScanline() {
 			yQuadrant = scanlinesFineY % 32;
 		}
 
-		uint8_t paletteIndex = getPaletteIndex(xQuadrant, yQuadrant, paletteByte);
+		uint8_t paletteIndex = getPaletteIndex(xQuadrant, yQuadrant, attributeByte);
 		
 		uint8_t byteMask = 0x80;
 		for (int bit = 0; bit < 8; bit++)
@@ -204,9 +204,9 @@ void PPU::renderSprite(int spriteIndex, int videoX, int videoY) {
 	}
 }
 
-uint8_t PPU::getPaletteIndex(int xQuadrant, int yQuadrant, uint8_t paletteByte) {
+uint8_t PPU::getPaletteIndex(int xQuadrant, int yQuadrant, uint8_t attributeByte) {
 	/*
-	Palette Byte = 76543210
+	Attribute Byte = 76543210
 	 _ _ _ _ _ _
 	|     |     |
 	| 10  | 32  |
@@ -224,12 +224,12 @@ uint8_t PPU::getPaletteIndex(int xQuadrant, int yQuadrant, uint8_t paletteByte) 
 		// Top left pixel
 		if (yQuadrant < 16)
 		{
-			paletteIndex = (paletteByte) & 0x3;
+			paletteIndex = (attributeByte) & 0x3;
 		}
 		// Bottom left pixel
 		else
 		{
-			paletteIndex = (paletteByte >> 4) & 0x3;
+			paletteIndex = (attributeByte >> 4) & 0x3;
 		}
 	}
 	else
@@ -237,12 +237,12 @@ uint8_t PPU::getPaletteIndex(int xQuadrant, int yQuadrant, uint8_t paletteByte) 
 		// Top right pixel
 		if (yQuadrant < 16)
 		{
-			paletteIndex = (paletteByte >> 2) & 0x3;
+			paletteIndex = (attributeByte >> 2) & 0x3;
 		}
 		// Bottom right pixel
 		else
 		{
-			paletteIndex = (paletteByte >> 6) & 0x3;
+			paletteIndex = (attributeByte >> 6) & 0x3;
 		}
 	}
 	return paletteIndex;

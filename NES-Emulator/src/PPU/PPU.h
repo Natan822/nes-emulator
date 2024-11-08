@@ -92,7 +92,7 @@ private:
 	void updatePPUMASK();
 	void updatePPUSCROLL();
 
-	uint8_t getPaletteIndex(int xQuadrant, int yQuadrant, uint8_t paletteByte);
+	uint8_t getPaletteIndex(int xQuadrant, int yQuadrant, uint8_t attributeByte);
 	int getPixelColor(int pixelValue);
 
 	int emphasizeRed(int color);
