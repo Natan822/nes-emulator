@@ -81,12 +81,13 @@ public:
 
 	void renderFrame(CPU* cpu);
 	void renderScanline();
+	void renderOAM();
 private:
 	bool isHighByte{};
 	void vramIncrease(CPU* cpu);
 
 	void renderSprite(int spriteIndex, int* videoX, int* videoY);
-	void renderSprite(int spriteIndex, int videoX, int videoY);
+	void renderSprite(int spriteIndex, int videoX, int videoY, int paletteIndex);
 
 	void updatePPUCTRL();
 	void updatePPUMASK();
