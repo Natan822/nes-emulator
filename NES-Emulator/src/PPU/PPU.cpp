@@ -156,7 +156,9 @@ void PPU::renderOAM() {
 		uint8_t xPosition  = oam[oamByte + 3];
 
 		uint8_t paletteIndex = attributes & 0x3;
-		renderSprite(tileIndex, xPosition, yPosition, paletteIndex);
+		bool hFlip = attributes & 0x40;
+		bool vFlip = attributes & 0x80;
+		renderSprite(tileIndex, xPosition, yPosition, paletteIndex, vFlip, hFlip);
 	}
 }
 
@@ -164,14 +166,14 @@ void PPU::setPixel(int x, int y, int pixelColor) {
 	video[x + (y * VIDEO_WIDTH)] = pixelColor;
 }
 
-void PPU::renderSprite(int spriteIndex, int videoX, int videoY, int paletteIndex) {
+void PPU::renderSprite(int spriteIndex, int videoX, int videoY, int paletteIndex, bool vFlip, bool hFlip) {
 	uint16_t addressSprite = (spriteIndex * 16) + spritePatternTableAddress;
 	for (int byte = 0; byte < 8; byte++)
 	{
 		uint8_t firstPlaneByte = this->memory[addressSprite + byte];
 		uint8_t secondPlaneByte = this->memory[addressSprite + byte + 8];
 
-		uint8_t byteMask = 0x80;
+		uint8_t byteMask = hFlip ? 0x1 : 0x80;
 		for (int bit = 0; bit < 8; bit++)
 		{
 			uint8_t firstPlaneBit = (firstPlaneByte & byteMask) ? 1 : 0;
@@ -186,8 +188,7 @@ void PPU::renderSprite(int spriteIndex, int videoX, int videoY, int paletteIndex
 				// Here "bit" works as an X offset and "byte" works as a Y offset for the sprite coordinates
 				setPixel((videoX + bit), (videoY + byte), pixelColor);
 			}
-
-			byteMask >>= 1;
+			byteMask = hFlip ? byteMask << 1 : byteMask >> 1;
 		}
 	}
 }
