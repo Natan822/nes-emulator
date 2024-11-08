@@ -205,6 +205,18 @@ void PPU::renderSprite(int spriteIndex, int videoX, int videoY) {
 }
 
 uint8_t PPU::getPaletteIndex(int xQuadrant, int yQuadrant, uint8_t paletteByte) {
+	/*
+	Palette Byte = 76543210
+	 _ _ _ _ _ _
+	|     |     |
+	| 10  | 32  |
+	|_ _ _|_ _ _|
+	|     |     |
+	| 54  | 76  |
+	|_ _ _|_ _ _|
+
+	*/
+
 	uint8_t paletteIndex = 0;
 
 	if (xQuadrant < 16)
