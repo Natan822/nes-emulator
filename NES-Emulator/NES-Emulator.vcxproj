@@ -138,12 +138,14 @@
     <ClCompile Include="src\CPU\Instructions.cpp" />
     <ClCompile Include="src\Graphics\Graphics.cpp" />
     <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\NES\NES.cpp" />
     <ClCompile Include="src\PPU\Bus.cpp" />
     <ClCompile Include="src\PPU\PPU.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\CPU\CPU.h" />
     <ClInclude Include="src\Graphics\Graphics.h" />
+    <ClInclude Include="src\NES\NES.h" />
     <ClInclude Include="src\PPU\PPU.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
