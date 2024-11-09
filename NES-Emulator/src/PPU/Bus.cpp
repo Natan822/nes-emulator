@@ -96,6 +96,7 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
 		break;
 
 	case PPUSTATUS:
+		data = regPpuStatus;
 		// Clear vblank_flag on read
 		cpu->memory[address] &= ~0x80;
 		regPpuStatus &= ~0x80;

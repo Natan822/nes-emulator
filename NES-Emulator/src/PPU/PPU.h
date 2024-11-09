@@ -88,6 +88,7 @@ private:
 
 	void renderSprite(int spriteIndex, int* videoX, int* videoY);
 	void renderSprite(int spriteIndex, int videoX, int videoY, int paletteIndex, bool vFlip, bool hFlip);
+	bool renderSpriteHitDetect(int spriteIndex, int videoX, int videoY, int paletteIndex, bool vFlip, bool hFlip);
 
 	void updatePPUCTRL();
 	void updatePPUMASK();
@@ -103,6 +104,7 @@ private:
 	int getNametableAddress();
 
 	void setPixel(int x, int y, int colorPixel);
+	int getPixel(int x, int y);
 
 	void mirrorPalettes();
 	void writePalettes(uint8_t data);

@@ -148,7 +148,7 @@ void PPU::renderScanline() {
 }
 
 void PPU::renderOAM() {
-	for (int oamByte = 252; oamByte >= 0; oamByte -= 4)
+	for (int oamByte = 252; oamByte >= 4; oamByte -= 4)
 	{
 		uint8_t yPosition  = oam[oamByte];
 		uint8_t tileIndex  = oam[oamByte + 1];
@@ -160,10 +160,27 @@ void PPU::renderOAM() {
 		bool vFlip = attributes & 0x80;
 		renderSprite(tileIndex, xPosition, yPosition, paletteIndex, vFlip, hFlip);
 	}
+	// Sprite 0
+	uint8_t yPosition = oam[0];
+	uint8_t tileIndex = oam[1];
+	uint8_t attributes = oam[2];
+	uint8_t xPosition = oam[3];
+
+	uint8_t paletteIndex = attributes & 0x3;
+	bool hFlip = attributes & 0x40;
+	bool vFlip = attributes & 0x80;
+	if (renderSpriteHitDetect(tileIndex, xPosition, yPosition, paletteIndex, vFlip, hFlip)) 
+	{
+		// Set sprite 0 hit flag
+		regPpuStatus |= 0x40;
+	}
 }
 
 void PPU::setPixel(int x, int y, int pixelColor) {
 	video[x + (y * VIDEO_WIDTH)] = pixelColor;
+}
+int PPU::getPixel(int x, int y) {
+	return video[x + (y * VIDEO_WIDTH)];
 }
 
 void PPU::renderSprite(int spriteIndex, int videoX, int videoY, int paletteIndex, bool vFlip, bool hFlip) {
@@ -191,6 +208,44 @@ void PPU::renderSprite(int spriteIndex, int videoX, int videoY, int paletteIndex
 			byteMask = hFlip ? byteMask << 1 : byteMask >> 1;
 		}
 	}
+}
+
+bool PPU::renderSpriteHitDetect(int spriteIndex, int videoX, int videoY, int paletteIndex, bool vFlip, bool hFlip) {
+	bool hitDetected = false;
+
+	uint16_t addressSprite = (spriteIndex * 16) + spritePatternTableAddress;
+	for (int byte = 0; byte < 8; byte++)
+	{
+		uint8_t firstPlaneByte = this->memory[addressSprite + byte];
+		uint8_t secondPlaneByte = this->memory[addressSprite + byte + 8];
+
+		uint8_t byteMask = hFlip ? 0x1 : 0x80;
+		for (int bit = 0; bit < 8; bit++)
+		{
+			uint8_t firstPlaneBit = (firstPlaneByte & byteMask) ? 1 : 0;
+			uint8_t secondPlaneBit = (secondPlaneByte & byteMask) ? 1 : 0;
+
+			uint8_t pixelBits = (secondPlaneBit << 1) | firstPlaneBit;
+			if (pixelBits != 0)
+			{
+				uint8_t pixelValue = this->memory[PALETTES_ADDRESS + pixelBits + (4 * paletteIndex) + 0x10];
+				int pixelColor = getPixelColor(pixelValue);
+				int backgroundPixel = getPixel((videoX + bit), (videoY + byte));
+				for (int backdropColor = 0; backdropColor < 4; backdropColor++)
+				{
+					if (backgroundPixel == getPixelColor(this->memory[PALETTES_ADDRESS + backdropColor]))
+					{
+						hitDetected = true;
+						break;
+					}
+				}
+				// Here "bit" works as an X offset and "byte" works as a Y offset for the sprite coordinates
+				setPixel((videoX + bit), (videoY + byte), pixelColor);
+			}
+			byteMask = hFlip ? byteMask << 1 : byteMask >> 1;
+		}
+	}
+	return hitDetected;
 }
 
 void PPU::renderSprite(int spriteIndex, int* videoX, int* videoY) {
