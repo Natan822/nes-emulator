@@ -10,7 +10,7 @@
 
 NES::NES() : NES(1, 1) {}
 NES::NES(int _windowScale) : NES(_windowScale, 1) {}
-NES::NES(int _windowScale, int speed) 
+NES::NES(int _windowScale, float speed) 
 	:	ppu(new PPU()),
 		controller(new Controller()),
 		cpu(new CPU(*ppu, *controller)),
