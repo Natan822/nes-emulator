@@ -145,28 +145,28 @@ void PPU::updatePPUCTRL() {
 	{
 	case 0:
 		baseNametableAddress = NAMETABLE1_ADDRESS;
-		if (mirrorType == VERTICAL)
+		if (mirrorType == HORIZONTAL)
 		{
 			mirrorNametableAddress = NAMETABLE3_ADDRESS;
 		}
 		break;
 	case 1:
 		baseNametableAddress = NAMETABLE2_ADDRESS;
-		if (mirrorType == VERTICAL)
+		if (mirrorType == HORIZONTAL)
 		{
 			mirrorNametableAddress = NAMETABLE4_ADDRESS;
 		}
 		break;
 	case 2:
 		baseNametableAddress = NAMETABLE3_ADDRESS;
-		if (mirrorType == VERTICAL)
+		if (mirrorType == HORIZONTAL)
 		{
 			mirrorNametableAddress = NAMETABLE1_ADDRESS;
 		}
 		break;
 	case 3:
 		baseNametableAddress = NAMETABLE4_ADDRESS;
-		if (mirrorType == VERTICAL)
+		if (mirrorType == HORIZONTAL)
 		{
 			mirrorNametableAddress = NAMETABLE2_ADDRESS;
 		}

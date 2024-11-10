@@ -29,7 +29,7 @@ void PPU::loadROM(std::string filePath) {
 	file.read(buffer, size);
 	file.close();
 
-	mirrorType = buffer[6] & 0x1 ? HORIZONTAL : VERTICAL;
+	mirrorType = buffer[6] & 0x1 ? VERTICAL : HORIZONTAL;
 
 	prgSize = static_cast<int>(static_cast<unsigned char>(buffer[4]));
 
