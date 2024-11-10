@@ -133,18 +133,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Controller\Controller.cpp" />
     <ClCompile Include="src\CPU\AddressingModes.cpp" />
     <ClCompile Include="src\CPU\CPU.cpp" />
     <ClCompile Include="src\CPU\Instructions.cpp" />
     <ClCompile Include="src\Graphics\Graphics.cpp" />
+    <ClCompile Include="src\Input\Input.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\NES\NES.cpp" />
     <ClCompile Include="src\PPU\Bus.cpp" />
     <ClCompile Include="src\PPU\PPU.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Controller\Controller.h" />
     <ClInclude Include="src\CPU\CPU.h" />
     <ClInclude Include="src\Graphics\Graphics.h" />
+    <ClInclude Include="src\Input\Input.h" />
     <ClInclude Include="src\NES\NES.h" />
     <ClInclude Include="src\PPU\PPU.h" />
   </ItemGroup>

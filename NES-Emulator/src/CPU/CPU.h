@@ -14,6 +14,7 @@
 #define OAMDMA 0x4014
 
 class PPU;
+class Controller;
 
 class CPU {
 
@@ -54,10 +55,12 @@ public:
 	int prgSize{}; // PRG ROM size in 16 KiB units
 	int chrSize{}; // CHR ROM size in 8 KiB units(0 = board uses CHR RAM)
 	
-	CPU(PPU& ppu);
+	CPU(PPU& ppu, Controller& controller);
 	~CPU();
 
 	PPU& ppu;
+	Controller& controller;
+	uint8_t controllerInput{};
 
 	// Table of opcodes
 	OPCODE table[0xFF + 1]{};

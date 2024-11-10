@@ -4,11 +4,13 @@
 
 class CPU;
 class PPU;
+class Controller;
 
 class NES {
 public:
-	PPU *ppu;
-	CPU *cpu;
+	PPU* ppu;
+	Controller* controller;
+	CPU* cpu;
 
 	NES();
 	NES(int _windowScale);

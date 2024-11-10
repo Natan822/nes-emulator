@@ -5,9 +5,10 @@
 #include <iostream>
 
 #include "CPU.h"
+#include "../Controller/Controller.h"
 #include "../PPU/PPU.h"
 
-CPU::CPU(PPU& ppu) : ppu(ppu) {
+CPU::CPU(PPU& ppu, Controller& controller) : ppu(ppu), controller(controller) {
 	sp = STACK_START_ADDRESS & 0xFF;
 
 	for (int i = 0; i < 0xFF + 1; i++)
@@ -319,6 +320,10 @@ uint8_t CPU::writeMemory(uint16_t address, uint8_t data) {
 	{
 		return ppu.writeMemoryPpu(address, data, this);
 	}
+	else if (address == 0x4016)
+	{
+		controllerInput = this->controller.getInput();
+	}
 	memory[address] = data;
 	return data;
 }
@@ -327,6 +332,12 @@ uint8_t CPU::readMemory(uint16_t address) {
 	if ((address >= 0x2000 && address <= 0x2007) || address == 0x4014)
 	{
 		return ppu.readMemoryPpu(address, this);
+	}
+	if (address == 0x4016)
+	{
+		uint8_t data = controllerInput & 0x1;
+		controllerInput >>= 1;
+		return data;
 	}
 	return memory[address];
 }
