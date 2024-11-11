@@ -119,6 +119,7 @@ private:
 	uint16_t indirectYPtr();
 
 	// Instructions
+	void invalid();
 	// ADC
 	void ADC(uint8_t value); // General ADC instruction
 	void OP_69NN(); // Immediate

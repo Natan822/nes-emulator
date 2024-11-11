@@ -1,5 +1,16 @@
 #include <stdint.h>
+#include <iostream>
+#include <sstream>
 #include "CPU.h"
+
+void CPU::invalid() {
+	std::ostringstream errorMessage;
+	errorMessage << 
+		"Invalid or unimplemented OPCODE: 0x" << std::hex << static_cast<int>(this->memory[pc]) << " at PC : 0x"  << this->pc;
+
+	std::cerr << errorMessage.str() << std::endl;
+	throw std::runtime_error(errorMessage.str());
+}
 
 void CPU::ADC(uint8_t value) {
 

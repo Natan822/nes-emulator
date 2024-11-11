@@ -13,7 +13,7 @@ CPU::CPU(PPU& ppu, Controller& controller) : ppu(ppu), controller(controller) {
 
 	for (int i = 0; i < 0xFF + 1; i++)
 	{
-		table[i] = &CPU::OP_EA;
+		table[i] = &CPU::invalid;
 	}
 
 	status = 0x24;
