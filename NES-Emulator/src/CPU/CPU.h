@@ -65,7 +65,7 @@ public:
 	// Table of opcodes
 	OPCODE table[0xFF + 1]{};
 
-	int cycles{};
+	unsigned int cycles{};
 
 	bool irqInterrupt{};
 	bool nmiInterrupt{};

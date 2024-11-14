@@ -227,10 +227,7 @@ void CPU::cycle() {
 	int oldCycles = cycles;
 	execute();
 	ppu.cycles += (cycles - oldCycles) * 3;
-	if (ppu.cycles > 341)
-	{
-		ppu.cycles %= 341;
-	}
+
 	if (irqInterrupt && !getFlag('I'))
 	{
 		handleInterrupt('I');

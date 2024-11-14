@@ -64,7 +64,7 @@ public:
 	// Address set by PPUADDR register
 	uint16_t vramAddress{};
 
-	int cycles{};
+	unsigned int cycles{};
 	int scanlines{};
 
 	void loadROM(std::string filePath);
