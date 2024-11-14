@@ -39,41 +39,52 @@ void NES::start() {
 	Graphics::initialize((VIDEO_WIDTH * windowScale), (VIDEO_HEIGHT * windowScale), VIDEO_WIDTH, VIDEO_HEIGHT);
 
 	int oldCycles = 0;
-	auto lastCycleTime = std::chrono::high_resolution_clock::now();
 	bool quit = false;
+
+	auto lastCycleTime = std::chrono::high_resolution_clock::now();
+	auto currentCycleTime = std::chrono::high_resolution_clock::now();
+	float delta = std::chrono::duration<float, std::chrono::milliseconds::period>(currentCycleTime - lastCycleTime).count();
 	while (!quit)
 	{
-		auto currentCycleTime = std::chrono::high_resolution_clock::now();
-		float delta = std::chrono::duration<float, std::chrono::milliseconds::period>(currentCycleTime - lastCycleTime).count();
-
 		cpu->cycle();
-
-		if ((cpu->cycles - oldCycles) >= 113)
+		if ((ppu->cycles - oldCycles) >= 341)
 		{
 			if (ppu->scanlines < 240)
 			{
-				ppu->renderScanline();
+				if (ppu->enableBackground)
+				{
+					ppu->renderScanline();
+				}
+				else
+				{
+					ppu->scanlines++;
+				}
 			}
 			else
 			{
-				if (ppu->scanlines == 260)
+				if (ppu->scanlines == 240)
+				{
+					do {
+						currentCycleTime = std::chrono::high_resolution_clock::now();
+						delta = std::chrono::duration<float, std::chrono::milliseconds::period>(currentCycleTime -lastCycleTime).count();
+					} while (delta < this->frameDelay);
+					quit = Input::inputProcessing(this->controller);
+					ppu->renderFrame(cpu);
+					lastCycleTime = currentCycleTime;
+					ppu->scanlines++;
+				}
+
+				else if (ppu->scanlines == 261)
 				{
 					ppu->scanlines = 0;
 					cpu->writeMemory(PPUSTATUS, ppu->regPpuStatus & ~0x40);
 				}
-				ppu->scanlines++;
-			}
-
-			if (ppu->scanlines == 240)
-			{
-				if (delta >= this->frameDelay)
+				else
 				{
-					quit = Input::inputProcessing(this->controller);
-					ppu->renderFrame(cpu);
-					lastCycleTime = currentCycleTime;
+					ppu->scanlines++;
 				}
 			}
-			oldCycles = cpu->cycles;
+			oldCycles = ppu->cycles;
 		}
 	}
 	Graphics::shutdown();

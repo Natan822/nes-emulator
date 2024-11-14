@@ -60,7 +60,10 @@ void PPU::loadPatternTable() {
 }
 
 void PPU::renderFrame(CPU* cpu) {
-	renderOAM();
+	if (enableSprites)
+	{
+		renderOAM();
+	}
 	Graphics::update(this->video, (sizeof(this->video[0]) * VIDEO_WIDTH));
 
 	cpu->memory[PPUSTATUS] |= 0x80;

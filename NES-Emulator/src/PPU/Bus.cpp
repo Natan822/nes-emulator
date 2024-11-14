@@ -181,6 +181,8 @@ void PPU::updatePPUCTRL() {
 
 void PPU::updatePPUMASK() {
 	isGrayscale = regPpuMask & 0x1;
+	enableBackground = regPpuMask & 0x8;
+	enableSprites = regPpuMask & 0x10;
 	isRedEmphasized = regPpuMask & 0x20;
 	isGreenEmphasized = regPpuMask & 0x40;
 	isBlueEmphasized = regPpuMask & 0x80;

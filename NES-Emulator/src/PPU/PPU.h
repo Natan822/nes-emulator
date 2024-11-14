@@ -46,6 +46,8 @@ public:
 	int backgroundPatternTableAddress{};
 
 	// Variables controlled by PPUMASK
+	bool enableBackground{};
+	bool enableSprites{};
 	bool isGrayscale{};
 	bool isRedEmphasized{};
 	bool isGreenEmphasized{};
