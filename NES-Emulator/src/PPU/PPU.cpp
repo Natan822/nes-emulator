@@ -299,9 +299,9 @@ int PPU::getPixelColor(int pixelValue) {
 // Dim every color but red by 12.5%
 int PPU::emphasizeRed(int color) {
 	// Dim green
-	color = (color & 0xFF00FF) | ((int)(color * 0.875) & 0x00FF00);
+	color = (color & 0xFF00FF) | ((int)((color & 0x00FF00) * 0.875) & 0x00FF00);
 	// Dim blue
-	color = (color & 0xFFFF00) | ((int)(color * 0.875) & 0x0000FF);
+	color = (color & 0xFFFF00) | ((int)((color & 0x0000FF) * 0.875) & 0x0000FF);
 
 	return color;
 }
@@ -309,9 +309,9 @@ int PPU::emphasizeRed(int color) {
 // Dim every color but green by 12.5%
 int PPU::emphasizeGreen(int color) {
 	// Dim red
-	color = (color & 0x00FFFF) | ((int)(color * 0.875) & 0xFF0000);
+	color = (color & 0x00FFFF) | ((int)((color & 0xFF0000) * 0.875) & 0xFF0000);
 	// Dim blue
-	color = (color & 0xFFFF00) | ((int)(color * 0.875) & 0x0000FF);
+	color = (color & 0xFFFF00) | ((int)((color & 0x0000FF) * 0.875) & 0x0000FF);
 
 	return color;
 }
@@ -319,9 +319,9 @@ int PPU::emphasizeGreen(int color) {
 // Dim every color but blue by 12.5%
 int PPU::emphasizeBlue(int color) {
 	// Dim red
-	color = (color & 0x00FFFF) | ((int)(color * 0.875) & 0xFF0000);
+	color = (color & 0x00FFFF) | ((int)((color & 0xFF0000) * 0.875) & 0xFF0000);
 	// Dim green
-	color = (color & 0xFF00FF) | ((int)(color * 0.875) & 0x00FF00);
+	color = (color & 0xFF00FF) | ((int)((color & 0x00FF00) * 0.875) & 0x00FF00);
 
 	return color;
 }
