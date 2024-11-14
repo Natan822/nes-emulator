@@ -37,6 +37,9 @@ public:
 	Mirroring mirrorType{};
 	int mirrorNametableAddress{};
 
+	int fineX{};
+	int coarseX{};
+
 	int fineY{};
 	int coarseY{};
 
@@ -89,8 +92,8 @@ private:
 	void vramIncrease(CPU* cpu);
 
 	void renderSprite(int spriteIndex, int* videoX, int* videoY);
-	void renderSprite(int spriteIndex, int videoX, int videoY, int paletteIndex, bool vFlip, bool hFlip);
-	bool renderSpriteHitDetect(int spriteIndex, int videoX, int videoY, int paletteIndex, bool vFlip, bool hFlip);
+	void renderSprite(int spriteIndex, int x, int y, int paletteIndex, bool vFlip, bool hFlip);
+	bool renderSpriteHitDetect(int spriteIndex, int x, int y, int paletteIndex, bool vFlip, bool hFlip);
 
 	void updatePPUCTRL();
 	void updatePPUMASK();
@@ -111,4 +114,7 @@ private:
 	void mirrorPalettes();
 	void writePalettes(uint8_t data);
 	uint8_t readPalettes();
+
+	void renderScanlineHorizontalMirroring();
+	void renderScanlineVerticalMirroring();
 };

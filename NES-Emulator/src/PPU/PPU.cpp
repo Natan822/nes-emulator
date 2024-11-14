@@ -75,72 +75,34 @@ void PPU::renderFrame(CPU* cpu) {
 }
 
 void PPU::renderScanline() {
-	int nametableIndex = 0;
-	int nametableAddress = getNametableAddress();
 
-	int scanlinesFineY = scanlines + fineY;
-	for (int videoX = 0; videoX < VIDEO_WIDTH; videoX += 8)
+	if (mirrorType == VERTICAL)
 	{
-		uint8_t tileIndex;
-		uint8_t attributeByte;
-		int yQuadrant;
-		if (nametableAddress == mirrorNametableAddress)
-		{
-			tileIndex = 
-				this->memory[nametableAddress + nametableIndex + (((scanlinesFineY - 240) / 8) * VIDEO_WIDTH / 8)];
-
-			attributeByte =
-				this->memory[(nametableAddress + ATTRIBUTE_TABLE_OFFSET) + (videoX / 32) + (((scanlinesFineY - 240) / 32) * 8)];
-
-			yQuadrant = (scanlinesFineY - 240) % 32;
-		}
-		else 
-		{
-			tileIndex = 
-				this->memory[nametableAddress + nametableIndex + ((scanlinesFineY / 8) * VIDEO_WIDTH / 8)];
-
-			attributeByte =
-				this->memory[(nametableAddress + ATTRIBUTE_TABLE_OFFSET) + (videoX / 32) + ((scanlinesFineY / 32) * 8)];
-
-			yQuadrant = scanlinesFineY % 32;
-		}
-		uint16_t addressSprite = (tileIndex * 16) + backgroundPatternTableAddress;
-
-		int videoY = scanlines % 8;
-
-		uint8_t firstPlaneByte = this->memory[addressSprite + videoY];
-		uint8_t secondPlaneByte = this->memory[addressSprite + videoY + 8];
-
-		int xQuadrant = videoX % 32;
-
-		uint8_t paletteIndex = getPaletteIndex(xQuadrant, yQuadrant, attributeByte);
-		
-		uint8_t byteMask = 0x80;
-		for (int bit = 0; bit < 8; bit++)
-		{
-			uint8_t firstPlaneBit = (firstPlaneByte & byteMask) ? 1 : 0;
-			uint8_t secondPlaneBit = (secondPlaneByte & byteMask) ? 1 : 0;
-
-			uint8_t pixelBits = (secondPlaneBit << 1) | firstPlaneBit;
-
-			uint8_t pixelValue;
-			if (pixelBits == 0)
-			{
-				pixelValue = this->memory[PALETTES_ADDRESS];
-			}
-			else
-			{
-				pixelValue = this->memory[PALETTES_ADDRESS + pixelBits + (4 * paletteIndex)];
-			}
-
-			int pixelColor = getPixelColor(pixelValue);
-			setPixel(videoX + bit, scanlines, pixelColor);
-
-			byteMask >>= 1;
-		}
-		nametableIndex++;
+		renderScanlineVerticalMirroring();
 	}
-	scanlines++;
+	else
+	{
+		renderScanlineHorizontalMirroring();
+	}
+
+	// Sprite 0 hit check
+	uint8_t yPosition = oam[0];
+	if (scanlines == yPosition + 8 && enableSprites)
+	{
+		uint8_t tileIndex = oam[1];
+		uint8_t attributes = oam[2];
+		uint8_t xPosition = oam[3];
+
+		uint8_t paletteIndex = attributes & 0x3;
+		bool vFlip = attributes & 0x80;
+		bool hFlip = attributes & 0x40;
+		if (renderSpriteHitDetect(tileIndex, xPosition, yPosition, paletteIndex, vFlip, hFlip))
+		{
+			// Set sprite 0 hit flag
+			regPpuStatus |= 0x40;
+		}
+	}
+
 }
 
 void PPU::renderOAM() {
@@ -156,20 +118,6 @@ void PPU::renderOAM() {
 		bool vFlip = attributes & 0x80;
 		renderSprite(tileIndex, xPosition, yPosition, paletteIndex, vFlip, hFlip);
 	}
-	// Sprite 0
-	uint8_t yPosition = oam[0];
-	uint8_t tileIndex = oam[1];
-	uint8_t attributes = oam[2];
-	uint8_t xPosition = oam[3];
-
-	uint8_t paletteIndex = attributes & 0x3;
-	bool hFlip = attributes & 0x40;
-	bool vFlip = attributes & 0x80;
-	if (renderSpriteHitDetect(tileIndex, xPosition, yPosition, paletteIndex, vFlip, hFlip)) 
-	{
-		// Set sprite 0 hit flag
-		regPpuStatus |= 0x40;
-	}
 }
 
 void PPU::setPixel(int x, int y, int pixelColor) {
@@ -179,7 +127,7 @@ int PPU::getPixel(int x, int y) {
 	return video[x + (y * VIDEO_WIDTH)];
 }
 
-void PPU::renderSprite(int spriteIndex, int videoX, int videoY, int paletteIndex, bool vFlip, bool hFlip) {
+void PPU::renderSprite(int spriteIndex, int x, int y, int paletteIndex, bool vFlip, bool hFlip) {
 	uint16_t addressSprite = (spriteIndex * 16) + spritePatternTableAddress;
 	for (int byte = 0; byte < 8; byte++)
 	{
@@ -199,23 +147,25 @@ void PPU::renderSprite(int spriteIndex, int videoX, int videoY, int paletteIndex
 				int pixelColor = getPixelColor(pixelValue);
 
 				// Here "bit" works as an X offset and "byte" works as a Y offset for the sprite coordinates
-				setPixel((videoX + bit), (videoY + byte), pixelColor);
+				setPixel((x + bit), (y + byte), pixelColor);
 			}
 			byteMask = hFlip ? byteMask << 1 : byteMask >> 1;
 		}
 	}
 }
 
-bool PPU::renderSpriteHitDetect(int spriteIndex, int videoX, int videoY, int paletteIndex, bool vFlip, bool hFlip) {
+bool PPU::renderSpriteHitDetect(int spriteIndex, int x, int y, int paletteIndex, bool vFlip, bool hFlip) {
 	bool hitDetected = false;
 
 	uint16_t addressSprite = (spriteIndex * 16) + spritePatternTableAddress;
+
 	for (int byte = 0; byte < 8; byte++)
 	{
 		uint8_t firstPlaneByte = this->memory[addressSprite + byte];
 		uint8_t secondPlaneByte = this->memory[addressSprite + byte + 8];
 
 		uint8_t byteMask = hFlip ? 0x1 : 0x80;
+
 		for (int bit = 0; bit < 8; bit++)
 		{
 			uint8_t firstPlaneBit = (firstPlaneByte & byteMask) ? 1 : 0;
@@ -226,7 +176,7 @@ bool PPU::renderSpriteHitDetect(int spriteIndex, int videoX, int videoY, int pal
 			{
 				uint8_t pixelValue = this->memory[PALETTES_ADDRESS + pixelBits + (4 * paletteIndex) + 0x10];
 				int pixelColor = getPixelColor(pixelValue);
-				int backgroundPixel = getPixel((videoX + bit), (videoY + byte));
+				int backgroundPixel = getPixel((x + bit), (y + byte));
 				for (int backdropColor = 0; backdropColor < 4; backdropColor++)
 				{
 					if (backgroundPixel == getPixelColor(this->memory[PALETTES_ADDRESS + backdropColor]))
@@ -236,7 +186,7 @@ bool PPU::renderSpriteHitDetect(int spriteIndex, int videoX, int videoY, int pal
 					}
 				}
 				// Here "bit" works as an X offset and "byte" works as a Y offset for the sprite coordinates
-				setPixel((videoX + bit), (videoY + byte), pixelColor);
+				setPixel((x + bit), (y + byte), pixelColor);
 			}
 			byteMask = hFlip ? byteMask << 1 : byteMask >> 1;
 		}
@@ -382,4 +332,145 @@ int PPU::getNametableAddress() {
 		return mirrorNametableAddress;
 	}
 	return baseNametableAddress;
+}
+
+void PPU::renderScanlineHorizontalMirroring() {
+	int nametableIndex = 0;
+	int nametableAddress = getNametableAddress();
+
+	int scanlinesFineY = scanlines + fineY;
+	for (int videoX = 0; videoX < VIDEO_WIDTH; videoX += 8)
+	{
+		uint8_t tileIndex;
+		uint8_t attributeByte;
+		int yQuadrant;
+		if (nametableAddress == mirrorNametableAddress)
+		{
+			tileIndex =
+				this->memory[nametableAddress + nametableIndex + (((scanlinesFineY - 240) / 8) * 32)];
+
+			attributeByte =
+				this->memory[(nametableAddress + ATTRIBUTE_TABLE_OFFSET) + (videoX / 32) + (((scanlinesFineY - 240) / 32) * 8)];
+
+			yQuadrant = (scanlinesFineY - 240) % 32;
+		}
+		else
+		{
+			tileIndex =
+				this->memory[nametableAddress + nametableIndex + ((scanlinesFineY / 8) * VIDEO_WIDTH / 8)];
+
+			attributeByte =
+				this->memory[(nametableAddress + ATTRIBUTE_TABLE_OFFSET) + (videoX / 32) + ((scanlinesFineY / 32) * 8)];
+
+			yQuadrant = scanlinesFineY % 32;
+		}
+		uint16_t addressSprite = (tileIndex * 16) + backgroundPatternTableAddress;
+
+		int videoY = scanlines % 8;
+
+		uint8_t firstPlaneByte = this->memory[addressSprite + videoY];
+		uint8_t secondPlaneByte = this->memory[addressSprite + videoY + 8];
+
+		int xQuadrant = videoX % 32;
+
+		uint8_t paletteIndex = getPaletteIndex(xQuadrant, yQuadrant, attributeByte);
+
+		uint8_t byteMask = 0x80;
+		for (int bit = 0; bit < 8; bit++)
+		{
+			uint8_t firstPlaneBit = (firstPlaneByte & byteMask) ? 1 : 0;
+			uint8_t secondPlaneBit = (secondPlaneByte & byteMask) ? 1 : 0;
+
+			uint8_t pixelBits = (secondPlaneBit << 1) | firstPlaneBit;
+
+			uint8_t pixelValue;
+			if (pixelBits == 0)
+			{
+				pixelValue = this->memory[PALETTES_ADDRESS];
+			}
+			else
+			{
+				pixelValue = this->memory[PALETTES_ADDRESS + pixelBits + (4 * paletteIndex)];
+			}
+
+			int pixelColor = getPixelColor(pixelValue);
+			setPixel(videoX + bit, scanlines, pixelColor);
+
+			byteMask >>= 1;
+		}
+		nametableIndex++;
+	}
+	scanlines++;
+}
+
+void PPU::renderScanlineVerticalMirroring() {
+	int nametableAddress;
+
+	for (int videoX = 0; videoX < VIDEO_WIDTH; videoX += 8)
+	{
+		if (videoX + fineX >= VIDEO_WIDTH)
+		{
+			nametableAddress = mirrorNametableAddress;
+		}
+		else
+		{
+			nametableAddress = baseNametableAddress;
+		}
+
+		uint8_t tileIndex;
+		uint8_t attributeByte;
+		int xQuadrant;
+		if (nametableAddress == mirrorNametableAddress)
+		{
+			tileIndex = this->memory[nametableAddress + ((videoX + fineX) - VIDEO_WIDTH) / 8 + ((scanlines / 8) * 32)];
+			attributeByte = 
+				this->memory[(nametableAddress + ATTRIBUTE_TABLE_OFFSET) + ((videoX + fineX) - VIDEO_WIDTH) / 32 + ((scanlines / 32) * 8)];
+			xQuadrant = (videoX + fineX - VIDEO_WIDTH) % 32;
+		}
+		else
+		{
+			tileIndex =
+				this->memory[nametableAddress + ((videoX + fineX) / 8) + ((scanlines / 8) * VIDEO_WIDTH / 8)];
+
+			attributeByte =
+				this->memory[(nametableAddress + ATTRIBUTE_TABLE_OFFSET) + ((videoX + fineX) / 32) + ((scanlines / 32) * 8)];
+			xQuadrant = (videoX + fineX) % 32;
+		}
+
+		uint16_t addressSprite = (tileIndex * 16) + backgroundPatternTableAddress;
+
+		int videoY = scanlines % 8;
+
+		uint8_t firstPlaneByte = this->memory[addressSprite + videoY];
+		uint8_t secondPlaneByte = this->memory[addressSprite + videoY + 8];
+
+		int yQuadrant = scanlines % 32;
+
+		uint8_t paletteIndex = getPaletteIndex(xQuadrant, yQuadrant, attributeByte);
+
+		uint8_t byteMask = 0x80;
+		for (int bit = 0; bit < 8; bit++)
+		{
+			uint8_t firstPlaneBit = (firstPlaneByte & byteMask) ? 1 : 0;
+			uint8_t secondPlaneBit = (secondPlaneByte & byteMask) ? 1 : 0;
+
+			uint8_t pixelBits = (secondPlaneBit << 1) | firstPlaneBit;
+
+			uint8_t pixelValue;
+			if (pixelBits == 0)
+			{
+				pixelValue = this->memory[PALETTES_ADDRESS];
+			}
+			else
+			{
+				pixelValue = this->memory[PALETTES_ADDRESS + pixelBits + (4 * paletteIndex)];
+			}
+
+			int pixelColor = getPixelColor(pixelValue);
+			setPixel(videoX + bit, scanlines, pixelColor);
+
+			byteMask >>= 1;
+		}
+	}
+	scanlines++;
 }
