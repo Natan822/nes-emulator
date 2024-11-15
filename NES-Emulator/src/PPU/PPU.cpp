@@ -327,7 +327,7 @@ int PPU::emphasizeBlue(int color) {
 }
 
 int PPU::getNametableAddress() {
-	if (fineY + scanlines >= 240)
+	if (scrollY + scanlines >= 240)
 	{
 		return mirrorNametableAddress;
 	}
@@ -338,7 +338,7 @@ void PPU::renderScanlineHorizontalMirroring() {
 	int nametableIndex = 0;
 	int nametableAddress = getNametableAddress();
 
-	int scanlinesFineY = scanlines + fineY;
+	int scanlinesScrollY = scanlines + scrollY;
 	for (int videoX = 0; videoX < VIDEO_WIDTH; videoX += 8)
 	{
 		uint8_t tileIndex;
@@ -347,22 +347,22 @@ void PPU::renderScanlineHorizontalMirroring() {
 		if (nametableAddress == mirrorNametableAddress)
 		{
 			tileIndex =
-				this->memory[nametableAddress + nametableIndex + (((scanlinesFineY - 240) / 8) * 32)];
+				this->memory[nametableAddress + nametableIndex + (((scanlinesScrollY - 240) / 8) * 32)];
 
 			attributeByte =
-				this->memory[(nametableAddress + ATTRIBUTE_TABLE_OFFSET) + (videoX / 32) + (((scanlinesFineY - 240) / 32) * 8)];
+				this->memory[(nametableAddress + ATTRIBUTE_TABLE_OFFSET) + (videoX / 32) + (((scanlinesScrollY - 240) / 32) * 8)];
 
-			yQuadrant = (scanlinesFineY - 240) % 32;
+			yQuadrant = (scanlinesScrollY - 240) % 32;
 		}
 		else
 		{
 			tileIndex =
-				this->memory[nametableAddress + nametableIndex + ((scanlinesFineY / 8) * VIDEO_WIDTH / 8)];
+				this->memory[nametableAddress + nametableIndex + ((scanlinesScrollY / 8) * VIDEO_WIDTH / 8)];
 
 			attributeByte =
-				this->memory[(nametableAddress + ATTRIBUTE_TABLE_OFFSET) + (videoX / 32) + ((scanlinesFineY / 32) * 8)];
+				this->memory[(nametableAddress + ATTRIBUTE_TABLE_OFFSET) + (videoX / 32) + ((scanlinesScrollY / 32) * 8)];
 
-			yQuadrant = scanlinesFineY % 32;
+			yQuadrant = scanlinesScrollY % 32;
 		}
 		uint16_t addressSprite = (tileIndex * 16) + backgroundPatternTableAddress;
 
@@ -405,10 +405,9 @@ void PPU::renderScanlineHorizontalMirroring() {
 
 void PPU::renderScanlineVerticalMirroring() {
 	int nametableAddress;
-
-	for (int videoX = 0; videoX < VIDEO_WIDTH; videoX += 8)
+	for (int x = 0; x < VIDEO_WIDTH;)
 	{
-		if (videoX + fineX >= VIDEO_WIDTH)
+		if (x + scrollX >= VIDEO_WIDTH)
 		{
 			nametableAddress = mirrorNametableAddress;
 		}
@@ -422,34 +421,50 @@ void PPU::renderScanlineVerticalMirroring() {
 		int xQuadrant;
 		if (nametableAddress == mirrorNametableAddress)
 		{
-			tileIndex = this->memory[nametableAddress + ((videoX + fineX) - VIDEO_WIDTH) / 8 + ((scanlines / 8) * 32)];
+			tileIndex = this->memory[nametableAddress + ((x + scrollX) - VIDEO_WIDTH) / 8 + ((scanlines / 8) * 32)];
 			attributeByte = 
-				this->memory[(nametableAddress + ATTRIBUTE_TABLE_OFFSET) + ((videoX + fineX) - VIDEO_WIDTH) / 32 + ((scanlines / 32) * 8)];
-			xQuadrant = (videoX + fineX - VIDEO_WIDTH) % 32;
+				this->memory[(nametableAddress + ATTRIBUTE_TABLE_OFFSET) + ((x + scrollX) - VIDEO_WIDTH) / 32 + ((scanlines / 32) * 8)];
+			xQuadrant = (x + scrollX - VIDEO_WIDTH) % 32;
 		}
 		else
 		{
 			tileIndex =
-				this->memory[nametableAddress + ((videoX + fineX) / 8) + ((scanlines / 8) * VIDEO_WIDTH / 8)];
+				this->memory[nametableAddress + ((x + scrollX) / 8) + ((scanlines / 8) * VIDEO_WIDTH / 8)];
 
 			attributeByte =
-				this->memory[(nametableAddress + ATTRIBUTE_TABLE_OFFSET) + ((videoX + fineX) / 32) + ((scanlines / 32) * 8)];
-			xQuadrant = (videoX + fineX) % 32;
+				this->memory[(nametableAddress + ATTRIBUTE_TABLE_OFFSET) + ((x + scrollX) / 32) + ((scanlines / 32) * 8)];
+			xQuadrant = (x + scrollX) % 32;
 		}
 
 		uint16_t addressSprite = (tileIndex * 16) + backgroundPatternTableAddress;
 
-		int videoY = scanlines % 8;
+		int y = scanlines % 8;
 
-		uint8_t firstPlaneByte = this->memory[addressSprite + videoY];
-		uint8_t secondPlaneByte = this->memory[addressSprite + videoY + 8];
+		uint8_t firstPlaneByte = this->memory[addressSprite + y];
+		uint8_t secondPlaneByte = this->memory[addressSprite + y + 8];
 
 		int yQuadrant = scanlines % 32;
 
 		uint8_t paletteIndex = getPaletteIndex(xQuadrant, yQuadrant, attributeByte);
 
-		uint8_t byteMask = 0x80;
-		for (int bit = 0; bit < 8; bit++)
+		int bit = 0;
+		int tileWidth = 8;
+		int fineX = scrollX % 8;
+		if (fineX != 0)
+		{
+			// First tile
+			if (x + fineX < 8)
+			{
+				bit = fineX;
+			}
+			// Last tile
+			else if (x >= VIDEO_WIDTH - fineX)
+			{
+				tileWidth = fineX;
+			}
+		}
+		uint8_t byteMask = 0x80 >> bit;
+		for (; bit < tileWidth; bit++)
 		{
 			uint8_t firstPlaneBit = (firstPlaneByte & byteMask) ? 1 : 0;
 			uint8_t secondPlaneBit = (secondPlaneByte & byteMask) ? 1 : 0;
@@ -467,7 +482,8 @@ void PPU::renderScanlineVerticalMirroring() {
 			}
 
 			int pixelColor = getPixelColor(pixelValue);
-			setPixel(videoX + bit, scanlines, pixelColor);
+			setPixel(x, scanlines, pixelColor);
+			x++;
 
 			byteMask >>= 1;
 		}

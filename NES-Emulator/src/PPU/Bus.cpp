@@ -208,12 +208,12 @@ void PPU::updatePPUSCROLL() {
 	// First write
 	if (isHighByte)
 	{
-		fineX = regPpuScroll;
+		scrollX = regPpuScroll;
 	}
 	// Second write
 	else
 	{
-		fineY = regPpuScroll;
+		scrollY = regPpuScroll;
 	}
 	isHighByte = !isHighByte;
 }

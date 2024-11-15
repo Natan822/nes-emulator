@@ -37,10 +37,10 @@ public:
 	Mirroring mirrorType{};
 	int mirrorNametableAddress{};
 
-	int fineX{};
+	int scrollX{};
 	int coarseX{};
 
-	int fineY{};
+	int scrollY{};
 	int coarseY{};
 
 	// Variables controlled by PPUCTRL
