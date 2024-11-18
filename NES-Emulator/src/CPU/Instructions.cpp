@@ -722,16 +722,16 @@ void CPU::OP_6CNN00() {
 	uint16_t addressPtr = (highBytePtr << 8) | lowBytePtr;
 
 	uint16_t address{};
-	uint8_t lowByte = memory[addressPtr];
+	uint8_t lowByte = memory.at(addressPtr);
 	if (lowBytePtr == 0xFF)
 	{
-		uint8_t highByte = memory[addressPtr - 0xFF];
+		uint8_t highByte = memory.at(addressPtr - 0xFF);
 
 		address = (highByte << 8) | lowByte;
 	}
 	else
 	{
-		uint8_t highByte = memory[addressPtr + 1];
+		uint8_t highByte = memory.at(addressPtr + 1);
 
 		address = (highByte << 8) | lowByte;
 	}

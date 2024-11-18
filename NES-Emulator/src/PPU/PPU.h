@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <vector>
 
 const int VIDEO_HEIGHT = 240;
 const int VIDEO_WIDTH = 256;
@@ -59,11 +60,14 @@ public:
 	bool isBlueEmphasized{};
 
 	// Address Space
-	uint8_t memory[0x3FFF + 1]{};
+	//uint8_t memory[0x3FFF + 1]{};
+	std::vector<uint8_t> memory;
 	// OAM Address Space
-	uint8_t oam[256];
+	//uint8_t oam[256];
+	std::vector<uint8_t> oam;
 	// Display Screen
-	uint32_t video[VIDEO_WIDTH * VIDEO_HEIGHT]{};
+	//uint32_t video[VIDEO_WIDTH * VIDEO_HEIGHT]{};
+	std::vector<uint32_t> video;
 
 	int prgSize{}; // PRG ROM size in 16 KiB units
 	int chrSize{}; // CHR ROM size in 8 KiB units(0 = board uses CHR RAM)

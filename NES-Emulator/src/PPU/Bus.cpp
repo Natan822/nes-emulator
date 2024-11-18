@@ -24,9 +24,9 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 
 	case OAMDATA:
 		// Write to OAM
-		this->oam[cpu->memory[OAMADDR]] = data;
+		this->oam.at(cpu->memory.at(OAMADDR)) = data;
 		// Increment OAMADDR
-		cpu->memory[OAMADDR]++;
+		cpu->memory.at(OAMADDR)++;
 		regOamAddr++;
 		break;
 
@@ -59,7 +59,7 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 		}
 		else
 		{
-			this->memory[vramAddress] = data;
+			this->memory.at(vramAddress) = data;
 		}
 		vramIncrease(cpu);
 		regPpuData = data;
@@ -71,7 +71,7 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 		// Copies from source address to OAM
 		for (int byteIndex = 0; byteIndex < 256; byteIndex++)
 		{
-			this->oam[byteIndex] = cpu->memory[sourceAddress + byteIndex];
+			this->oam[byteIndex] = cpu->memory.at(sourceAddress + byteIndex);
 		}
 		cpu->cycles += 513;
 		regOamDma = data;
@@ -81,12 +81,12 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 		break;
 	}
 
-	cpu->memory[address] = data;
+	cpu->memory.at(address) = data;
 	return data;
 }
 
 uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
-	uint8_t data = cpu->memory[address];
+	uint8_t data = cpu->memory.at(address);
 	switch (address)
 	{
 	case PPUCTRL:
@@ -98,7 +98,7 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
 	case PPUSTATUS:
 		data = regPpuStatus;
 		// Clear vblank_flag on read
-		cpu->memory[address] &= ~0x80;
+		cpu->memory.at(address) &= ~0x80;
 		regPpuStatus &= ~0x80;
 		isHighByte = true;
 		break;
@@ -124,7 +124,7 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
 		}
 		else
 		{
-			readBuffer = this->memory[vramAddress];
+			readBuffer = this->memory.at(vramAddress);
 		}
 		vramIncrease(cpu);
 		break;
@@ -244,7 +244,7 @@ void PPU::mirrorPalettes() {
 		{
 			paletteIndex = 0;
 		}
-		this->memory[0x3F20 + i] = this->memory[PALETTES_ADDRESS + paletteIndex];
+		this->memory.at(0x3F20 + i) = this->memory.at(PALETTES_ADDRESS + paletteIndex);
 		paletteIndex++;
 	}
 }
@@ -284,5 +284,5 @@ uint8_t PPU::readPalettes() {
 	}
 
 	uint8_t mirroredByte = (vramAddress & 0xFF) % 0x20;
-	return this->memory[(vramAddress & 0xFF00) | mirroredByte];
+	return this->memory[(vramAddress & 0x3F00) | mirroredByte];
 }

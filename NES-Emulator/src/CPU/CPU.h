@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 //PPU REGISTERS ADDRESSES
 #define PPUCTRL 0x2000
@@ -50,7 +51,8 @@ public:
 	*/
 
 	// Address Space
-	uint8_t memory[0xFFFF + 1]{};
+	//uint8_t memory[0xFFFF + 1]{};
+	std::vector<uint8_t> memory;
 
 	int prgSize{}; // PRG ROM size in 16 KiB units
 	int chrSize{}; // CHR ROM size in 8 KiB units(0 = board uses CHR RAM)

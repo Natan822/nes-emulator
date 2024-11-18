@@ -1,4 +1,5 @@
 #include "SDL.h"
+#include <vector>
 #include "../PPU/PPU.h"
 #include "Graphics.h"
 
@@ -28,7 +29,7 @@ namespace Graphics {
 
 	void displayPatternTable(PPU ppu) {
 		ppu.loadPatternTable();
-		update(ppu.video, (sizeof(ppu.video[0]) * VIDEO_WIDTH));
+		update(ppu.video.data(), (sizeof(ppu.video[0]) * VIDEO_WIDTH));
 	}
 
 	void shutdown() {

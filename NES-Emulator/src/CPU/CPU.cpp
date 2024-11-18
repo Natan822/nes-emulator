@@ -1,6 +1,7 @@
 #include <fstream>
 #include <stdint.h>
 #include <string>
+#include <vector>
 
 #include <iostream>
 
@@ -8,7 +9,11 @@
 #include "../Controller/Controller.h"
 #include "../PPU/PPU.h"
 
-CPU::CPU(PPU& ppu, Controller& controller) : ppu(ppu), controller(controller) {
+CPU::CPU(PPU& ppu, Controller& controller) : 
+	ppu(ppu), 
+	controller(controller),
+	memory(0xFFFF + 1)
+{
 	sp = STACK_START_ADDRESS & 0xFF;
 
 	for (int i = 0; i < 0xFF + 1; i++)
@@ -199,25 +204,25 @@ void CPU::loadROM(std::string filePath) {
 	{
 		for (int i = 0; i < 32768; i++)
 		{
-			memory[PRG_START_ADDRESS + i] = buffer[i + 16];
+			memory.at(PRG_START_ADDRESS + i) = buffer[i + 16];
 		}
 	}
 	else if (prgSize == 1)
 	{
 		for (int i = 0; i < 16384; i++)
 		{
-			memory[PRG_START_ADDRESS + i] = buffer[i + 16];
+			memory.at(PRG_START_ADDRESS + i) = buffer[i + 16];
 		}
 		for (int i = 16384; i < 32768; i++)
 		{
-			memory[PRG_START_ADDRESS + i] = buffer[i + 16 - 16384];
+			memory.at(PRG_START_ADDRESS + i) = buffer[i + 16 - 16384];
 		}
 	}
 
 	delete[] buffer;
 
-	uint8_t lowByteStartAddress = memory[RESET_VECTOR_ADDRESS];
-	uint8_t highByteStartAddress = memory[RESET_VECTOR_ADDRESS + 1];
+	uint8_t lowByteStartAddress = memory.at(RESET_VECTOR_ADDRESS);
+	uint8_t highByteStartAddress = memory.at(RESET_VECTOR_ADDRESS + 1);
 
 	uint16_t startAddress = (highByteStartAddress << 8) | lowByteStartAddress;
 	pc = startAddress;
@@ -273,8 +278,8 @@ void CPU::handleInterrupt(char interruptType) {
 	// IRQ interrupt
 	case 'I':
 	{
-		uint8_t lowByteVectorAddress = memory[IRQ_VECTOR_ADDRESS];
-		uint8_t highByteVectorAddress = memory[IRQ_VECTOR_ADDRESS + 1];
+		uint8_t lowByteVectorAddress = memory.at(IRQ_VECTOR_ADDRESS);
+		uint8_t highByteVectorAddress = memory.at(IRQ_VECTOR_ADDRESS + 1);
 		uint16_t vectorAddress = (highByteVectorAddress << 8) | lowByteVectorAddress;
 		pc = vectorAddress;
 
@@ -283,8 +288,8 @@ void CPU::handleInterrupt(char interruptType) {
 	// NMI interrupt
 	case 'N':
 	{
-		uint8_t lowByteVectorAddress = memory[NMI_VECTOR_ADDRESS];
-		uint8_t highByteVectorAddress = memory[NMI_VECTOR_ADDRESS + 1];
+		uint8_t lowByteVectorAddress = memory.at(NMI_VECTOR_ADDRESS);
+		uint8_t highByteVectorAddress = memory.at(NMI_VECTOR_ADDRESS + 1);
 		uint16_t vectorAddress = (highByteVectorAddress << 8) | lowByteVectorAddress;
 		pc = vectorAddress;
 
@@ -321,7 +326,7 @@ uint8_t CPU::writeMemory(uint16_t address, uint8_t data) {
 	{
 		controllerInput = this->controller.getInput();
 	}
-	memory[address] = data;
+	memory.at(address) = data;
 	return data;
 }
 
@@ -336,17 +341,17 @@ uint8_t CPU::readMemory(uint16_t address) {
 		controllerInput >>= 1;
 		return data;
 	}
-	return memory[address];
+	return memory.at(address);
 }
 
 void CPU::push(uint8_t value) {
-	memory[sp + STACK_BOTTOM_ADDRESS] = value;
+	memory.at(sp + STACK_BOTTOM_ADDRESS) = value;
 	sp--;
 }
 
 uint8_t CPU::pop() {
 	sp++;
-	return memory[sp + STACK_BOTTOM_ADDRESS];
+	return memory.at(sp + STACK_BOTTOM_ADDRESS);
 }
 
 void CPU::setFlag(char flag, uint8_t value) {
