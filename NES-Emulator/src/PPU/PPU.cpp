@@ -6,6 +6,7 @@
 #include "../Graphics/Graphics.h"
 
 #include <iostream>
+#include <assert.h>
 
 PPU::PPU() {
 	cycles = 21;
@@ -121,6 +122,7 @@ void PPU::renderOAM() {
 }
 
 void PPU::setPixel(int x, int y, int pixelColor) {
+	assert(x < VIDEO_WIDTH || y < VIDEO_HEIGHT);
 	video[x + (y * VIDEO_WIDTH)] = pixelColor;
 }
 int PPU::getPixel(int x, int y) {
@@ -131,12 +133,21 @@ void PPU::renderSprite(int spriteIndex, int x, int y, int paletteIndex, bool vFl
 	uint16_t addressSprite = (spriteIndex * 16) + spritePatternTableAddress;
 	for (int byte = 0; byte < 8; byte++)
 	{
+		if (y + byte > VIDEO_HEIGHT) break;
+
 		uint8_t firstPlaneByte = this->memory[addressSprite + byte];
 		uint8_t secondPlaneByte = this->memory[addressSprite + byte + 8];
 
 		uint8_t byteMask = hFlip ? 0x1 : 0x80;
-		for (int bit = 0; bit < 8; bit++)
+		int bit = 0;
+		if (x < 8 && !showLeftmostSprites)
 		{
+			bit = 8 - x;
+		}
+		for (; bit < 8; bit++)
+		{
+			if (x + bit > VIDEO_WIDTH) break;
+
 			uint8_t firstPlaneBit = (firstPlaneByte & byteMask) ? 1 : 0;
 			uint8_t secondPlaneBit = (secondPlaneByte & byteMask) ? 1 : 0;
 
@@ -336,7 +347,8 @@ int PPU::getNametableAddress() {
 
 void PPU::renderScanlineHorizontalMirroring() {
 	int nametableAddress = getNametableAddress();
-	for (int x = 0; x < VIDEO_WIDTH; x+=8)
+	int x = showLeftmostBackground ? 0 : 8;
+	for (; x < VIDEO_WIDTH; x+=8)
 	{
 		int tileIndex;
 		int attributeByte;
@@ -400,7 +412,8 @@ void PPU::renderScanlineHorizontalMirroring() {
 
 void PPU::renderScanlineVerticalMirroring() {
 	int nametableAddress;
-	for (int x = 0; x < VIDEO_WIDTH;)
+	int x = showLeftmostBackground ? 0 : 8;
+	for (; x < VIDEO_WIDTH;)
 	{
 		if (x + scrollX >= VIDEO_WIDTH)
 		{
