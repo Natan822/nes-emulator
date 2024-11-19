@@ -98,8 +98,8 @@ private:
 	void vramIncrease(CPU* cpu);
 
 	void renderSprite(int spriteIndex, int* videoX, int* videoY);
-	void renderSprite(int spriteIndex, int x, int y, int paletteIndex, bool vFlip, bool hFlip);
-	bool renderSpriteHitDetect(int spriteIndex, int x, int y, int paletteIndex, bool vFlip, bool hFlip);
+	void renderSprite(int spriteIndex, int x, int y, int paletteIndex, bool vFlip, bool hFlip, bool isBehindBackground);
+	bool renderSpriteHitDetect(int spriteIndex, int x, int y, int paletteIndex, bool vFlip, bool hFlip, bool isBehindBackground);
 
 	void updatePPUCTRL();
 	void updatePPUMASK();
