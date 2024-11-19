@@ -141,8 +141,9 @@ void PPU::renderSprite(int spriteIndex, int x, int y, int paletteIndex, bool vFl
 	{
 		if (y + byte >= VIDEO_HEIGHT) break;
 
-		uint8_t firstPlaneByte = this->memory.at(addressSprite + byte);
-		uint8_t secondPlaneByte = this->memory.at(addressSprite + byte + 8);
+		int yOffset = vFlip ? 7 - byte : byte;
+		uint8_t firstPlaneByte = this->memory.at(addressSprite + yOffset);
+		uint8_t secondPlaneByte = this->memory.at(addressSprite + yOffset + 8);
 
 		uint8_t byteMask = hFlip ? 0x1 : 0x80;
 		int bit = 0;
@@ -171,6 +172,7 @@ void PPU::renderSprite(int spriteIndex, int x, int y, int paletteIndex, bool vFl
 						{
 							// Here "bit" works as an X offset and "byte" works as a Y offset for the sprite coordinates
 							setPixel((x + bit), (y + byte), pixelColor);
+							break;
 						}
 					}
 				}
@@ -192,8 +194,9 @@ bool PPU::renderSpriteHitDetect(int spriteIndex, int x, int y, int paletteIndex,
 
 	for (int byte = 0; byte < 8; byte++)
 	{
-		uint8_t firstPlaneByte = this->memory.at(addressSprite + byte);
-		uint8_t secondPlaneByte = this->memory.at(addressSprite + byte + 8);
+		int yOffset = vFlip ? 7 - byte : byte;
+		uint8_t firstPlaneByte = this->memory.at(addressSprite + yOffset);
+		uint8_t secondPlaneByte = this->memory.at(addressSprite + yOffset + 8);
 
 		uint8_t byteMask = hFlip ? 0x1 : 0x80;
 
