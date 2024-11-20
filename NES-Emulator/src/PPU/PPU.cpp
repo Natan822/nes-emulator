@@ -92,8 +92,8 @@ void PPU::renderScanline() {
 	scanlines++;
 
 	// Sprite 0 hit check
-	uint8_t yPosition = oam[0];
-	if (scanlines == yPosition + 7 && enableSprites)
+	uint8_t yPosition = oam[0] + 1;
+	if (scanlines == yPosition + 6 && enableSprites)
 	{
 		uint8_t tileIndex = oam[1];
 		uint8_t attributes = oam[2];
@@ -115,7 +115,7 @@ void PPU::renderScanline() {
 void PPU::renderOAM() {
 	for (int oamByte = 252; oamByte >= 4; oamByte -= 4)
 	{
-		uint8_t yPosition  = oam.at(oamByte);
+		uint8_t yPosition  = oam.at(oamByte)  + 1;
 		uint8_t tileIndex  = oam.at(oamByte + 1);
 		uint8_t attributes = oam.at(oamByte + 2);
 		uint8_t xPosition  = oam.at(oamByte + 3);
