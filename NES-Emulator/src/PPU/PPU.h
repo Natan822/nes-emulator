@@ -123,4 +123,6 @@ private:
 
 	void renderScanlineHorizontalMirroring();
 	void renderScanlineVerticalMirroring();
+
+	void changeBaseNametable(uint8_t nametable); // 0 = nametable 1, 1 = nametable 2, 2 = nametable 3, 3 = nametable 4
 };

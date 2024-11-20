@@ -484,7 +484,7 @@ void PPU::renderScanlineVerticalMirroring() {
 		int yQuadrant = scanlines % 32;
 
 		uint8_t paletteIndex = getPaletteIndex(xQuadrant, yQuadrant, attributeByte);
-
+		
 		int bit = 0;
 		int tileWidth = 8;
 		int fineX = scrollX % 8;
@@ -525,5 +525,55 @@ void PPU::renderScanlineVerticalMirroring() {
 
 			byteMask >>= 1;
 		}
+	}
+}
+
+void PPU::changeBaseNametable(uint8_t nametable) {
+	switch (nametable)
+	{
+	case 0:
+		baseNametableAddress = NAMETABLE1_ADDRESS;
+		if (mirrorType == HORIZONTAL)
+		{
+			mirrorNametableAddress = NAMETABLE3_ADDRESS;
+		}
+		else
+		{
+			mirrorNametableAddress = NAMETABLE2_ADDRESS;
+		}
+		break;
+	case 1:
+		baseNametableAddress = NAMETABLE2_ADDRESS;
+		if (mirrorType == HORIZONTAL)
+		{
+			mirrorNametableAddress = NAMETABLE4_ADDRESS;
+		}
+		else
+		{
+			mirrorNametableAddress = NAMETABLE1_ADDRESS;
+		}
+		break;
+	case 2:
+		baseNametableAddress = NAMETABLE3_ADDRESS;
+		if (mirrorType == HORIZONTAL)
+		{
+			mirrorNametableAddress = NAMETABLE1_ADDRESS;
+		}
+		else
+		{
+			mirrorNametableAddress = NAMETABLE4_ADDRESS;
+		}
+		break;
+	case 3:
+		baseNametableAddress = NAMETABLE4_ADDRESS;
+		if (mirrorType == HORIZONTAL)
+		{
+			mirrorNametableAddress = NAMETABLE2_ADDRESS;
+		}
+		else
+		{
+			mirrorNametableAddress = NAMETABLE3_ADDRESS;
+		}
+		break;
 	}
 }

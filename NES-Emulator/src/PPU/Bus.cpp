@@ -48,10 +48,11 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 		{
 			vramAddress &= 0x3FFF;
 		}
+		changeBaseNametable(vramAddress & 0xC00 >> 10);
+		
 		isHighByte = !isHighByte;
 		regPpuAddr = data;
 		break;
-
 	case PPUDATA:
 		if (vramAddress >= PALETTES_ADDRESS)
 		{
@@ -140,55 +141,7 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
 }
 
 void PPU::updatePPUCTRL() {
-	// Check base and mirror nametables addresses
-	switch (regPpuCtrl & 0x3)
-	{
-	case 0:
-		baseNametableAddress = NAMETABLE1_ADDRESS;
-		if (mirrorType == HORIZONTAL)
-		{
-			mirrorNametableAddress = NAMETABLE3_ADDRESS;
-		}
-		else
-		{
-			mirrorNametableAddress = NAMETABLE2_ADDRESS;
-		}
-		break;
-	case 1:
-		baseNametableAddress = NAMETABLE2_ADDRESS;
-		if (mirrorType == HORIZONTAL)
-		{
-			mirrorNametableAddress = NAMETABLE4_ADDRESS;
-		}
-		else
-		{
-			mirrorNametableAddress = NAMETABLE1_ADDRESS;
-		}
-		break;
-	case 2:
-		baseNametableAddress = NAMETABLE3_ADDRESS;
-		if (mirrorType == HORIZONTAL)
-		{
-			mirrorNametableAddress = NAMETABLE1_ADDRESS;
-		}
-		else
-		{
-			mirrorNametableAddress = NAMETABLE4_ADDRESS;
-		}
-		break;
-	case 3:
-		baseNametableAddress = NAMETABLE4_ADDRESS;
-		if (mirrorType == HORIZONTAL)
-		{
-			mirrorNametableAddress = NAMETABLE2_ADDRESS;
-		}
-		else
-		{
-			mirrorNametableAddress = NAMETABLE3_ADDRESS;
-		}
-		break;
-	}
-
+	changeBaseNametable(regPpuCtrl & 0x3);
 	// Check sprite pattern table address
 	spritePatternTableAddress = regPpuCtrl & 0x8 ? 0x1000 : 0;
 	// Check background pattern table address
