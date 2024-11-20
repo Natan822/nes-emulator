@@ -17,7 +17,7 @@ NES::NES(int _windowScale, double speed)
 		cpu(new CPU(*ppu, *controller)),
 		windowScale(_windowScale)
 {
-	this->frameDelay = 16666.667 / speed;
+	this->frameDelay = 16000.0 / speed;
 }
 
 NES::~NES() {
@@ -71,8 +71,8 @@ void NES::start() {
 						std::this_thread::sleep_for(std::chrono::duration<double, std::micro>
 							(this->frameDelay - delta));
 					}
-					ppu->renderFrame(cpu);
 					lastFrameTime = std::chrono::high_resolution_clock::now();
+					ppu->renderFrame(cpu);
 
 					quit = Input::inputProcessing(this->controller);
 					ppu->scanlines++;
