@@ -14,7 +14,7 @@ public:
 
 	NES();
 	NES(int _windowScale);
-	NES(int _windowScale, float speed);
+	NES(int _windowScale, double speed);
 	~NES();
 
 	void loadROM(std::string path);
@@ -22,5 +22,5 @@ public:
 
 private:
 	int windowScale;
-	float frameDelay;
+	double frameDelay;
 };

@@ -7,16 +7,17 @@
 
 #include <chrono>
 #include <iostream>
+#include <thread>
 
 NES::NES() : NES(1, 1) {}
 NES::NES(int _windowScale) : NES(_windowScale, 1) {}
-NES::NES(int _windowScale, float speed) 
+NES::NES(int _windowScale, double speed) 
 	:	ppu(new PPU()),
 		controller(new Controller()),
 		cpu(new CPU(*ppu, *controller)),
 		windowScale(_windowScale)
 {
-	this->frameDelay = 16.667 / speed;
+	this->frameDelay = 16666.667 / speed;
 }
 
 NES::~NES() {
@@ -41,9 +42,8 @@ void NES::start() {
 	int oldCycles = 0;
 	bool quit = false;
 
-	auto lastCycleTime = std::chrono::high_resolution_clock::now();
-	auto currentCycleTime = std::chrono::high_resolution_clock::now();
-	float delta = std::chrono::duration<float, std::chrono::milliseconds::period>(currentCycleTime - lastCycleTime).count();
+	auto lastFrameTime = std::chrono::high_resolution_clock::now();
+	double delta;
 	while (!quit)
 	{
 		cpu->cycle();
@@ -64,13 +64,17 @@ void NES::start() {
 			{
 				if (ppu->scanlines == 240)
 				{
-					do {
-						currentCycleTime = std::chrono::high_resolution_clock::now();
-						delta = std::chrono::duration<float, std::chrono::milliseconds::period>(currentCycleTime -lastCycleTime).count();
-					} while (delta < this->frameDelay);
-					quit = Input::inputProcessing(this->controller);
+					delta = std::chrono::duration<float, std::chrono::microseconds::period>
+						(std::chrono::high_resolution_clock::now() - lastFrameTime).count();
+					if (delta < this->frameDelay)
+					{
+						std::this_thread::sleep_for(std::chrono::duration<double, std::micro>
+							(this->frameDelay - delta));
+					}
 					ppu->renderFrame(cpu);
-					lastCycleTime = currentCycleTime;
+					lastFrameTime = std::chrono::high_resolution_clock::now();
+
+					quit = Input::inputProcessing(this->controller);
 					ppu->scanlines++;
 				}
 
