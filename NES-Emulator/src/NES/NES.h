@@ -23,4 +23,5 @@ public:
 private:
 	int windowScale;
 	double frameDelay;
+	bool isRomLoaded;
 };
