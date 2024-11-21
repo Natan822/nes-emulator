@@ -115,7 +115,7 @@ void PPU::renderScanline() {
 void PPU::renderOAM() {
 	for (int oamByte = 252; oamByte >= 4; oamByte -= 4)
 	{
-		uint8_t yPosition  = oam.at(oamByte)  + 1;
+		uint8_t yPosition  = oam.at(oamByte) + 1;
 		uint8_t tileIndex  = oam.at(oamByte + 1);
 		uint8_t attributes = oam.at(oamByte + 2);
 		uint8_t xPosition  = oam.at(oamByte + 3);
@@ -166,14 +166,10 @@ void PPU::renderSprite(int spriteIndex, int x, int y, int paletteIndex, bool vFl
 				if (isBehindBackground)
 				{
 					int backgroundColor = getPixel(x + bit, y + byte);
-					for (int backdropColor = 0; backdropColor < 4; backdropColor++)
+					if (backgroundColor == getPixelColor(this->memory[PALETTES_ADDRESS]))
 					{
-						if (backgroundColor == getPixelColor(this->memory[PALETTES_ADDRESS + (backdropColor * 4)]))
-						{
-							// Here "bit" works as an X offset and "byte" works as a Y offset for the sprite coordinates
-							setPixel((x + bit), (y + byte), pixelColor);
-							break;
-						}
+						// Here "bit" works as an X offset and "byte" works as a Y offset for the sprite coordinates
+						setPixel((x + bit), (y + byte), pixelColor);
 					}
 				}
 				else
