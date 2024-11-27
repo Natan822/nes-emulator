@@ -1,5 +1,8 @@
 #include "PPU.h"
 #include "../CPU/CPU.h"
+#include "../Mappers/Mapper.h"
+#include "../Mappers/Mapper003.h"
+#include <iostream>
 
 uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 	switch (address)
@@ -39,18 +42,19 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 		if (isHighByte)
 		{
 			vramAddress = (vramAddress & 0xFF) | (data << 8);
+			changeBaseNametable((vramAddress & 0xC00) >> 10);
 		}
 		else
 		{
 			vramAddress = (vramAddress & 0xFF00) | data;
 		}
+		isHighByte = !isHighByte;
 		if (vramAddress > 0x3FFF)
 		{
 			vramAddress &= 0x3FFF;
 		}
-		changeBaseNametable(vramAddress & 0xC00 >> 10);
+
 		
-		isHighByte = !isHighByte;
 		regPpuAddr = data;
 		break;
 	case PPUDATA:
@@ -60,7 +64,7 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 		}
 		else
 		{
-			this->memory.at(vramAddress) = data;
+			memoryWrite(vramAddress, data);
 		}
 		vramIncrease(cpu);
 		regPpuData = data;
@@ -125,7 +129,7 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
 		}
 		else
 		{
-			readBuffer = this->memory.at(vramAddress);
+			readBuffer = memoryRead(vramAddress);
 		}
 		vramIncrease(cpu);
 		break;
@@ -138,6 +142,104 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
 	}
 
 	return data;
+}
+
+uint8_t PPU::memoryRead(uint16_t address)
+{
+	// CHR
+	if (address < 0x2000)
+	{
+		return this->mapper->chrRead(address);
+	}
+	// Nametables
+	if (address < 0x3000)
+	{
+		switch (mirrorType)
+		{
+		case PPU::HORIZONTAL:
+			// Nametable 2
+			if (address >= 0x2400 && address < 0x2800)
+			{
+				return this->memory.at(address & 0x23FF); // Mirror of Nametable 1
+			}
+			// Nametable 4
+			if (address >= 0x2C00)
+			{
+				return this->memory.at(address & 0x2BFF); // Mirror of Nametable 3
+			}
+			// Nametables 1 and 3
+			return this->memory.at(address);
+
+		case PPU::VERTICAL:
+			// Nametable 3
+			if (address >= 0x2800 && address < 0x2C00)
+			{
+				return this->memory.at(address & 0x27FF); // Mirror of Nametable 1
+			}
+			// Nametable 4
+			if (address >= 0x2C00)
+			{
+				return this->memory.at(address & 0x27FF); // Mirror of Nametable 2
+			}
+			// Nametables 1 and 2
+			return this->memory.at(address);
+		}
+	}
+	return this->memory.at(address);
+}
+
+void PPU::memoryWrite(uint16_t address, uint8_t data)
+{
+	if (address < 0x2000)
+	{
+		this->mapper->chrWrite(address, data);
+	}
+	// Nametables
+	else if (address < 0x3000)
+	{
+		switch (mirrorType)
+		{
+		case PPU::HORIZONTAL:
+			// Nametable 2
+			if (address >= 0x2400 && address < 0x2800)
+			{
+				this->memory.at(address & 0x23FF) = data; // Mirror of Nametable 1
+			}
+			// Nametable 4
+			else if (address >= 0x2C00)
+			{
+				this->memory.at(address & 0x2BFF) = data; // Mirror of Nametable 3
+			}
+			// Nametables 1 and 3
+			else
+			{
+				this->memory.at(address) = data;
+			}
+			break;
+
+		case PPU::VERTICAL:
+			// Nametable 3
+			if (address >= 0x2800 && address < 0x2C00)
+			{
+				this->memory.at(address & 0x27FF) = data; // Mirror of Nametable 1
+			}
+			// Nametable 4
+			else if (address >= 0x2C00)
+			{
+				this->memory.at(address & 0x27FF) = data; // Mirror of Nametable 2
+			}
+			// Nametables 1 and 2
+			else
+			{
+				this->memory.at(address) = data;
+			}
+			break;
+		}
+	}
+	else
+	{
+		this->memory.at(address) = data;
+	}
 }
 
 void PPU::updatePPUCTRL() {

@@ -5,14 +5,18 @@
 #include "../CPU/CPU.h"
 #include "PPU.h"
 #include "../Graphics/Graphics.h"
+#include "../Mappers/Mapper.h"
+#include "../Mappers/Mapper003.h"
 
 #include <iostream>
 #include <assert.h>
 
 PPU::PPU() : 
 	video(VIDEO_WIDTH * VIDEO_HEIGHT),
+	backgroundPixelBits(VIDEO_WIDTH * VIDEO_HEIGHT),
 	memory(0x3FFF + 1),
-	oam(256)
+	oam(256),
+	chr(0xFFFF + 1)
 {
 	cycles = 21;
 	isHighByte = true;
@@ -37,12 +41,17 @@ void PPU::loadROM(std::string filePath) {
 
 	mirrorType = buffer[6] & 0x1 ? VERTICAL : HORIZONTAL;
 
-	prgSize = static_cast<int>(static_cast<unsigned char>(buffer[4]));
+	prgSize = static_cast<int>(buffer[4]);
+	chrSize = static_cast<int>(buffer[5]);
 
 	// Starts at 16 because the header bytes occupy the first 16 bytes
 	for (int i = 16; i < 8192 + 16; i++)
 	{	
 		memory.at(i - 16) = buffer[(prgSize * 16384) + i];
+	}
+	for (int i = 16; i < (8192 * chrSize) + 16; i++)
+	{
+		chr.at(i - 16) = buffer[(prgSize * 16384) + i];
 	}
 
 	delete[] buffer;
@@ -80,38 +89,6 @@ void PPU::renderFrame(CPU* cpu) {
 	}
 }
 
-void PPU::renderScanline() {
-	if (mirrorType == VERTICAL)
-	{
-		renderScanlineVerticalMirroring();
-	}
-	else
-	{
-		renderScanlineHorizontalMirroring();
-	}
-	scanlines++;
-
-	// Sprite 0 hit check
-	uint8_t yPosition = oam[0] + 1;
-	if (scanlines == yPosition + 6 && enableSprites)
-	{
-		uint8_t tileIndex = oam[1];
-		uint8_t attributes = oam[2];
-		uint8_t xPosition = oam[3];
-
-		uint8_t paletteIndex = attributes & 0x3;
-		bool isBehindBackground = attributes & 0x20;
-		bool vFlip = attributes & 0x80;
-		bool hFlip = attributes & 0x40;
-		if (renderSpriteHitDetect(tileIndex, xPosition, yPosition, paletteIndex, vFlip, hFlip, isBehindBackground))
-		{
-			// Set sprite 0 hit flag
-			regPpuStatus |= 0x40;
-		}
-	}
-
-}
-
 void PPU::renderOAM() {
 	for (int oamByte = 252; oamByte >= 4; oamByte -= 4)
 	{
@@ -142,8 +119,8 @@ void PPU::renderSprite(int spriteIndex, int x, int y, int paletteIndex, bool vFl
 		if (y + byte >= VIDEO_HEIGHT) break;
 
 		int yOffset = vFlip ? 7 - byte : byte;
-		uint8_t firstPlaneByte = this->memory.at(addressSprite + yOffset);
-		uint8_t secondPlaneByte = this->memory.at(addressSprite + yOffset + 8);
+		uint8_t firstPlaneByte = this->memoryRead(addressSprite + yOffset);
+		uint8_t secondPlaneByte = this->memoryRead(addressSprite + yOffset + 8);
 
 		uint8_t byteMask = hFlip ? 0x1 : 0x80;
 		int bit = 0;
@@ -165,8 +142,7 @@ void PPU::renderSprite(int spriteIndex, int x, int y, int paletteIndex, bool vFl
 				int pixelColor = getPixelColor(pixelValue);
 				if (isBehindBackground)
 				{
-					int backgroundColor = getPixel(x + bit, y + byte);
-					if (backgroundColor == getPixelColor(this->memory[PALETTES_ADDRESS]))
+					if (backgroundPixelBits.at(x + bit + (VIDEO_WIDTH * (y + byte))) == 0)
 					{
 						// Here "bit" works as an X offset and "byte" works as a Y offset for the sprite coordinates
 						setPixel((x + bit), (y + byte), pixelColor);
@@ -183,50 +159,43 @@ void PPU::renderSprite(int spriteIndex, int x, int y, int paletteIndex, bool vFl
 	}
 }
 
-bool PPU::renderSpriteHitDetect(int spriteIndex, int x, int y, int paletteIndex, bool vFlip, bool hFlip, bool isBehindBackground) {
+bool PPU::renderSpriteRow(int spriteIndex, int x, int y, int paletteIndex, bool vFlip, bool hFlip, bool isBehindBackground) {
 	bool hitDetected = false;
+	uint16_t addressSprite = (spriteIndex * 16) + spritePatternTableAddress;;
 
-	uint16_t addressSprite = (spriteIndex * 16) + spritePatternTableAddress;
+	int byte = scanlines - y;
+	if (y + byte >= VIDEO_HEIGHT) return hitDetected;
 
-	for (int byte = 0; byte < 8; byte++)
+	int yOffset = vFlip ? 7 - byte : byte;
+	uint8_t firstPlaneByte = this->memoryRead(addressSprite + yOffset);
+	uint8_t secondPlaneByte = this->memoryRead(addressSprite + yOffset + 8);
+
+	uint8_t byteMask = hFlip ? 0x1 : 0x80;
+
+	for (int bit = 0; bit < 8; bit++)
 	{
-		int yOffset = vFlip ? 7 - byte : byte;
-		uint8_t firstPlaneByte = this->memory.at(addressSprite + yOffset);
-		uint8_t secondPlaneByte = this->memory.at(addressSprite + yOffset + 8);
+		if (x + bit >= VIDEO_WIDTH) break;
 
-		uint8_t byteMask = hFlip ? 0x1 : 0x80;
+		uint8_t firstPlaneBit = (firstPlaneByte & byteMask) ? 1 : 0;
+		uint8_t secondPlaneBit = (secondPlaneByte & byteMask) ? 1 : 0;
 
-		for (int bit = 0; bit < 8; bit++)
+		uint8_t pixelBits = (secondPlaneBit << 1) | firstPlaneBit;
+		if (pixelBits != 0)
 		{
-			uint8_t firstPlaneBit = (firstPlaneByte & byteMask) ? 1 : 0;
-			uint8_t secondPlaneBit = (secondPlaneByte & byteMask) ? 1 : 0;
-
-			uint8_t pixelBits = (secondPlaneBit << 1) | firstPlaneBit;
-			if (pixelBits != 0)
+			uint8_t pixelValue = this->memory.at(PALETTES_ADDRESS + pixelBits + (4 * paletteIndex) + 0x10);
+			int pixelColor = getPixelColor(pixelValue);
+			int backgroundPixel = getPixel((x + bit), (y + byte));
+			if (!hitDetected)
 			{
-				uint8_t pixelValue = this->memory.at(PALETTES_ADDRESS + pixelBits + (4 * paletteIndex) + 0x10);
-				int pixelColor = getPixelColor(pixelValue);
-				int backgroundPixel = getPixel((x + bit), (y + byte));
-				if (!hitDetected)
-				{
-					for (int backdropIndex = 0; backdropIndex < 4; backdropIndex++)
-					{
-						int backdropColor = getPixelColor(this->memory[PALETTES_ADDRESS + (backdropIndex * 4)]);
-						if (backgroundPixel != backdropColor)
-						{
-							hitDetected = true;
-							break;
-						}
-					}
-				}
-				if (!isBehindBackground || !hitDetected)
-				{
-					// Here "bit" works as an X offset and "byte" works as a Y offset for the sprite coordinates
-					setPixel((x + bit), (y + byte), pixelColor);
-				}
+				hitDetected = backgroundPixelBits.at(x + bit + (VIDEO_WIDTH * scanlines)) != 0;
 			}
-			byteMask = hFlip ? byteMask << 1 : byteMask >> 1;
+			if (!isBehindBackground || !hitDetected && enableSprites)
+			{
+				// Here "bit" works as an X offset and "byte" works as a Y offset for the sprite coordinates
+				setPixel((x + bit), scanlines, pixelColor);
+			}
 		}
+		byteMask = hFlip ? byteMask << 1 : byteMask >> 1;
 	}
 	return hitDetected;
 }
@@ -371,40 +340,80 @@ int PPU::getNametableAddress() {
 	return baseNametableAddress;
 }
 
+void PPU::renderScanline() {
+	if (mirrorType == VERTICAL)
+	{
+		renderScanlineVerticalMirroring();
+	}
+	else
+	{
+		renderScanlineHorizontalMirroring();
+	}
+
+	// Sprite 0 hit check
+	uint8_t yPosition = oam[0] + 1;
+	if (scanlines >= yPosition && scanlines - yPosition < 8)
+	{
+		uint8_t tileIndex = oam[1];
+		uint8_t attributes = oam[2];
+		uint8_t xPosition = oam[3];
+
+		uint8_t paletteIndex = attributes & 0x3;
+		bool isBehindBackground = attributes & 0x20;
+		bool vFlip = attributes & 0x80;
+		bool hFlip = attributes & 0x40;
+		if (renderSpriteRow(tileIndex, xPosition, yPosition, paletteIndex, vFlip, hFlip, isBehindBackground))
+		{
+			// Set sprite 0 hit flag
+			regPpuStatus |= 0x40;
+		}
+	}
+	scanlines++;
+}
+
 void PPU::renderScanlineHorizontalMirroring() {
 	int nametableAddress = getNametableAddress();
-	int x = showLeftmostBackground ? 0 : 8;
-	for (; x < VIDEO_WIDTH; x+=8)
+	for (int x = 0; x < VIDEO_WIDTH; x+=8)
 	{
+		if (x == 0 && !showLeftmostBackground)
+		{
+			int pixelValue = this->memory.at(PALETTES_ADDRESS);
+			int pixelColor = getPixelColor(pixelValue);
+			for (int bit = 0; bit < 8; bit++)
+			{
+				setPixel(x + bit, scanlines, pixelColor);
+				backgroundPixelBits.at(backgroundIndex) = 0;
+				backgroundIndex++;
+			}
+			continue;
+		}
 		int tileIndex;
 		int attributeByte;
 		int yQuadrant;
 		if (nametableAddress == mirrorNametableAddress)
 		{
 			tileIndex =
-				this->memory.at(nametableAddress + (x / 8) + (((scanlines + scrollY - 240) / 8) * 32));
+				this->memoryRead(nametableAddress + (x / 8) + (((scanlines + scrollY - 240) / 8) * 32));
 
 			attributeByte =
-				this->memory.at((nametableAddress + ATTRIBUTE_TABLE_OFFSET) + (x / 32) + (((scanlines + scrollY - 240) / 32) * 8));
+				this->memoryRead((nametableAddress + ATTRIBUTE_TABLE_OFFSET) + (x / 32) + (((scanlines + scrollY - 240) / 32) * 8));
 
 			yQuadrant = (scanlines + scrollY - 240) % 32;
 		}
 		else
 		{
 			tileIndex =
-				this->memory.at(nametableAddress + (x / 8) + (((scanlines + scrollY) / 8) * VIDEO_WIDTH / 8));
-
+				this->memoryRead(nametableAddress + (x / 8) + (((scanlines + scrollY) / 8) * VIDEO_WIDTH / 8));
 			attributeByte =
-				this->memory.at((nametableAddress + ATTRIBUTE_TABLE_OFFSET) + (x / 32) + (((scanlines + scrollY) / 32) * 8));
+				this->memoryRead((nametableAddress + ATTRIBUTE_TABLE_OFFSET) + (x / 32) + (((scanlines + scrollY) / 32) * 8));
 
 			yQuadrant = (scanlines + scrollY) % 32;
 		}
-
 		uint16_t addressSprite = backgroundPatternTableAddress + tileIndex * 16;
-		
+
 		int tileY = (scanlines + scrollY) % 8;
-		uint8_t firstPlaneByte = this->memory.at(addressSprite + tileY);
-		uint8_t secondPlaneByte = this->memory.at(addressSprite + tileY + 8);
+		uint8_t firstPlaneByte = this->memoryRead(addressSprite + tileY);
+		uint8_t secondPlaneByte = this->memoryRead(addressSprite + tileY + 8);
 
 		int xQuadrant = x % 32;
 		uint8_t paletteIndex = getPaletteIndex(xQuadrant, yQuadrant, attributeByte);
@@ -430,17 +439,30 @@ void PPU::renderScanlineHorizontalMirroring() {
 			int pixelColor = getPixelColor(pixelValue);
 			setPixel(x + bit, scanlines, pixelColor);
 
+			backgroundPixelBits.at(backgroundIndex) = pixelBits;
+			backgroundIndex++;
+
 			byteMask >>= 1;
 		}
 	}
-
 }
 
 void PPU::renderScanlineVerticalMirroring() {
 	int nametableAddress;
-	int x = showLeftmostBackground ? 0 : 8;
-	for (; x < VIDEO_WIDTH;)
+	for (int x = 0; x < VIDEO_WIDTH;)
 	{
+		if (x == 0 && !showLeftmostBackground)
+		{
+			int pixelValue = this->memory.at(PALETTES_ADDRESS);
+			int pixelColor = getPixelColor(pixelValue);
+			for (int bit = 0; bit < 8; bit++)
+			{
+				setPixel(x + bit, scanlines, pixelColor);
+				backgroundPixelBits.at(backgroundIndex) = 0;
+				backgroundIndex++;
+			}
+			continue;
+		}
 		if (x + scrollX >= VIDEO_WIDTH)
 		{
 			nametableAddress = mirrorNametableAddress;
@@ -455,27 +477,27 @@ void PPU::renderScanlineVerticalMirroring() {
 		int xQuadrant;
 		if (nametableAddress == mirrorNametableAddress)
 		{
-			tileIndex = this->memory.at(nametableAddress + ((x + scrollX) - VIDEO_WIDTH) / 8 + ((scanlines / 8) * 32));
+			tileIndex = this->memoryRead(nametableAddress + ((x + scrollX) - VIDEO_WIDTH) / 8 + ((scanlines / 8) * 32));
 			attributeByte = 
-				this->memory.at((nametableAddress + ATTRIBUTE_TABLE_OFFSET) + ((x + scrollX) - VIDEO_WIDTH) / 32 + ((scanlines / 32) * 8));
+				this->memoryRead((nametableAddress + ATTRIBUTE_TABLE_OFFSET) + ((x + scrollX) - VIDEO_WIDTH) / 32 + ((scanlines / 32) * 8));
 			xQuadrant = (x + scrollX - VIDEO_WIDTH) % 32;
 		}
 		else
 		{
 			tileIndex =
-				this->memory.at(nametableAddress + ((x + scrollX) / 8) + ((scanlines / 8) * VIDEO_WIDTH / 8));
+				this->memoryRead(nametableAddress + ((x + scrollX) / 8) + ((scanlines / 8) * VIDEO_WIDTH / 8));
 
 			attributeByte =
-				this->memory.at((nametableAddress + ATTRIBUTE_TABLE_OFFSET) + ((x + scrollX) / 32) + ((scanlines / 32) * 8));
+				this->memoryRead((nametableAddress + ATTRIBUTE_TABLE_OFFSET) + ((x + scrollX) / 32) + ((scanlines / 32) * 8));
 			xQuadrant = (x + scrollX) % 32;
 		}
-
+		
 		uint16_t addressSprite = (tileIndex * 16) + backgroundPatternTableAddress;
 
 		int y = scanlines % 8;
 
-		uint8_t firstPlaneByte = this->memory.at(addressSprite + y);
-		uint8_t secondPlaneByte = this->memory.at(addressSprite + y + 8);
+		uint8_t firstPlaneByte = this->memoryRead(addressSprite + y);
+		uint8_t secondPlaneByte = this->memoryRead(addressSprite + y + 8);
 
 		int yQuadrant = scanlines % 32;
 
@@ -516,8 +538,11 @@ void PPU::renderScanlineVerticalMirroring() {
 			}
 
 			int pixelColor = getPixelColor(pixelValue);
-			setPixel(x, scanlines, pixelColor);
+			setPixel(x, scanlines, pixelColor); 
 			x++;
+
+			backgroundPixelBits.at(backgroundIndex) = pixelBits;
+			backgroundIndex++;
 
 			byteMask >>= 1;
 		}

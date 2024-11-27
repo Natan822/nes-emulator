@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -16,6 +17,7 @@
 
 class PPU;
 class Controller;
+class Mapper;
 
 class CPU {
 
@@ -80,6 +82,9 @@ public:
 	uint8_t writeMemory(uint16_t address, uint8_t data);
 	uint8_t readMemory(uint16_t address);
 private:
+
+	std::shared_ptr<Mapper> mapper;
+	void setMapper(uint16_t mapperNumber);
 
 	void execute();
 	void reset();

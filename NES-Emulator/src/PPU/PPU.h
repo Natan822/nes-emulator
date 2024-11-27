@@ -1,4 +1,6 @@
 #pragma once
+
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -15,6 +17,7 @@ const int NAMETABLE_SIZE = 0x400;
 const int ATTRIBUTE_TABLE_OFFSET = 960;
 
 class CPU;
+class Mapper;
 
 class PPU {
 public:
@@ -60,14 +63,15 @@ public:
 	bool isBlueEmphasized{};
 
 	// Address Space
-	//uint8_t memory[0x3FFF + 1]{};
 	std::vector<uint8_t> memory;
 	// OAM Address Space
-	//uint8_t oam[256];
 	std::vector<uint8_t> oam;
+	// CHR memory
+	std::vector<uint8_t> chr;
 	// Display Screen
-	//uint32_t video[VIDEO_WIDTH * VIDEO_HEIGHT]{};
 	std::vector<uint32_t> video;
+	std::vector<uint8_t> backgroundPixelBits;
+	unsigned int backgroundIndex{};
 
 	int prgSize{}; // PRG ROM size in 16 KiB units
 	int chrSize{}; // CHR ROM size in 8 KiB units(0 = board uses CHR RAM)
@@ -76,7 +80,7 @@ public:
 	uint16_t vramAddress{};
 
 	unsigned int cycles{};
-	int scanlines{};
+	unsigned int scanlines{};
 
 	void loadROM(std::string filePath);
 
@@ -93,20 +97,28 @@ public:
 	void renderFrame(CPU* cpu);
 	void renderScanline();
 	void renderOAM();
+
+	std::shared_ptr<Mapper> mapper;
+
+	uint8_t memoryRead(uint16_t address);
+	void memoryWrite(uint16_t address, uint8_t data);
+
+	uint8_t getPaletteIndex(int xQuadrant, int yQuadrant, uint8_t attributeByte);
+	int getPixelColor(int pixelValue);
 private:
 	bool isHighByte{};
 	void vramIncrease(CPU* cpu);
 
 	void renderSprite(int spriteIndex, int* videoX, int* videoY);
+	// Render sprite at given X, Y location
 	void renderSprite(int spriteIndex, int x, int y, int paletteIndex, bool vFlip, bool hFlip, bool isBehindBackground);
-	bool renderSpriteHitDetect(int spriteIndex, int x, int y, int paletteIndex, bool vFlip, bool hFlip, bool isBehindBackground);
+	// Render one row of a sprite at the last scanline rendered if that sprite has any pixels there. If a nontransparent pixel is drawn over a background nontransparent pixel, returns true(made specifically for sprite 0 hit checking)
+	bool renderSpriteRow(int spriteIndex, int x, int y, int paletteIndex, bool vFlip, bool hFlip, bool isBehindBackground);
 
 	void updatePPUCTRL();
 	void updatePPUMASK();
 	void updatePPUSCROLL();
 
-	uint8_t getPaletteIndex(int xQuadrant, int yQuadrant, uint8_t attributeByte);
-	int getPixelColor(int pixelValue);
 
 	int emphasizeRed(int color);
 	int emphasizeGreen(int color);

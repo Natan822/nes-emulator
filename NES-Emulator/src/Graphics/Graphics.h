@@ -1,5 +1,7 @@
 #pragma once
 
+class PPU;
+
 namespace Graphics {
 	extern int colorsMapTable[0x3F + 1];
 

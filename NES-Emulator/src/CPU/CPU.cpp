@@ -2,12 +2,15 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include <memory>
 
 #include <iostream>
 
 #include "CPU.h"
 #include "../Controller/Controller.h"
 #include "../PPU/PPU.h"
+#include "../Mappers/Mapper.h"
+#include "../Mappers/Mapper003.h"
 
 CPU::CPU(PPU& ppu, Controller& controller) : 
 	ppu(ppu), 
@@ -219,6 +222,9 @@ void CPU::loadROM(std::string filePath) {
 		}
 	}
 
+	uint16_t mapperNumber = (buffer[7] & 0xF0) | ((buffer[6] & 0xF0) >> 4);
+	setMapper(mapperNumber);
+
 	delete[] buffer;
 
 	uint8_t lowByteStartAddress = memory.at(RESET_VECTOR_ADDRESS);
@@ -233,16 +239,16 @@ void CPU::cycle() {
 	execute();
 	ppu.cycles += (cycles - oldCycles) * 3;
 
-	if (irqInterrupt && !getFlag('I'))
-	{
-		handleInterrupt('I');
-		irqInterrupt = false;
-		cycles += 7;
-	}
 	if (nmiInterrupt)
 	{
 		handleInterrupt('N');
 		nmiInterrupt = false;
+		cycles += 7;
+	}
+	if (irqInterrupt && !getFlag('I'))
+	{
+		handleInterrupt('I');
+		irqInterrupt = false;
 		cycles += 7;
 	}
 }
@@ -411,3 +417,15 @@ bool CPU::getFlag(char flag) {
 	return NULL;
 }
 
+void CPU::setMapper(uint16_t mapperNumber) {
+	switch (mapperNumber)
+	{
+	case 0:
+		this->mapper = std::make_shared<Mapper>(this, &this->ppu);
+		break;
+	case 3:
+		this->mapper = std::make_shared<Mapper003>(this, &this->ppu);
+		break;
+	}
+	this->ppu.mapper = this->mapper;
+}

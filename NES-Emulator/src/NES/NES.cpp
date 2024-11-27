@@ -87,6 +87,7 @@ void NES::start() {
 				else if (ppu->scanlines == 261)
 				{
 					ppu->scanlines = 0;
+					ppu->backgroundIndex = 0;
 					cpu->writeMemory(PPUSTATUS, ppu->regPpuStatus & ~0x40);
 				}
 				else
