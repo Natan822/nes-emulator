@@ -41,30 +41,32 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 	case PPUADDR:
 		if (isHighByte)
 		{
-			vramAddress = (vramAddress & 0xFF) | (data << 8);
-			changeBaseNametable((vramAddress & 0xC00) >> 10);
+			tRegister &= ~0x7F00;
+			tRegister |= (data & 0x3F) << 8;
 		}
 		else
 		{
-			vramAddress = (vramAddress & 0xFF00) | data;
+			tRegister &= ~0x00FF;
+			tRegister |= data;
+			vRegister = tRegister;
 		}
 		isHighByte = !isHighByte;
-		if (vramAddress > 0x3FFF)
+		if (vRegister > 0x7FFF)
 		{
-			vramAddress &= 0x3FFF;
+			vRegister &= 0x7FFF;
 		}
 
 		
 		regPpuAddr = data;
 		break;
 	case PPUDATA:
-		if (vramAddress >= PALETTES_ADDRESS)
+		if (vRegister >= PALETTES_ADDRESS)
 		{
 			writePalettes(data);
 		}
 		else
 		{
-			memoryWrite(vramAddress, data);
+			memoryWrite(vRegister, data);
 		}
 		vramIncrease(cpu);
 		regPpuData = data;
@@ -123,13 +125,13 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
 	case PPUDATA:
 	{
 		data = readBuffer;
-		if (vramAddress >= PALETTES_ADDRESS)
+		if (vRegister >= PALETTES_ADDRESS)
 		{
 			readBuffer = readPalettes();
 		}
 		else
 		{
-			readBuffer = memoryRead(vramAddress);
+			readBuffer = memoryRead(vRegister);
 		}
 		vramIncrease(cpu);
 		break;
@@ -244,8 +246,14 @@ void PPU::memoryWrite(uint16_t address, uint8_t data)
 
 void PPU::updatePPUCTRL() {
 	changeBaseNametable(regPpuCtrl & 0x3);
+
+	// Update nametable selection
+	tRegister &= ~0xC00;
+	tRegister |= ((regPpuCtrl & 0x3) << 10);
+
 	// Check sprite pattern table address
 	spritePatternTableAddress = regPpuCtrl & 0x8 ? 0x1000 : 0;
+
 	// Check background pattern table address
 	backgroundPatternTableAddress = regPpuCtrl & 0x10 ? 0x1000 : 0;
 }
@@ -266,11 +274,19 @@ void PPU::updatePPUSCROLL() {
 	if (isHighByte)
 	{
 		scrollX = regPpuScroll;
+
+		tRegister &= ~0x1F;
+		tRegister |= ((regPpuScroll & 0xF8) >> 3);
+		xRegister = regPpuScroll & 0x7;
 	}
 	// Second write
 	else
 	{
 		scrollY = regPpuScroll;
+
+		tRegister &= ~0x73E0;
+		tRegister |= (regPpuScroll & 0x3) << 12;
+		tRegister |= (regPpuScroll & 0xF8) << 2;
 	}
 	isHighByte = !isHighByte;
 }
@@ -279,15 +295,15 @@ void PPU::vramIncrease(CPU* cpu) {
 	// Check VRAM address increment mode
 	if (regPpuCtrl & 0x4)
 	{
-		vramAddress += 32;
+		vRegister += 32;
 	}
 	else
 	{
-		vramAddress++;
+		vRegister++;
 	}
-	if (vramAddress > 0x3FFF)
+	if (vRegister > 0x7FFF)
 	{
-		vramAddress &= 0x3FFF;
+		vRegister &= 0x7FFF;
 	}
 }
 
@@ -305,9 +321,9 @@ void PPU::mirrorPalettes() {
 }
 
 void PPU::writePalettes(uint8_t data) {
-	if (vramAddress <= 0x3F1F)
+	if (vRegister <= 0x3F1F)
 	{
-		uint8_t lastDigit = vramAddress & 0xF;
+		uint8_t lastDigit = vRegister & 0xF;
 		// Backdrop color
 		if (lastDigit % 4 == 0)
 		{
@@ -316,28 +332,28 @@ void PPU::writePalettes(uint8_t data) {
 		}
 		else
 		{
-			this->memory[vramAddress] = data;
+			this->memory[vRegister] = data;
 		}
 	}
 	else
 	{
-		uint8_t mirroredByte = (vramAddress & 0xFF) % 0x20;
+		uint8_t mirroredByte = (vRegister & 0xFF) % 0x20;
 		this->memory[PALETTES_ADDRESS | mirroredByte] = data;
 	}
 }
 
 uint8_t PPU::readPalettes() {
-	if (vramAddress <= 0x3F1F)
+	if (vRegister <= 0x3F1F)
 	{
 		// Backdrop color
-		if ((vramAddress & 0xFF) % 4 == 0)
+		if ((vRegister & 0xFF) % 4 == 0)
 		{
 			return this->memory[PALETTES_ADDRESS];
 		}
 
-		return this->memory[vramAddress];
+		return this->memory[vRegister];
 	}
 
-	uint8_t mirroredByte = (vramAddress & 0xFF) % 0x20;
-	return this->memory[(vramAddress & 0x3F00) | mirroredByte];
+	uint8_t mirroredByte = (vRegister & 0xFF) % 0x20;
+	return this->memory[(vRegister & 0x3F00) | mirroredByte];
 }

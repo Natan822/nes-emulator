@@ -79,6 +79,10 @@ public:
 	// Address set by PPUADDR register
 	uint16_t vramAddress{};
 
+	uint16_t vRegister{};
+	uint16_t tRegister{};
+	uint8_t xRegister{};
+
 	unsigned int cycles{};
 	unsigned int scanlines{};
 
@@ -96,6 +100,7 @@ public:
 
 	void renderFrame(CPU* cpu);
 	void renderScanline();
+	void newRenderScanline();
 	void renderOAM();
 
 	std::shared_ptr<Mapper> mapper;

@@ -340,6 +340,66 @@ int PPU::getNametableAddress() {
 	return baseNametableAddress;
 }
 
+void PPU::newRenderScanline() {
+	int coarseX = vRegister & 0x1F;
+	int coarseY = (vRegister & 0x3E0) >> 5;
+	int fineX = xRegister;
+	int fineY = (vRegister & 0x7000) >> 12;
+	for (int dot = 0; dot < 341; dot++)
+	{
+
+		if (dot > 0 && dot <= 256)
+		{
+			int x = dot - 1;
+			int y = scanlines;
+
+			uint16_t tileAddress = 0x2000 | (vRegister & 0xFFF);
+			uint16_t attributeByteAddr = 0x23C0 | (vRegister & 0x0C00) | ((vRegister >> 4) & 0x38) | ((vRegister >> 2) & 0x07);
+
+			uint8_t tileIndex = this->memoryRead(tileAddress);
+			uint8_t attributeByte = this->memoryRead(attributeByteAddr);
+
+			uint16_t addressSprite = backgroundPatternTableAddress + tileIndex * 16;
+			int paletteIndex = getPaletteIndex(x % 32, y % 32, attributeByte);
+
+			int tileY = (scanlines + fineY) % 8;
+			uint8_t firstPlaneByte = this->memoryRead(addressSprite + tileY);
+			uint8_t secondPlaneByte = this->memoryRead(addressSprite + tileY + 8);
+
+			uint8_t byteMask = 0x80 >> (x % 8);
+			uint8_t firstPlaneBit = (firstPlaneByte & byteMask) ? 1 : 0;
+			uint8_t secondPlaneBit = (secondPlaneByte & byteMask) ? 1 : 0;
+
+			uint8_t pixelBits = (secondPlaneBit << 1) | firstPlaneBit;
+
+			uint8_t pixelValue;
+			if (pixelBits == 0)
+			{
+				pixelValue = this->memory.at(PALETTES_ADDRESS);
+			}
+			else
+			{
+				pixelValue = this->memory.at(PALETTES_ADDRESS + pixelBits + (4 * paletteIndex));
+			}
+
+			int pixelColor = getPixelColor(pixelValue);
+			setPixel(x, scanlines, pixelColor);
+			//backgroundPixelBits.at(backgroundIndex) = pixelBits;
+			//backgroundIndex++;
+
+				byteMask >>= 1;
+
+			fineX++;
+			if (fineX == 8)
+			{
+				fineX = 0;
+				vRegister++;
+			}
+		}
+	}
+	scanlines++;
+}
+
 void PPU::renderScanline() {
 	if (mirrorType == VERTICAL)
 	{
