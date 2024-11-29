@@ -111,6 +111,9 @@ public:
 	uint8_t getPaletteIndex(int xQuadrant, int yQuadrant, uint8_t attributeByte);
 	int getPixelColor(int pixelValue);
 private:
+	void incrementCoarseX();
+	void incrementY();
+
 	bool isHighByte{};
 	void vramIncrease(CPU* cpu);
 
@@ -119,6 +122,7 @@ private:
 	void renderSprite(int spriteIndex, int x, int y, int paletteIndex, bool vFlip, bool hFlip, bool isBehindBackground);
 	// Render one row of a sprite at the last scanline rendered if that sprite has any pixels there. If a nontransparent pixel is drawn over a background nontransparent pixel, returns true(made specifically for sprite 0 hit checking)
 	bool renderSpriteRow(int spriteIndex, int x, int y, int paletteIndex, bool vFlip, bool hFlip, bool isBehindBackground);
+	void handleSpriteZero();
 
 	void updatePPUCTRL();
 	void updatePPUMASK();

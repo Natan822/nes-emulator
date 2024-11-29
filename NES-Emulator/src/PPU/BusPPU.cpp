@@ -55,7 +55,6 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 		{
 			vRegister &= 0x7FFF;
 		}
-
 		
 		regPpuAddr = data;
 		break;
@@ -148,6 +147,7 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
 
 uint8_t PPU::memoryRead(uint16_t address)
 {
+	address &= 0x3FFF;
 	// CHR
 	if (address < 0x2000)
 	{
@@ -192,6 +192,8 @@ uint8_t PPU::memoryRead(uint16_t address)
 
 void PPU::memoryWrite(uint16_t address, uint8_t data)
 {
+	address &= 0x3FFF;
+
 	if (address < 0x2000)
 	{
 		this->mapper->chrWrite(address, data);

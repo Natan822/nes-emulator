@@ -80,13 +80,6 @@ void PPU::renderFrame(CPU* cpu) {
 		renderOAM();
 	}
 	Graphics::update(this->video.data(), (sizeof(this->video[0]) * VIDEO_WIDTH));
-
-	cpu->memory.at(PPUSTATUS) |= 0x80;
-	regPpuStatus |= 0x80;
-	if (regPpuCtrl & 0x80)
-	{
-		cpu->nmiInterrupt = true;
-	}
 }
 
 void PPU::renderOAM() {
@@ -340,14 +333,53 @@ int PPU::getNametableAddress() {
 	return baseNametableAddress;
 }
 
+void PPU::incrementCoarseX() {
+	// Coarse X == 31
+	if ((vRegister & 0x1F) == 31)
+	{
+		// Coarse X = 0
+		vRegister &= ~0x1F;
+		// Switch horizontal nametable
+		vRegister ^= 0x400;
+	}
+	else
+	{
+		vRegister++;
+	}
+}
+
+void PPU::incrementY() {
+	// Fine Y < 7
+	if ((vRegister & 0x7000) != 0x7000)
+	{
+		vRegister += 0x1000;
+	}
+	else
+	{
+		// Fine Y = 0
+		vRegister &= ~0x7000;
+		int coarseY = (vRegister & 0x3E0) >> 5;
+		if (coarseY == 29)
+		{
+			coarseY = 0;
+			// Switch vertical nametable
+			vRegister ^= 0x800;
+		}
+		else if (coarseY == 31)
+		{
+			coarseY = 0;
+		}
+		else
+		{
+			coarseY++;
+		}
+		vRegister = (vRegister & ~0x03E0) | (coarseY << 5);
+	}
+}
+
 void PPU::newRenderScanline() {
-	int coarseX = vRegister & 0x1F;
-	int coarseY = (vRegister & 0x3E0) >> 5;
-	int fineX = xRegister;
-	int fineY = (vRegister & 0x7000) >> 12;
 	for (int dot = 0; dot < 341; dot++)
 	{
-
 		if (dot > 0 && dot <= 256)
 		{
 			int x = dot - 1;
@@ -362,9 +394,9 @@ void PPU::newRenderScanline() {
 			uint16_t addressSprite = backgroundPatternTableAddress + tileIndex * 16;
 			int paletteIndex = getPaletteIndex(x % 32, y % 32, attributeByte);
 
-			int tileY = (scanlines + fineY) % 8;
-			uint8_t firstPlaneByte = this->memoryRead(addressSprite + tileY);
-			uint8_t secondPlaneByte = this->memoryRead(addressSprite + tileY + 8);
+			int fineY = (vRegister & 0x7000) >> 12;
+			uint8_t firstPlaneByte = this->memoryRead(addressSprite + fineY);
+			uint8_t secondPlaneByte = this->memoryRead(addressSprite + fineY + 8);
 
 			uint8_t byteMask = 0x80 >> (x % 8);
 			uint8_t firstPlaneBit = (firstPlaneByte & byteMask) ? 1 : 0;
@@ -384,20 +416,52 @@ void PPU::newRenderScanline() {
 
 			int pixelColor = getPixelColor(pixelValue);
 			setPixel(x, scanlines, pixelColor);
-			//backgroundPixelBits.at(backgroundIndex) = pixelBits;
-			//backgroundIndex++;
+			backgroundPixelBits.at(backgroundIndex) = pixelBits;
+			backgroundIndex++;
 
-				byteMask >>= 1;
+			byteMask >>= 1;
 
-			fineX++;
-			if (fineX == 8)
+			xRegister++;
+			if (xRegister == 8)
 			{
-				fineX = 0;
-				vRegister++;
+				xRegister = 0;
+				incrementCoarseX();
+			}
+
+			if (dot == 256)
+			{
+				incrementY();
 			}
 		}
+		else if (dot == 257)
+		{
+			vRegister &= ~0x41F;
+			vRegister |= (tRegister & 0x41F);
+		}
 	}
+	handleSpriteZero();
 	scanlines++;
+}
+
+void PPU::handleSpriteZero() {
+	// Sprite 0 hit check
+	uint8_t yPosition = oam[0] + 1;
+	if (scanlines >= yPosition && scanlines - yPosition < 8)
+	{
+		uint8_t tileIndex = oam[1];
+		uint8_t attributes = oam[2];
+		uint8_t xPosition = oam[3];
+
+		uint8_t paletteIndex = attributes & 0x3;
+		bool isBehindBackground = attributes & 0x20;
+		bool vFlip = attributes & 0x80;
+		bool hFlip = attributes & 0x40;
+		if (renderSpriteRow(tileIndex, xPosition, yPosition, paletteIndex, vFlip, hFlip, isBehindBackground))
+		{
+			// Set sprite 0 hit flag
+			regPpuStatus |= 0x40;
+		}
+	}
 }
 
 void PPU::renderScanline() {

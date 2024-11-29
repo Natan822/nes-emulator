@@ -84,12 +84,26 @@ void NES::start() {
 					quit = Input::inputProcessing(this->controller);
 					ppu->scanlines++;
 				}
-
+				else if (ppu->scanlines == 241)
+				{
+					// Set VBlank flag
+					cpu->writeMemory(PPUSTATUS, ppu->regPpuStatus | 0x80);
+					if (ppu->regPpuCtrl & 0x80)
+					{
+						cpu->nmiInterrupt = true;
+					}
+					ppu->scanlines++;
+				}
 				else if (ppu->scanlines == 261)
 				{
 					ppu->scanlines = 0;
 					ppu->backgroundIndex = 0;
-					cpu->writeMemory(PPUSTATUS, ppu->regPpuStatus & ~0x40);
+					// Clear Sprite 0, VBlank and Sprite overflow
+					cpu->writeMemory(PPUSTATUS, ppu->regPpuStatus & ~0xE0);
+					if (ppu->enableBackground)
+					{
+						ppu->vRegister = ppu->tRegister;
+					}
 				}
 				else
 				{
