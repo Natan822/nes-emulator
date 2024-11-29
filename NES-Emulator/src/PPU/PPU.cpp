@@ -392,7 +392,10 @@ void PPU::newRenderScanline() {
 			uint8_t attributeByte = this->memoryRead(attributeByteAddr);
 
 			uint16_t addressSprite = backgroundPatternTableAddress + tileIndex * 16;
-			int paletteIndex = getPaletteIndex(x % 32, y % 32, attributeByte);
+
+			int coarseX = vRegister & 0x1F;
+			int coarseY = (vRegister & 0x3E0) >> 5;
+			int paletteIndex = getPaletteIndex((coarseX * 8) % 32, (coarseY * 8) % 32, attributeByte);
 
 			int fineY = (vRegister & 0x7000) >> 12;
 			uint8_t firstPlaneByte = this->memoryRead(addressSprite + fineY);
