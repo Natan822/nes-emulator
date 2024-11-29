@@ -45,7 +45,7 @@ void PPU::loadROM(std::string filePath) {
 	chrSize = static_cast<int>(buffer[5]);
 
 	// Starts at 16 because the header bytes occupy the first 16 bytes
-	for (int i = 16; i < 8192 + 16; i++)
+	for (int i = 16; i < (8192 * chrSize) + 16; i++)
 	{	
 		memory.at(i - 16) = buffer[(prgSize * 16384) + i];
 	}
