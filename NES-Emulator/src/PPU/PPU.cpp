@@ -85,7 +85,7 @@ void PPU::renderFrame(CPU* cpu) {
 void PPU::renderOAM() {
 	for (int oamByte = 252; oamByte >= 4; oamByte -= 4)
 	{
-		uint8_t yPosition  = oam.at(oamByte) + 1;
+		uint16_t yPosition  = oam.at(oamByte) + 1; // 16 bits in order to prevent overflowing from 0xFF to 0x00
 		uint8_t tileIndex  = oam.at(oamByte + 1);
 		uint8_t attributes = oam.at(oamByte + 2);
 		uint8_t xPosition  = oam.at(oamByte + 3);
