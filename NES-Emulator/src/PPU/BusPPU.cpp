@@ -123,13 +123,14 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
 
 	case PPUDATA:
 	{
-		data = readBuffer;
 		if (vRegister >= PALETTES_ADDRESS)
 		{
 			readBuffer = readPalettes();
+			data = readBuffer;
 		}
 		else
 		{
+			data = readBuffer;
 			readBuffer = memoryRead(vRegister);
 		}
 		vramIncrease(cpu);
