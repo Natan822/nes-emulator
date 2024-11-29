@@ -382,8 +382,23 @@ void PPU::newRenderScanline() {
 	{
 		if (dot > 0 && dot <= 256)
 		{
+
 			int x = dot - 1;
 			int y = scanlines;
+
+			if (x < 8 && !showLeftmostBackground)
+			{
+				int pixelColor = getPixelColor(this->memory.at(PALETTES_ADDRESS));
+				setPixel(x, y, pixelColor);
+
+				xRegister++;
+				if (xRegister == 8)
+				{
+					xRegister = 0;
+					incrementCoarseX();
+				}
+				continue;
+			}
 
 			uint16_t tileAddress = 0x2000 | (vRegister & 0xFFF);
 			uint16_t attributeByteAddr = 0x23C0 | (vRegister & 0x0C00) | ((vRegister >> 4) & 0x38) | ((vRegister >> 2) & 0x07);
