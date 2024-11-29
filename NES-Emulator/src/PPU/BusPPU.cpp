@@ -287,7 +287,7 @@ void PPU::updatePPUSCROLL() {
 		scrollY = regPpuScroll;
 
 		tRegister &= ~0x73E0;
-		tRegister |= (regPpuScroll & 0x3) << 12;
+		tRegister |= (regPpuScroll & 0x7) << 12;
 		tRegister |= (regPpuScroll & 0xF8) << 2;
 	}
 	isHighByte = !isHighByte;

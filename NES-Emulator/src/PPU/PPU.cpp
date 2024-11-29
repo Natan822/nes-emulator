@@ -418,7 +418,7 @@ void PPU::newRenderScanline() {
 			}
 
 			int pixelColor = getPixelColor(pixelValue);
-			setPixel(x, scanlines, pixelColor);
+			setPixel(x, y, pixelColor);
 			backgroundPixelBits.at(backgroundIndex) = pixelBits;
 			backgroundIndex++;
 
