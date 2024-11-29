@@ -442,7 +442,10 @@ void PPU::newRenderScanline() {
 			vRegister |= (tRegister & 0x41F);
 		}
 	}
-	handleSpriteZero();
+	if (enableSprites)
+	{
+		handleSpriteZero();
+	}
 	scanlines++;
 }
 
