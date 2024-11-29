@@ -401,7 +401,7 @@ void PPU::newRenderScanline() {
 			uint8_t firstPlaneByte = this->memoryRead(addressSprite + fineY);
 			uint8_t secondPlaneByte = this->memoryRead(addressSprite + fineY + 8);
 
-			uint8_t byteMask = 0x80 >> (x % 8);
+			uint8_t byteMask = 0x80 >> xRegister;
 			uint8_t firstPlaneBit = (firstPlaneByte & byteMask) ? 1 : 0;
 			uint8_t secondPlaneBit = (secondPlaneByte & byteMask) ? 1 : 0;
 
