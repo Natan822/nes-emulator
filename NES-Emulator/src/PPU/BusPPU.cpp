@@ -248,8 +248,6 @@ void PPU::memoryWrite(uint16_t address, uint8_t data)
 }
 
 void PPU::updatePPUCTRL() {
-	changeBaseNametable(regPpuCtrl & 0x3);
-
 	// Update nametable selection
 	tRegister &= ~0xC00;
 	tRegister |= ((regPpuCtrl & 0x3) << 10);

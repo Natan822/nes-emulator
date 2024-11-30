@@ -59,7 +59,7 @@ void NES::start() {
 			{
 				if (ppu->enableBackground)
 				{
-					ppu->newRenderScanline();
+					ppu->renderScanline();
 					//ppu->renderScanline();
 				}
 				else

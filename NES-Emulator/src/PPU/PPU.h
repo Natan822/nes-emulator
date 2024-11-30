@@ -100,7 +100,6 @@ public:
 
 	void renderFrame(CPU* cpu);
 	void renderScanline();
-	void newRenderScanline();
 	void renderOAM();
 
 	std::shared_ptr<Mapper> mapper;
@@ -133,17 +132,10 @@ private:
 	int emphasizeGreen(int color);
 	int emphasizeBlue(int color);
 
-	int getNametableAddress();
-
 	void setPixel(int x, int y, int colorPixel);
 	int getPixel(int x, int y);
 
 	void mirrorPalettes();
 	void writePalettes(uint8_t data);
 	uint8_t readPalettes();
-
-	void renderScanlineHorizontalMirroring();
-	void renderScanlineVerticalMirroring();
-
-	void changeBaseNametable(uint8_t nametable); // 0 = nametable 1, 1 = nametable 2, 2 = nametable 3, 3 = nametable 4
 };
