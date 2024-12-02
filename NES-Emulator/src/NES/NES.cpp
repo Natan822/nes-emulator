@@ -53,64 +53,19 @@ void NES::start() {
 	while (!quit)
 	{
 		cpu->cycle();
-		if ((ppu->cycles - oldCycles) >= 341)
+		if (1)
 		{
-			if (ppu->scanlines < 240)
+			/*delta = std::chrono::duration<float, std::chrono::microseconds::period>
+				(std::chrono::high_resolution_clock::now() - lastFrameTime).count();
+			if (delta < this->frameDelay)
 			{
-				if (ppu->enableBackground)
-				{
-					ppu->renderScanline();
-					//ppu->renderScanline();
-				}
-				else
-				{
-					ppu->scanlines++;
-				}
+				std::this_thread::sleep_for(std::chrono::duration<double, std::micro>
+					(this->frameDelay - delta));
 			}
-			else
-			{
-				if (ppu->scanlines == 240)
-				{
-					delta = std::chrono::duration<float, std::chrono::microseconds::period>
-						(std::chrono::high_resolution_clock::now() - lastFrameTime).count();
-					if (delta < this->frameDelay)
-					{
-						std::this_thread::sleep_for(std::chrono::duration<double, std::micro>
-							(this->frameDelay - delta));
-					}
-					lastFrameTime = std::chrono::high_resolution_clock::now();
-					ppu->renderFrame(cpu);
+			lastFrameTime = std::chrono::high_resolution_clock::now();*/
+			//ppu->renderFrame();
 
-					quit = Input::inputProcessing(this->controller);
-					ppu->scanlines++;
-				}
-				else if (ppu->scanlines == 241)
-				{
-					// Set VBlank flag
-					cpu->writeMemory(PPUSTATUS, ppu->regPpuStatus | 0x80);
-					if (ppu->regPpuCtrl & 0x80)
-					{
-						cpu->nmiInterrupt = true;
-					}
-					ppu->scanlines++;
-				}
-				else if (ppu->scanlines == 261)
-				{
-					ppu->scanlines = 0;
-					ppu->backgroundIndex = 0;
-					// Clear Sprite 0, VBlank and Sprite overflow
-					cpu->writeMemory(PPUSTATUS, ppu->regPpuStatus & ~0xE0);
-					if (ppu->enableBackground)
-					{
-						ppu->vRegister = ppu->tRegister;
-					}
-				}
-				else
-				{
-					ppu->scanlines++;
-				}
-			}
-			oldCycles = ppu->cycles;
+			quit = Input::inputProcessing(this->controller);
 		}
 	}
 	Graphics::shutdown();

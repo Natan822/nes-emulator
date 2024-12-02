@@ -92,13 +92,15 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 }
 
 uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
-	uint8_t data = cpu->memory.at(address);
+	uint8_t data;
 	switch (address)
 	{
 	case PPUCTRL:
+		data = regPpuCtrl;
 		break;
 
 	case PPUMASK:
+		data = regPpuMask;
 		break;
 
 	case PPUSTATUS:
@@ -110,15 +112,19 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
 		break;
 
 	case OAMADDR:
+		data = regOamAddr;
 		break;
 
 	case OAMDATA:
+		data = regOamData;
 		break;
 
 	case PPUSCROLL:
+		data = regPpuScroll;
 		break;
 
 	case PPUADDR:
+		data = regPpuAddr;
 		break;
 
 	case PPUDATA:
@@ -137,6 +143,7 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
 		break;
 	}
 	case OAMDMA:
+		data = regOamDma;
 		break;
 
 	default:

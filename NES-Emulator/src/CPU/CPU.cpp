@@ -27,7 +27,7 @@ CPU::CPU(PPU& ppu, Controller& controller) :
 	status = 0x24;
 	pc = 0xC000;
 
-	cycles = 7;
+	//cycles = 7;
 
 	// Fill opcodes table
 	table[0x00] = &CPU::OP_00NN;
@@ -428,4 +428,15 @@ void CPU::setMapper(uint16_t mapperNumber) {
 		break;
 	}
 	this->ppu.mapper = this->mapper;
+}
+
+void CPU::stepPpu() {
+	unsigned int currentPpuCycleCount = this->ppu.cycles;
+	unsigned int steps = currentPpuCycleCount - previousPpuCycleCount;
+	//std::cout << "steps: " << steps << std::endl;
+	for (int i = 0; i < steps; i++)
+	{
+		this->ppu.step(this);
+	}
+	previousPpuCycleCount = currentPpuCycleCount;
 }

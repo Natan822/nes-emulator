@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <chrono>
 
 const int VIDEO_HEIGHT = 240;
 const int VIDEO_WIDTH = 256;
@@ -40,6 +41,13 @@ public:
 	};
 	Mirroring mirrorType{};
 	int mirrorNametableAddress{};
+
+	enum RenderState {
+		PRE_RENDER,
+		RENDER,
+		POST_RENDER
+	};
+	RenderState renderState;
 
 	int scrollX{};
 	int coarseX{};
@@ -85,6 +93,7 @@ public:
 
 	unsigned int cycles{};
 	unsigned int scanlines{};
+	unsigned int dot{};
 
 	void loadROM(std::string filePath);
 
@@ -98,9 +107,11 @@ public:
 	uint8_t readMemoryPpu(uint16_t address, CPU* cpu);
 	uint8_t readBuffer{};
 
-	void renderFrame(CPU* cpu);
+	void renderFrame();
 	void renderScanline();
 	void renderOAM();
+
+	void step(CPU* cpu);
 
 	std::shared_ptr<Mapper> mapper;
 
@@ -109,7 +120,15 @@ public:
 
 	uint8_t getPaletteIndex(int xQuadrant, int yQuadrant, uint8_t attributeByte);
 	int getPixelColor(int pixelValue);
+
+	std::chrono::high_resolution_clock::time_point lastFrameTime;
 private:
+	void preRender();
+	void render();
+	void postRender(CPU* cpu);
+
+	void defineRenderState();
+
 	void incrementCoarseX();
 	void incrementY();
 

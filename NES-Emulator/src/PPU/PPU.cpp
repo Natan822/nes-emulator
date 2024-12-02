@@ -9,6 +9,8 @@
 #include "../Mappers/Mapper003.h"
 
 #include <iostream>
+#include <chrono>
+#include <thread>
 #include <assert.h>
 
 PPU::PPU() : 
@@ -18,8 +20,9 @@ PPU::PPU() :
 	oam(256),
 	chr(0xFFFF + 1)
 {
-	cycles = 21;
+	//cycles = 21;
 	isHighByte = true;
+	lastFrameTime = std::chrono::high_resolution_clock::now();
 }
 
 PPU::~PPU() {}
@@ -74,7 +77,7 @@ void PPU::loadPatternTable() {
 	}
 }
 
-void PPU::renderFrame(CPU* cpu) {
+void PPU::renderFrame() {
 	if (enableSprites)
 	{
 		renderOAM();
@@ -367,6 +370,179 @@ void PPU::incrementY() {
 		vRegister = (vRegister & ~0x03E0) | (coarseY << 5);
 	}
 }
+
+void PPU::step(CPU* cpu) {
+
+	if (dot == 256 && (enableBackground || enableSprites))
+	{
+		incrementY();
+	}
+
+	// Copy all bits related to horizontal position from t to v
+	if (dot == 257 && (enableBackground || enableSprites))
+	{
+		vRegister &= ~0x41F;
+		vRegister |= tRegister & 0x41F;
+	}
+
+	switch (this->renderState)
+	{
+	case PRE_RENDER:
+		preRender();
+		break;
+	case RENDER:
+		render();
+		break;
+	case POST_RENDER:
+		postRender(cpu);
+		break;
+	}
+
+	dot++;
+	if (dot == 341)
+	{
+		dot = 0;
+		scanlines++;
+		if (scanlines == 262)
+		{
+			scanlines = 0;
+		}
+		defineRenderState();
+	}
+}
+
+void PPU::preRender() {
+	if (dot == 1)
+	{
+		this->backgroundIndex = 0;
+		// Clear Sprite 0, VBlank and Sprite overflow
+		this->regPpuStatus &= ~0xE0;
+	}
+
+	else if (dot >= 280 && dot <= 304 && (enableBackground || enableSprites))
+	{
+		// Repeatedly copy the vertical bits from t to v
+		vRegister &= ~0x3DF;
+		vRegister |= tRegister & 0x3DF;
+	}
+
+	/*if (this->enableBackground)
+	{
+		this->vRegister = this->tRegister;
+	}*/
+}
+
+void PPU::render() {
+	if (dot > 0 && dot <= 256 && enableBackground)
+	{
+		int x = dot - 1;
+		int y = scanlines;
+
+		if (x < 8 && !showLeftmostBackground)
+		{
+			int pixelColor = getPixelColor(this->memory.at(PALETTES_ADDRESS));
+			setPixel(x, y, pixelColor);
+
+			xRegister++;
+			if (xRegister == 8)
+			{
+				xRegister = 0;
+				incrementCoarseX();
+			}
+			dot++;
+			return;
+		}
+
+		uint16_t tileAddress = 0x2000 | (vRegister & 0xFFF);
+		uint16_t attributeByteAddr = 0x23C0 | (vRegister & 0x0C00) | ((vRegister >> 4) & 0x38) | ((vRegister >> 2) & 0x07);
+
+		uint8_t tileIndex = this->memoryRead(tileAddress);
+		uint8_t attributeByte = this->memoryRead(attributeByteAddr);
+
+		uint16_t addressSprite = backgroundPatternTableAddress + tileIndex * 16;
+
+		int coarseX = vRegister & 0x1F;
+		int coarseY = (vRegister & 0x3E0) >> 5;
+		int paletteIndex = getPaletteIndex((coarseX * 8) % 32, (coarseY * 8) % 32, attributeByte);
+
+		int fineY = (vRegister & 0x7000) >> 12;
+		uint8_t firstPlaneByte = this->memoryRead(addressSprite + fineY);
+		uint8_t secondPlaneByte = this->memoryRead(addressSprite + fineY + 8);
+
+		uint8_t byteMask = 0x80 >> xRegister;
+		uint8_t firstPlaneBit = (firstPlaneByte & byteMask) ? 1 : 0;
+		uint8_t secondPlaneBit = (secondPlaneByte & byteMask) ? 1 : 0;
+
+		uint8_t pixelBits = (secondPlaneBit << 1) | firstPlaneBit;
+
+		uint8_t pixelValue;
+		if (pixelBits == 0)
+		{
+			pixelValue = this->memory.at(PALETTES_ADDRESS);
+		}
+		else
+		{
+			pixelValue = this->memory.at(PALETTES_ADDRESS + pixelBits + (4 * paletteIndex));
+		}
+
+		int pixelColor = getPixelColor(pixelValue);
+		setPixel(x, y, pixelColor);
+		backgroundPixelBits.at(backgroundIndex) = pixelBits;
+		backgroundIndex++;
+
+		byteMask >>= 1;
+
+		xRegister++;
+		if (xRegister == 8)
+		{
+			xRegister = 0;
+			incrementCoarseX();
+		}
+
+		if (enableSprites)
+		{
+			handleSpriteZero();
+		}
+	}
+}
+
+void PPU::postRender(CPU* cpu) {
+	if (scanlines == 241 && dot == 1)
+	{
+		auto delta = std::chrono::duration<float, std::chrono::microseconds::period>
+			(std::chrono::high_resolution_clock::now() - lastFrameTime).count();
+		if (delta < 16000)
+		{
+			std::this_thread::sleep_for(std::chrono::duration<double, std::micro>
+				(16000 - delta));
+		}
+		lastFrameTime = std::chrono::high_resolution_clock::now();
+		this->renderFrame();
+
+		// Set VBlank flag
+		this->regPpuStatus |= 0x80;
+		if (this->regPpuCtrl & 0x80)
+		{
+			cpu->nmiInterrupt = true;
+		}
+	}
+}
+
+void PPU::defineRenderState() {
+	if (scanlines < 240)
+	{
+		this->renderState = RenderState::RENDER;
+	}
+	else if (scanlines < 261)
+	{
+		this->renderState = RenderState::POST_RENDER;
+	}
+	else
+	{
+		this->renderState = RenderState::PRE_RENDER;
+	}
+}
+
 
 void PPU::renderScanline() {
 	for (int dot = 0; dot < 341; dot++)

@@ -70,6 +70,8 @@ public:
 	OPCODE table[0xFF + 1]{};
 
 	unsigned int cycles{};
+	unsigned int previousPpuCycleCount{};
+	void stepPpu();
 
 	bool irqInterrupt{};
 	bool nmiInterrupt{};
