@@ -271,6 +271,7 @@ void CPU::step() {
 			irqInterrupt = false;
 			incrementCycle(7);
 		}
+		currentInstruction = instructionsTable[memory[pc]];
 	}
 	else
 	{
@@ -283,10 +284,8 @@ void CPU::execute() {
 
 	// Every instruction takes at least 2 cycles
 	incrementCycle(2);
-	std::cout << "instruction executed: " << currentInstruction.instructionName << " | PC = 0x" << std::hex << pc  << std::endl;
+	//std::cout << "instruction executed: " << currentInstruction.instructionName << " | PC = 0x" << std::hex << pc << " | CPU-CYC = " << std::dec << cycles << std::endl;
 	(this->*currentInstruction.function)();
-
-	currentInstruction = instructionsTable[memory[pc]];
 }
 
 void CPU::reset() {
