@@ -7,6 +7,7 @@
 #include "../Graphics/Graphics.h"
 #include "../Mappers/Mapper.h"
 #include "../Mappers/Mapper003.h"
+#include "../Input/Input.h"
 
 #include <iostream>
 #include <chrono>
@@ -373,15 +374,15 @@ void PPU::incrementY() {
 
 void PPU::step(CPU* cpu) {
 
-	if (dot == 256 && (enableBackground || enableSprites))
+	if (dot == 256 && (enableBackground || enableSprites) && renderState != POST_RENDER)
 	{
 		incrementY();
 	}
 
 	// Copy all bits related to horizontal position from t to v
-	if (dot == 257 && (enableBackground || enableSprites))
+	if (dot == 257 && (enableBackground || enableSprites) && renderState != POST_RENDER)
 	{
-		vRegister &= ~0x41F;
+		vRegister &= 0x7BE0;
 		vRegister |= tRegister & 0x41F;
 	}
 
@@ -419,10 +420,20 @@ void PPU::preRender() {
 		this->regPpuStatus &= ~0xE0;
 	}
 
+	/*else if ((dot <= 256 || dot >= 328) && dot % 8 == 0 && (enableBackground || enableSprites))
+	{
+		xRegister++;
+		if (xRegister == 8)
+		{
+			xRegister = 0;
+			incrementCoarseX();
+		}
+	}*/
+
 	else if (dot >= 280 && dot <= 304 && (enableBackground || enableSprites))
 	{
 		// Repeatedly copy the vertical bits from t to v
-		vRegister &= ~0x3DF;
+		vRegister &= 0x41F;
 		vRegister |= tRegister & 0x3DF;
 	}
 
@@ -449,7 +460,6 @@ void PPU::render() {
 				xRegister = 0;
 				incrementCoarseX();
 			}
-			dot++;
 			return;
 		}
 
@@ -518,6 +528,7 @@ void PPU::postRender(CPU* cpu) {
 		}
 		lastFrameTime = std::chrono::high_resolution_clock::now();
 		this->renderFrame();
+		Input::inputProcessing(&cpu->controller);
 
 		// Set VBlank flag
 		this->regPpuStatus |= 0x80;
@@ -632,13 +643,12 @@ void PPU::renderScanline() {
 }
 
 void PPU::handleSpriteZero() {
-	// Sprite 0 hit check
 	uint8_t yPosition = oam[0] + 1;
-	if (scanlines >= yPosition && scanlines - yPosition < 8)
+	uint8_t xPosition = oam[3];
+	if (scanlines >= yPosition && scanlines - yPosition < 8 && (dot - 1) == xPosition + 8)
 	{
 		uint8_t tileIndex = oam[1];
 		uint8_t attributes = oam[2];
-		uint8_t xPosition = oam[3];
 
 		uint8_t paletteIndex = attributes & 0x3;
 		bool isBehindBackground = attributes & 0x20;

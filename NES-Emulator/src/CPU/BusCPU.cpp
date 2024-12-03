@@ -7,13 +7,11 @@ uint8_t CPU::writeMemory(uint16_t address, uint8_t data) {
 	// PPU registers and mirrors
 	if (address >= 0x2000 && address < 0x4000)
 	{
-		stepPpu();
 		return ppu.writeMemoryPpu(0x2000 | (address & 7), data, this);
 	}
 	// OAMDMA PPU register
 	else if (address == 0x4014)
 	{
-		stepPpu();
 		return ppu.writeMemoryPpu(address, data, this);
 	}
 	// Controller input
@@ -34,13 +32,11 @@ uint8_t CPU::readMemory(uint16_t address) {
 	// PPU registers and mirrors
 	if (address >= 0x2000 && address < 0x4000)
 	{
-		stepPpu();
 		return ppu.readMemoryPpu(0x2000 | (address & 7), this);
 	}
 	// OAMDMA PPU register
 	else if (address == 0x4014)
 	{
-		stepPpu();
 		return ppu.readMemoryPpu(address, this);
 	}
 	// Input

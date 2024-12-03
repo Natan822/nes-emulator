@@ -33,7 +33,36 @@ class CPU {
 
 	typedef void(CPU::* OPCODE)();
 
+	enum AddressingMode {
+		RELATIVE,
+		ACCUMULATOR,
+		IMPLIED,
+		IMMEDIATE,
+		ABSOLUTE,
+		ABSOLUTEX,
+		ABSOLUTEY,
+		ZEROPAGE,
+		ZEROPAGEX,
+		ZEROPAGEY,
+		INDIRECTX,
+		INDIRECTY
+	};
+
+	struct Instruction {
+		OPCODE function;
+		int totalCycles;
+		std::string instructionName;
+		AddressingMode addressingMode;
+	};
+
 public:
+	// Instruction being currently executed
+	Instruction currentInstruction;
+	// Count how many cycles the current instruction has been executing for
+	short cyclesElapsed{};
+
+	Instruction instructionsTable[0xFF + 1];
+
 	// Registers
 	uint8_t aReg{}; // A
 	uint8_t xReg{}; // X
@@ -72,12 +101,16 @@ public:
 	unsigned int cycles{};
 	unsigned int previousPpuCycleCount{};
 	void stepPpu();
+	void stepPpu(int steps);
 
 	bool irqInterrupt{};
 	bool nmiInterrupt{};
 
 	void loadROM(std::string filePath);
 	void cycle();
+	void incrementCycle(int cycles);
+	
+	void step();
 
 	void printInfo();
 

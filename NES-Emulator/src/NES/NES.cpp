@@ -52,9 +52,15 @@ void NES::start() {
 	double delta;
 	while (!quit)
 	{
-		cpu->cycle();
-		if (1)
-		{
+		cpu->step();
+		ppu->step(cpu);
+		ppu->step(cpu);
+		ppu->step(cpu);
+
+
+		//cpu->cycle();
+		//if (1)
+		//{
 			/*delta = std::chrono::duration<float, std::chrono::microseconds::period>
 				(std::chrono::high_resolution_clock::now() - lastFrameTime).count();
 			if (delta < this->frameDelay)
@@ -65,8 +71,8 @@ void NES::start() {
 			lastFrameTime = std::chrono::high_resolution_clock::now();*/
 			//ppu->renderFrame();
 
-			quit = Input::inputProcessing(this->controller);
-		}
+			//quit = Input::inputProcessing(this->controller);
+		//}
 	}
 	Graphics::shutdown();
 }

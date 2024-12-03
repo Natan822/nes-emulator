@@ -182,7 +182,7 @@ void CPU::ASL(uint16_t address) {
 	setFlag('Z', value == 0);
 	setFlag('N', value & 0x80);
 
-	cycles += 2;
+	incrementCycle(2);
 }
 
 void CPU::OP_0A() {
@@ -226,7 +226,7 @@ void CPU::OP_1ENN00() {
 	// Make sure ASL(absolute, X) takes 7 cycles even if page crossing doesn't occur
 	if ((memory[pc + 1] + xReg) <= 0xFF)
 	{
-		cycles++;
+		incrementCycle(1);
 	}
 	pc += 3;
 }
@@ -280,14 +280,16 @@ void CPU::OP_2CNN00() {
 }
 
 void CPU::BRANCH() {
-	cycles++;
+	incrementCycle(1);
+	cyclesElapsed--;
 
 	int8_t signedBranchValue = static_cast<int8_t>(memory[pc - 1]);
 
 	// Page boundary crossed
 	if (((pc & 0xFF) + signedBranchValue) > 0xFF)
 	{
-		cycles++;
+		incrementCycle(1);
+		cyclesElapsed--;
 	}
 
 	pc += signedBranchValue;
@@ -388,7 +390,7 @@ void CPU::OP_00NN() {
 	uint8_t highByte = memory[0xFFFF];
 
 	pc = (highByte << 8) | (lowByte);
-	cycles += 5;
+	incrementCycle(5);
 }
 
 void CPU::CMP(uint8_t value) {
@@ -525,7 +527,7 @@ void CPU::DEC(uint16_t address) {
 	setFlag('N', value & 0x80);
 	setFlag('Z', value == 0);
 
-	cycles += 2;
+	incrementCycle(2);
 }
 
 void CPU::OP_C6NN() {
@@ -556,7 +558,7 @@ void CPU::OP_DENN00() {
 	// Make sure DEC(absolute, X) always takes 7 cycles even if page crossing doesn't occur
 	if ((memory[pc + 1] + xReg) <= 0xFF)
 	{
-		cycles++;
+		incrementCycle(1);
 	}
 	pc += 3;
 }
@@ -665,7 +667,7 @@ void CPU::INC(uint16_t address) {
 	setFlag('N', value & 0x80);
 	setFlag('Z', value == 0);
 
-	cycles += 2;
+	incrementCycle(2);
 }
 
 void CPU::OP_E6NN() {
@@ -696,7 +698,7 @@ void CPU::OP_FENN00() {
 	// Make sure INC(absolute, X) always takes 7 cycles even if page crossing doesn't occur
 	if ((memory[pc + 1] + xReg) <= 0xFF)
 	{
-		cycles++;
+		incrementCycle(1);
 	}
 	pc += 3;
 }
@@ -712,7 +714,7 @@ void CPU::OP_4CNN00() {
 	uint16_t address = (highByte << 8) | lowByte;
 	JMP(address);
 
-	cycles++;
+	incrementCycle(1);
 }
 
 void CPU::OP_6CNN00() {
@@ -737,7 +739,7 @@ void CPU::OP_6CNN00() {
 	}
 	JMP(address);
 
-	cycles += 3;
+	incrementCycle(3);
 }
 
 void CPU::OP_20NN00() {
@@ -752,7 +754,7 @@ void CPU::OP_20NN00() {
 	push((pc + 2) & 0x00FF);
 
 	JMP(address);
-	cycles += 4;
+	incrementCycle(4);
 }
 
 void CPU::LDA(uint8_t value) {
@@ -912,7 +914,7 @@ void CPU::LSR(uint16_t address) {
 	setFlag('N', value & 0x80);
 	setFlag('Z', value == 0);
 
-	cycles += 2;
+	incrementCycle(2);
 }
 
 void CPU::OP_4A() {
@@ -955,7 +957,7 @@ void CPU::OP_5ENN00() {
 	// Make sure LSR(absolute, X) always takes 7 cycles even if page crossing doesn't occur
 	if ((memory[pc + 1] + xReg) <= 0xFF)
 	{
-		cycles++;
+		incrementCycle(1);
 	}
 	pc += 3;
 }
@@ -1110,7 +1112,7 @@ void CPU::ROL(uint16_t address) {
 	setFlag('N', value & 0x80);
 	setFlag('Z', value == 0);
 
-	cycles += 2;
+	incrementCycle(2);
 }
 
 void CPU::OP_2A() {
@@ -1154,7 +1156,7 @@ void CPU::OP_3ENN00() {
 	// Make sure ROL(absolute, X) always takes 7 cycles even if page crossing doesn't occur
 	if ((memory[pc + 1] + xReg) <= 0xFF)
 	{
-		cycles++;
+		incrementCycle(1);
 	}
 	pc += 3;
 }
@@ -1170,7 +1172,7 @@ void CPU::ROR(uint16_t address) {
 	setFlag('N', value & 0x80);
 	setFlag('Z', value == 0);
 
-	cycles += 2;
+	incrementCycle(2);
 }
 
 void CPU::OP_6A() {
@@ -1213,7 +1215,7 @@ void CPU::OP_7ENN00() {
 	// Make sure ROR(absolute, X) takes 7 cycles even if page crossing doesn't occur
 	if ((memory[pc + 1] + xReg) <= 0xFF)
 	{
-		cycles++;
+		incrementCycle(1);
 	}
 	pc += 3;
 }
@@ -1228,7 +1230,7 @@ void CPU::OP_40() {
 
 	uint16_t pcAddress = (pcHighByte << 8) | pcLowByte;
 	pc = pcAddress;
-	cycles += 4;
+	incrementCycle(4);
 }
 
 void CPU::OP_60() {
@@ -1237,7 +1239,7 @@ void CPU::OP_60() {
 
 	uint16_t pcAddress = (pcHighByte << 8) | pcLowByte;
 	pc = pcAddress + 1;
-	cycles += 4;
+	incrementCycle(4);
 }
 
 void CPU::SBC(uint8_t value) {
@@ -1342,7 +1344,7 @@ void CPU::OP_9DNN00() {
 	// Make sure STA(absolute, X) takes 5 cycles even if page crossing doesn't occur
 	if ((memory[pc + 1] + xReg) <= 0xFF)
 	{
-		cycles++;
+		incrementCycle(1);
 	}
 	pc += 3;
 }
@@ -1351,7 +1353,7 @@ void CPU::OP_99NN00() {
 	uint16_t address = absoluteYPtr();
 	STA(address);
 
-	cycles++;
+	incrementCycle(1);
 	pc += 3;
 }
 
@@ -1366,7 +1368,7 @@ void CPU::OP_91NN() {
 	uint16_t address = indirectYPtr();
 	STA(address);
 
-	cycles++;
+	incrementCycle(1);
 	pc += 2;
 }
 
@@ -1388,7 +1390,7 @@ void CPU::OP_48() {
 	push(aReg);
 
 	pc += 1;
-	cycles++;
+	incrementCycle(1);
 }
 
 void CPU::OP_68() {
@@ -1398,14 +1400,14 @@ void CPU::OP_68() {
 	setFlag('Z', aReg == 0);
 
 	pc += 1;
-	cycles += 2;
+	incrementCycle(2);
 }
 
 void CPU::OP_08() {
 	push(status);
 
 	pc += 1;
-	cycles++;
+	incrementCycle(1);
 }
 
 void CPU::OP_28() {
@@ -1415,7 +1417,7 @@ void CPU::OP_28() {
 	setFlag('B', 0);
 
 	pc += 1;
-	cycles += 2;
+	incrementCycle(2);
 }
 
 void CPU::STX(uint16_t address) {

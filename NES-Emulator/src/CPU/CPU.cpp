@@ -21,7 +21,7 @@ CPU::CPU(PPU& ppu, Controller& controller) :
 
 	for (int i = 0; i < 0xFF + 1; i++)
 	{
-		table[i] = &CPU::invalid;
+		instructionsTable[i] = Instruction{ &CPU::invalid, 0, "Unknown", IMMEDIATE };
 	}
 
 	status = 0x24;
@@ -29,158 +29,157 @@ CPU::CPU(PPU& ppu, Controller& controller) :
 
 	//cycles = 7;
 
-	// Fill opcodes table
-	table[0x00] = &CPU::OP_00NN;
-	table[0x01] = &CPU::OP_01NN;
-	table[0x05] = &CPU::OP_05NN;
-	table[0x06] = &CPU::OP_06NN;
-	table[0x08] = &CPU::OP_08;
-	table[0x09] = &CPU::OP_09NN;
-	table[0x0A] = &CPU::OP_0A;
-	table[0x0D] = &CPU::OP_0DNN00;
-	table[0x0E] = &CPU::OP_0ENN00;
-	table[0x10] = &CPU::OP_10NN;
-	table[0x11] = &CPU::OP_11NN;
-	table[0x15] = &CPU::OP_15NN;
-	table[0x16] = &CPU::OP_16NN;
-	table[0x18] = &CPU::OP_18;
-	table[0x19] = &CPU::OP_19NN00;
-	table[0x1D] = &CPU::OP_1DNN00;
-	table[0x1E] = &CPU::OP_1ENN00;
-	table[0x20] = &CPU::OP_20NN00;
-	table[0x21] = &CPU::OP_21NN;
-	table[0x24] = &CPU::OP_24NN;
-	table[0x25] = &CPU::OP_25NN;
-	table[0x26] = &CPU::OP_26NN;
-	table[0x28] = &CPU::OP_28;
-	table[0x29] = &CPU::OP_29NN;
-	table[0x2A] = &CPU::OP_2A;
-	table[0x2C] = &CPU::OP_2CNN00;
-	table[0x2D] = &CPU::OP_2DNN00;
-	table[0x2E] = &CPU::OP_2ENN00;
-	table[0x30] = &CPU::OP_30NN;
-	table[0x31] = &CPU::OP_31NN;
-	table[0x35] = &CPU::OP_35NN;
-	table[0x36] = &CPU::OP_36NN;
-	table[0x38] = &CPU::OP_38;
-	table[0x39] = &CPU::OP_39NN00;
-	table[0x3D] = &CPU::OP_3DNN00;
-	table[0x3E] = &CPU::OP_3ENN00;
-	table[0x40] = &CPU::OP_40;
-	table[0x41] = &CPU::OP_41NN;
-	table[0x45] = &CPU::OP_45NN;
-	table[0x46] = &CPU::OP_46NN;
-	table[0x48] = &CPU::OP_48;
-	table[0x49] = &CPU::OP_49NN;
-	table[0x4A] = &CPU::OP_4A;
-	table[0x4C] = &CPU::OP_4CNN00;
-	table[0x4D] = &CPU::OP_4DNN00;
-	table[0x4E] = &CPU::OP_4ENN00;
-	table[0x50] = &CPU::OP_50NN;
-	table[0x51] = &CPU::OP_51NN;
-	table[0x55] = &CPU::OP_55NN;
-	table[0x56] = &CPU::OP_56NN;
-	table[0x58] = &CPU::OP_58;
-	table[0x59] = &CPU::OP_59NN00;
-	table[0x5D] = &CPU::OP_5DNN00;
-	table[0x5E] = &CPU::OP_5ENN00;
-	table[0x60] = &CPU::OP_60;
-	table[0x61] = &CPU::OP_61NN;
-	table[0x65] = &CPU::OP_65NN;
-	table[0x66] = &CPU::OP_66NN;
-	table[0x68] = &CPU::OP_68;
-	table[0x69] = &CPU::OP_69NN;
-	table[0x6A] = &CPU::OP_6A;
-	table[0x6C] = &CPU::OP_6CNN00;
-	table[0x6D] = &CPU::OP_6DNN00;
-	table[0x6E] = &CPU::OP_6ENN00;
-	table[0x70] = &CPU::OP_70NN;
-	table[0x71] = &CPU::OP_71NN;
-	table[0x75] = &CPU::OP_75NN;
-	table[0x76] = &CPU::OP_76NN;
-	table[0x78] = &CPU::OP_78;
-	table[0x79] = &CPU::OP_79NN00;
-	table[0x7D] = &CPU::OP_7DNN00;
-	table[0x7E] = &CPU::OP_7ENN00;
-	table[0x81] = &CPU::OP_81NN;
-	table[0x84] = &CPU::OP_84NN;
-	table[0x85] = &CPU::OP_85NN;
-	table[0x86] = &CPU::OP_86NN;
-	table[0x88] = &CPU::OP_88;
-	table[0x8A] = &CPU::OP_8A;
-	table[0x8C] = &CPU::OP_8CNN00;
-	table[0x8D] = &CPU::OP_8DNN00;
-	table[0x8E] = &CPU::OP_8ENN00;
-	table[0x90] = &CPU::OP_90NN;
-	table[0x91] = &CPU::OP_91NN;
-	table[0x94] = &CPU::OP_94NN;
-	table[0x95] = &CPU::OP_95NN;
-	table[0x96] = &CPU::OP_96NN;
-	table[0x98] = &CPU::OP_98;
-	table[0x99] = &CPU::OP_99NN00;
-	table[0x9A] = &CPU::OP_9A;
-	table[0x9D] = &CPU::OP_9DNN00;
-	table[0xA0] = &CPU::OP_A0NN;
-	table[0xA1] = &CPU::OP_A1NN;
-	table[0xA2] = &CPU::OP_A2NN;
-	table[0xA4] = &CPU::OP_A4NN;
-	table[0xA5] = &CPU::OP_A5NN;
-	table[0xA6] = &CPU::OP_A6NN;
-	table[0xA8] = &CPU::OP_A8;
-	table[0xA9] = &CPU::OP_A9NN;
-	table[0xAA] = &CPU::OP_AA;
-	table[0xAC] = &CPU::OP_ACNN00;
-	table[0xAD] = &CPU::OP_ADNN00;
-	table[0xAE] = &CPU::OP_AENN00;
-	table[0xB0] = &CPU::OP_B0NN;
-	table[0xB1] = &CPU::OP_B1NN;
-	table[0xB4] = &CPU::OP_B4NN;
-	table[0xB5] = &CPU::OP_B5NN;
-	table[0xB6] = &CPU::OP_B6NN;
-	table[0xB8] = &CPU::OP_B8;
-	table[0xB9] = &CPU::OP_B9NN00;
-	table[0xBA] = &CPU::OP_BA;
-	table[0xBC] = &CPU::OP_BCNN00;
-	table[0xBD] = &CPU::OP_BDNN00;
-	table[0xBE] = &CPU::OP_BENN00;
-	table[0xC0] = &CPU::OP_C0NN;
-	table[0xC1] = &CPU::OP_C1NN;
-	table[0xC4] = &CPU::OP_C4NN;
-	table[0xC5] = &CPU::OP_C5NN;
-	table[0xC6] = &CPU::OP_C6NN;
-	table[0xC8] = &CPU::OP_C8;
-	table[0xC9] = &CPU::OP_C9NN;
-	table[0xCA] = &CPU::OP_CA;
-	table[0xCC] = &CPU::OP_CCNN00;
-	table[0xCD] = &CPU::OP_CDNN00;
-	table[0xCE] = &CPU::OP_CENN00;
-	table[0xD0] = &CPU::OP_D0NN;
-	table[0xD1] = &CPU::OP_D1NN;
-	table[0xD5] = &CPU::OP_D5NN;
-	table[0xD6] = &CPU::OP_D6NN;
-	table[0xD8] = &CPU::OP_D8;
-	table[0xD9] = &CPU::OP_D9NN00;
-	table[0xDD] = &CPU::OP_DDNN00;
-	table[0xDE] = &CPU::OP_DENN00;
-	table[0xE0] = &CPU::OP_E0NN;
-	table[0xE1] = &CPU::OP_E1NN;
-	table[0xE4] = &CPU::OP_E4NN;
-	table[0xE5] = &CPU::OP_E5NN;
-	table[0xE6] = &CPU::OP_E6NN;
-	table[0xE8] = &CPU::OP_E8;
-	table[0xE9] = &CPU::OP_E9NN;
-	table[0xEA] = &CPU::OP_EA;
-	table[0xEC] = &CPU::OP_ECNN00;
-	table[0xED] = &CPU::OP_EDNN00;
-	table[0xEE] = &CPU::OP_EENN00;
-	table[0xF0] = &CPU::OP_F0NN;
-	table[0xF1] = &CPU::OP_F1NN;
-	table[0xF5] = &CPU::OP_F5NN;
-	table[0xF6] = &CPU::OP_F6NN;
-	table[0xF8] = &CPU::OP_F8;
-	table[0xF9] = &CPU::OP_F9NN00;
-	table[0xFD] = &CPU::OP_FDNN00;
-	table[0xFE] = &CPU::OP_FENN00;
+	instructionsTable[0x69] = Instruction{&CPU::OP_69NN, 2, "ADC #$nn", IMMEDIATE};
+	instructionsTable[0x6D] = Instruction{&CPU::OP_6DNN00, 4, "ADC $nnnn", ABSOLUTE};
+	instructionsTable[0x7D] = Instruction{&CPU::OP_7DNN00, 4, "ADC $nnnn,X", ABSOLUTEX};
+	instructionsTable[0x79] = Instruction{&CPU::OP_79NN00, 4, "ADC $nnnn,Y", ABSOLUTEY};
+	instructionsTable[0x65] = Instruction{&CPU::OP_65NN, 3, "ADC $nn", ZEROPAGE};
+	instructionsTable[0x75] = Instruction{&CPU::OP_75NN, 4, "ADC $nn,X", ZEROPAGEX};
+	instructionsTable[0x61] = Instruction{&CPU::OP_61NN, 6, "ADC ($nn,X)", INDIRECTX};
+	instructionsTable[0x71] = Instruction{&CPU::OP_71NN, 5, "ADC ($nn),Y", INDIRECTY};
+	instructionsTable[0x29] = Instruction{&CPU::OP_29NN, 2, "AND #$nn", IMMEDIATE};
+	instructionsTable[0x2D] = Instruction{&CPU::OP_2DNN00, 4, "AND $nnnn", ABSOLUTE};
+	instructionsTable[0x3D] = Instruction{&CPU::OP_3DNN00, 4, "AND $nnnn,X", ABSOLUTEX};
+	instructionsTable[0x39] = Instruction{&CPU::OP_39NN00, 4, "AND $nnnn,Y", ABSOLUTEY};
+	instructionsTable[0x25] = Instruction{&CPU::OP_25NN, 3, "AND $nn", ZEROPAGE};
+	instructionsTable[0x35] = Instruction{&CPU::OP_35NN, 4, "AND $nn,X", ZEROPAGEX};
+	instructionsTable[0x21] = Instruction{&CPU::OP_21NN, 6, "AND ($nn,X)", INDIRECTX};
+	instructionsTable[0x31] = Instruction{&CPU::OP_31NN, 5, "AND ($nn),Y", INDIRECTY};
+	instructionsTable[0x0A] = Instruction{&CPU::OP_0A, 2, "ASL A", ACCUMULATOR};
+	instructionsTable[0x0E] = Instruction{&CPU::OP_0ENN00, 6, "ASL $nnnn", ABSOLUTE};
+	instructionsTable[0x1E] = Instruction{&CPU::OP_1ENN00, 7, "ASL $nnnn,X", ABSOLUTEX};
+	instructionsTable[0x06] = Instruction{&CPU::OP_06NN, 5, "ASL $nn", ZEROPAGE};
+	instructionsTable[0x16] = Instruction{&CPU::OP_16NN, 6, "ASL $nn,X", ZEROPAGEX};
+	instructionsTable[0x90] = Instruction{&CPU::OP_90NN, 2, "BCC $nnnn", RELATIVE};
+	instructionsTable[0xB0] = Instruction{&CPU::OP_B0NN, 2, "BCS $nnnn", RELATIVE};
+	instructionsTable[0xF0] = Instruction{&CPU::OP_F0NN, 2, "BEQ $nnnn", RELATIVE};
+	instructionsTable[0x2C] = Instruction{&CPU::OP_2CNN00, 4, "BIT $nnnn", ABSOLUTE};
+	instructionsTable[0x24] = Instruction{&CPU::OP_24NN, 3, "BIT $nn", ZEROPAGE};
+	instructionsTable[0x30] = Instruction{&CPU::OP_30NN, 2, "BMI $nnnn", RELATIVE};
+	instructionsTable[0xD0] = Instruction{&CPU::OP_D0NN, 2, "BNE $nnnn", RELATIVE};
+	instructionsTable[0x10] = Instruction{&CPU::OP_10NN, 2, "BPL $nnnn", RELATIVE};
+	instructionsTable[0x00] = Instruction{&CPU::OP_00NN, 7, "BRK", IMPLIED};
+	instructionsTable[0x50] = Instruction{&CPU::OP_50NN, 2, "BVC $nnnn", RELATIVE};
+	instructionsTable[0x70] = Instruction{&CPU::OP_70NN, 2, "BVS $nnnn", RELATIVE};
+	instructionsTable[0x18] = Instruction{&CPU::OP_18, 2, "CLC", IMPLIED};
+	instructionsTable[0xD8] = Instruction{&CPU::OP_D8, 2, "CLD", IMPLIED};
+	instructionsTable[0x58] = Instruction{&CPU::OP_58, 2, "CLI", IMPLIED};
+	instructionsTable[0xB8] = Instruction{&CPU::OP_B8, 2, "CLV", IMPLIED};
+	instructionsTable[0xC9] = Instruction{&CPU::OP_C9NN, 2, "CMP #$nn", IMMEDIATE};
+	instructionsTable[0xCD] = Instruction{&CPU::OP_CDNN00, 4, "CMP $nnnn", ABSOLUTE};
+	instructionsTable[0xDD] = Instruction{&CPU::OP_DDNN00, 4, "CMP $nnnn,X", ABSOLUTEX};
+	instructionsTable[0xD9] = Instruction{&CPU::OP_D9NN00, 4, "CMP $nnnn,Y", ABSOLUTEY};
+	instructionsTable[0xC5] = Instruction{&CPU::OP_C5NN, 3, "CMP $nn", ZEROPAGE};
+	instructionsTable[0xD5] = Instruction{&CPU::OP_D5NN, 4, "CMP $nn,X", ZEROPAGEX};
+	instructionsTable[0xC1] = Instruction{&CPU::OP_C1NN, 6, "CMP ($nn,X)", INDIRECTX};
+	instructionsTable[0xD1] = Instruction{&CPU::OP_D1NN, 5, "CMP ($nn),Y", INDIRECTY};
+	instructionsTable[0xE0] = Instruction{&CPU::OP_E0NN, 2, "CPX #$nn", IMMEDIATE};
+	instructionsTable[0xEC] = Instruction{&CPU::OP_ECNN00, 4, "CPX $nnnn", ABSOLUTE};
+	instructionsTable[0xE4] = Instruction{&CPU::OP_E4NN, 3, "CPX $nn", ZEROPAGE};
+	instructionsTable[0xC0] = Instruction{&CPU::OP_C0NN, 2, "CPY #$nn", IMMEDIATE};
+	instructionsTable[0xCC] = Instruction{&CPU::OP_CCNN00, 4, "CPY $nnnn", ABSOLUTE};
+	instructionsTable[0xC4] = Instruction{&CPU::OP_C4NN, 3, "CPY $nn", ZEROPAGE};
+	instructionsTable[0xCE] = Instruction{&CPU::OP_CENN00, 6, "DEC $nnnn", ABSOLUTE};
+	instructionsTable[0xDE] = Instruction{&CPU::OP_DENN00, 7, "DEC $nnnn,X", ABSOLUTEX};
+	instructionsTable[0xC6] = Instruction{&CPU::OP_C6NN, 5, "DEC $nn", ZEROPAGE};
+	instructionsTable[0xD6] = Instruction{&CPU::OP_D6NN, 6, "DEC $nn,X", ZEROPAGEX};
+	instructionsTable[0xCA] = Instruction{&CPU::OP_CA, 2, "DEX", IMPLIED};
+	instructionsTable[0x88] = Instruction{&CPU::OP_88, 2, "DEY", IMPLIED};
+	instructionsTable[0x49] = Instruction{&CPU::OP_49NN, 2, "EOR #$nn", IMMEDIATE};
+	instructionsTable[0x4D] = Instruction{&CPU::OP_4DNN00, 4, "EOR $nnnn", ABSOLUTE};
+	instructionsTable[0x5D] = Instruction{&CPU::OP_5DNN00, 4, "EOR $nnnn,X", ABSOLUTEX};
+	instructionsTable[0x59] = Instruction{&CPU::OP_59NN00, 4, "EOR $nnnn,Y", ABSOLUTEY};
+	instructionsTable[0x45] = Instruction{&CPU::OP_45NN, 3, "EOR $nn", ZEROPAGE};
+	instructionsTable[0x55] = Instruction{&CPU::OP_55NN, 4, "EOR $nn,X", ZEROPAGEX};
+	instructionsTable[0x41] = Instruction{&CPU::OP_41NN, 6, "EOR ($nn,X)", INDIRECTX};
+	instructionsTable[0x51] = Instruction{&CPU::OP_51NN, 5, "EOR ($nn),Y", INDIRECTY};
+	instructionsTable[0xEE] = Instruction{&CPU::OP_EENN00, 6, "INC $nnnn", ABSOLUTE};
+	instructionsTable[0xFE] = Instruction{&CPU::OP_FENN00, 7, "INC $nnnn,X", ABSOLUTEX};
+	instructionsTable[0xE6] = Instruction{&CPU::OP_E6NN, 5, "INC $nn", ZEROPAGE};
+	instructionsTable[0xF6] = Instruction{&CPU::OP_F6NN, 6, "INC $nn,X", ZEROPAGEX};
+	instructionsTable[0xE8] = Instruction{&CPU::OP_E8, 2, "INX", IMPLIED};
+	instructionsTable[0xC8] = Instruction{&CPU::OP_C8, 2, "INY", IMPLIED};
+	instructionsTable[0x4C] = Instruction{&CPU::OP_4CNN00, 3, "JMP $nnnn", ABSOLUTE};
+	instructionsTable[0x6C] = Instruction{&CPU::OP_6CNN00, 5, "JMP ($nnnn)", ABSOLUTE};
+	instructionsTable[0x20] = Instruction{&CPU::OP_20NN00, 6, "JSR $nnnn", ABSOLUTE};
+	instructionsTable[0xA9] = Instruction{&CPU::OP_A9NN, 2, "LDA #$nn", IMMEDIATE};
+	instructionsTable[0xAD] = Instruction{&CPU::OP_ADNN00, 4, "LDA $nnnn", ABSOLUTE};
+	instructionsTable[0xBD] = Instruction{&CPU::OP_BDNN00, 4, "LDA $nnnn,X", ABSOLUTEX};
+	instructionsTable[0xB9] = Instruction{&CPU::OP_B9NN00, 4, "LDA $nnnn,Y", ABSOLUTEY};
+	instructionsTable[0xA5] = Instruction{&CPU::OP_A5NN, 3, "LDA $nn", ZEROPAGE};
+	instructionsTable[0xB5] = Instruction{&CPU::OP_B5NN, 4, "LDA $nn,X", ZEROPAGEX};
+	instructionsTable[0xA1] = Instruction{&CPU::OP_A1NN, 6, "LDA ($nn,X)", INDIRECTX};
+	instructionsTable[0xB1] = Instruction{&CPU::OP_B1NN, 5, "LDA ($nn),Y", INDIRECTY};
+	instructionsTable[0xA2] = Instruction{&CPU::OP_A2NN, 2, "LDX #$nn", IMMEDIATE};
+	instructionsTable[0xAE] = Instruction{&CPU::OP_AENN00, 4, "LDX $nnnn", ABSOLUTE};
+	instructionsTable[0xBE] = Instruction{&CPU::OP_BENN00, 4, "LDX $nnnn,Y", ABSOLUTEY};
+	instructionsTable[0xA6] = Instruction{&CPU::OP_A6NN, 3, "LDX $nn", ZEROPAGE};
+	instructionsTable[0xB6] = Instruction{&CPU::OP_B6NN, 4, "LDX $nn,Y", ZEROPAGEY};
+	instructionsTable[0xA0] = Instruction{&CPU::OP_A0NN, 2, "LDY #$nn", IMMEDIATE};
+	instructionsTable[0xAC] = Instruction{&CPU::OP_ACNN00, 4, "LDY $nnnn", ABSOLUTE};
+	instructionsTable[0xBC] = Instruction{&CPU::OP_BCNN00, 4, "LDY $nnnn,X", ABSOLUTEX};
+	instructionsTable[0xA4] = Instruction{&CPU::OP_A4NN, 3, "LDY $nn", ZEROPAGE};
+	instructionsTable[0xB4] = Instruction{&CPU::OP_B4NN, 4, "LDY $nn,X", ZEROPAGEX};
+	instructionsTable[0x4A] = Instruction{&CPU::OP_4A, 2, "LSR A", ACCUMULATOR};
+	instructionsTable[0x4E] = Instruction{&CPU::OP_4ENN00, 6, "LSR $nnnn", ABSOLUTE};
+	instructionsTable[0x5E] = Instruction{&CPU::OP_5ENN00, 7, "LSR $nnnn,X", ABSOLUTEX};
+	instructionsTable[0x46] = Instruction{&CPU::OP_46NN, 5, "LSR $nn", ZEROPAGE};
+	instructionsTable[0x56] = Instruction{&CPU::OP_56NN, 6, "LSR $nn,X", ZEROPAGEX};
+	instructionsTable[0xEA] = Instruction{&CPU::OP_EA, 2, "NOP", IMPLIED};
+	instructionsTable[0x09] = Instruction{&CPU::OP_09NN, 2, "ORA #$nn", IMMEDIATE};
+	instructionsTable[0x0D] = Instruction{&CPU::OP_0DNN00, 4, "ORA $nnnn", ABSOLUTE};
+	instructionsTable[0x1D] = Instruction{&CPU::OP_1DNN00, 4, "ORA $nnnn,X", ABSOLUTEX};
+	instructionsTable[0x19] = Instruction{&CPU::OP_19NN00, 4, "ORA $nnnn,Y", ABSOLUTEY};
+	instructionsTable[0x05] = Instruction{&CPU::OP_05NN, 3, "ORA $nn", ZEROPAGE};
+	instructionsTable[0x15] = Instruction{&CPU::OP_15NN, 4, "ORA $nn,X", ZEROPAGEX};
+	instructionsTable[0x01] = Instruction{&CPU::OP_01NN, 6, "ORA ($nn,X)", INDIRECTX};
+	instructionsTable[0x11] = Instruction{&CPU::OP_11NN, 5, "ORA ($nn),Y", INDIRECTY};
+	instructionsTable[0x48] = Instruction{&CPU::OP_48, 3, "PHA", IMPLIED};
+	instructionsTable[0x08] = Instruction{&CPU::OP_08, 3, "PHP", IMPLIED};
+	instructionsTable[0x68] = Instruction{&CPU::OP_68, 4, "PLA", IMPLIED};
+	instructionsTable[0x28] = Instruction{&CPU::OP_28, 4, "PLP", IMPLIED};
+	instructionsTable[0x2A] = Instruction{&CPU::OP_2A, 2, "ROL A", ACCUMULATOR};
+	instructionsTable[0x2E] = Instruction{&CPU::OP_2ENN00, 6, "ROL $nnnn", ABSOLUTE};
+	instructionsTable[0x3E] = Instruction{&CPU::OP_3ENN00, 7, "ROL $nnnn,X", ABSOLUTEX};
+	instructionsTable[0x26] = Instruction{&CPU::OP_26NN, 5, "ROL $nn", ZEROPAGE};
+	instructionsTable[0x36] = Instruction{&CPU::OP_36NN, 6, "ROL $nn,X", ZEROPAGEX};
+	instructionsTable[0x6A] = Instruction{&CPU::OP_6A, 2, "ROR A", ACCUMULATOR};
+	instructionsTable[0x6E] = Instruction{&CPU::OP_6ENN00, 6, "ROR $nnnn", ABSOLUTE};
+	instructionsTable[0x7E] = Instruction{&CPU::OP_7ENN00, 7, "ROR $nnnn,X", ABSOLUTEX};
+	instructionsTable[0x66] = Instruction{&CPU::OP_66NN, 5, "ROR $nn", ZEROPAGE};
+	instructionsTable[0x76] = Instruction{&CPU::OP_76NN, 6, "ROR $nn,X", ZEROPAGEX};
+	instructionsTable[0x40] = Instruction{&CPU::OP_40, 6, "RTI", IMPLIED};
+	instructionsTable[0x60] = Instruction{&CPU::OP_60, 6, "RTS", IMPLIED};
+	instructionsTable[0xE9] = Instruction{&CPU::OP_E9NN, 2, "SBC #$nn", IMMEDIATE};
+	instructionsTable[0xED] = Instruction{&CPU::OP_EDNN00, 4, "SBC $nnnn", ABSOLUTE};
+	instructionsTable[0xFD] = Instruction{&CPU::OP_FDNN00, 4, "SBC $nnnn,X", ABSOLUTEX};
+	instructionsTable[0xF9] = Instruction{&CPU::OP_F9NN00, 4, "SBC $nnnn,Y", ABSOLUTEY};
+	instructionsTable[0xE5] = Instruction{&CPU::OP_E5NN, 3, "SBC $nn", ZEROPAGE};
+	instructionsTable[0xF5] = Instruction{&CPU::OP_F5NN, 4, "SBC $nn,X", ZEROPAGEX};
+	instructionsTable[0xE1] = Instruction{&CPU::OP_E1NN, 6, "SBC ($nn,X)", INDIRECTX};
+	instructionsTable[0xF1] = Instruction{&CPU::OP_F1NN, 5, "SBC ($nn),Y", INDIRECTY};
+	instructionsTable[0x38] = Instruction{&CPU::OP_38, 2, "SEC", IMPLIED};
+	instructionsTable[0xF8] = Instruction{&CPU::OP_F8, 2, "SED", IMPLIED};
+	instructionsTable[0x78] = Instruction{&CPU::OP_78, 2, "SEI", IMPLIED};
+	instructionsTable[0x8D] = Instruction{&CPU::OP_8DNN00, 4, "STA $nnnn", ABSOLUTE};
+	instructionsTable[0x9D] = Instruction{&CPU::OP_9DNN00, 5, "STA $nnnn,X", ABSOLUTEX};
+	instructionsTable[0x99] = Instruction{&CPU::OP_99NN00, 5, "STA $nnnn,Y", ABSOLUTEY};
+	instructionsTable[0x85] = Instruction{&CPU::OP_85NN, 3, "STA $nn", ZEROPAGE};
+	instructionsTable[0x95] = Instruction{&CPU::OP_95NN, 4, "STA $nn,X", ZEROPAGEX};
+	instructionsTable[0x81] = Instruction{&CPU::OP_81NN, 6, "STA ($nn,X)", INDIRECTX};
+	instructionsTable[0x91] = Instruction{&CPU::OP_91NN, 6, "STA ($nn),Y", INDIRECTY};
+	instructionsTable[0x8E] = Instruction{&CPU::OP_8ENN00, 4, "STX $nnnn", ABSOLUTE};
+	instructionsTable[0x86] = Instruction{&CPU::OP_86NN, 3, "STX $nn", ZEROPAGE};
+	instructionsTable[0x96] = Instruction{&CPU::OP_96NN, 4, "STX $nn,Y", ZEROPAGEY};
+	instructionsTable[0x8C] = Instruction{&CPU::OP_8CNN00, 4, "STY $nnnn", ABSOLUTE};
+	instructionsTable[0x84] = Instruction{&CPU::OP_84NN, 3, "STY $nn", ZEROPAGE};
+	instructionsTable[0x94] = Instruction{&CPU::OP_94NN, 4, "STY $nn,X", ZEROPAGEX};
+	instructionsTable[0xAA] = Instruction{&CPU::OP_AA, 2, "TAX", IMPLIED};
+	instructionsTable[0xA8] = Instruction{&CPU::OP_A8, 2, "TAY", IMPLIED};
+	instructionsTable[0xBA] = Instruction{&CPU::OP_BA, 2, "TSX", IMPLIED};
+	instructionsTable[0x8A] = Instruction{&CPU::OP_8A, 2, "TXA", IMPLIED};
+	instructionsTable[0x9A] = Instruction{&CPU::OP_9A, 2, "TXS", IMPLIED};
+	instructionsTable[0x98] = Instruction{&CPU::OP_98, 2, "TYA", IMPLIED};
 }
 
 CPU::~CPU() {}
@@ -232,6 +231,7 @@ void CPU::loadROM(std::string filePath) {
 
 	uint16_t startAddress = (highByteStartAddress << 8) | lowByteStartAddress;
 	pc = startAddress;
+	currentInstruction = instructionsTable[memory[pc]];
 }
 
 void CPU::cycle() {
@@ -243,13 +243,38 @@ void CPU::cycle() {
 	{
 		handleInterrupt('N');
 		nmiInterrupt = false;
-		cycles += 7;
+		incrementCycle(7);
 	}
 	if (irqInterrupt && !getFlag('I'))
 	{
 		handleInterrupt('I');
 		irqInterrupt = false;
-		cycles += 7;
+		incrementCycle(7);
+	}
+}
+
+void CPU::step() {
+	if (cyclesElapsed == currentInstruction.totalCycles)
+	{
+		cyclesElapsed = 0;
+		execute();
+
+		if (nmiInterrupt)
+		{
+			handleInterrupt('N');
+			nmiInterrupt = false;
+			incrementCycle(7);
+		}
+		if (irqInterrupt && !getFlag('I'))
+		{
+			handleInterrupt('I');
+			irqInterrupt = false;
+			incrementCycle(7);
+		}
+	}
+	else
+	{
+		cyclesElapsed++;
 	}
 }
 
@@ -257,9 +282,11 @@ void CPU::execute() {
 	//printInfo();
 
 	// Every instruction takes at least 2 cycles
-	cycles += 2;
+	incrementCycle(2);
+	std::cout << "instruction executed: " << currentInstruction.instructionName << " | PC = 0x" << std::hex << pc  << std::endl;
+	(this->*currentInstruction.function)();
 
-	(this->*table[memory[pc]])();
+	currentInstruction = instructionsTable[memory[pc]];
 }
 
 void CPU::reset() {
@@ -439,4 +466,16 @@ void CPU::stepPpu() {
 		this->ppu.step(this);
 	}
 	previousPpuCycleCount = currentPpuCycleCount;
+}
+
+void CPU::stepPpu(int steps) {
+	for (int i = 0; i < steps; i++)
+	{
+		this->ppu.step(this);
+	}
+}
+
+void CPU::incrementCycle(int _cycles) {
+	this->cycles += _cycles;
+	//stepPpu(_cycles * 3);
 }
