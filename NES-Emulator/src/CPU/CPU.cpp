@@ -243,13 +243,13 @@ void CPU::cycle() {
 	{
 		handleInterrupt('N');
 		nmiInterrupt = false;
-		incrementCycle(7);
+		cycles += 7;
 	}
 	if (irqInterrupt && !getFlag('I'))
 	{
 		handleInterrupt('I');
 		irqInterrupt = false;
-		incrementCycle(7);
+		cycles += 7;
 	}
 }
 
@@ -263,13 +263,13 @@ void CPU::step() {
 		{
 			handleInterrupt('N');
 			nmiInterrupt = false;
-			incrementCycle(7);
+			cycles += 7;
 		}
 		if (irqInterrupt && !getFlag('I'))
 		{
 			handleInterrupt('I');
 			irqInterrupt = false;
-			incrementCycle(7);
+			cycles += 7;
 		}
 		currentInstruction = instructionsTable[memory[pc]];
 	}
@@ -283,7 +283,7 @@ void CPU::execute() {
 	//printInfo();
 
 	// Every instruction takes at least 2 cycles
-	incrementCycle(2);
+	cycles += 2;
 	//std::cout << "instruction executed: " << currentInstruction.instructionName << " | PC = 0x" << std::hex << pc << " | CPU-CYC = " << std::dec << cycles << std::endl;
 	(this->*currentInstruction.function)();
 }

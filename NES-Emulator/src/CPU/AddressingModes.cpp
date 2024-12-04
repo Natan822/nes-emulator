@@ -12,7 +12,7 @@ uint8_t* CPU::immediatePtr() {
 }
 
 uint8_t CPU::zeroPage() {
-	incrementCycle(1);
+	cycles++;
 
 	uint8_t address = readMemory(pc + 1);
 	uint8_t value = readMemory(address);
@@ -21,14 +21,14 @@ uint8_t CPU::zeroPage() {
 }
 
 uint16_t CPU::zeroPagePtr() {
-	incrementCycle(1);
+	cycles++;
 
 	uint16_t address = memory[pc + 1];
 	return address;
 }
 
 uint8_t CPU::zeroPageX() {
-	incrementCycle(2);
+	cycles += 2;
 
 	uint8_t address = readMemory(pc + 1);
 	uint8_t value = readMemory((address + xReg) & 0xFF);
@@ -37,14 +37,14 @@ uint8_t CPU::zeroPageX() {
 }
 
 uint16_t CPU::zeroPageXPtr() {
-	incrementCycle(2);
+	cycles += 2;
 
 	uint8_t address = memory[pc + 1];
 	return (address + xReg) & 0xFF;
 }
 
 uint8_t CPU::zeroPageY() {
-	incrementCycle(1);
+	cycles++;
 
 	uint8_t address = readMemory(pc + 1);
 	uint8_t value = readMemory((address + yReg) & 0xFF);
@@ -53,7 +53,7 @@ uint8_t CPU::zeroPageY() {
 }
 
 uint16_t CPU::zeroPageYPtr() {
-	incrementCycle(2);
+	cycles += 2;
 
 	uint8_t address = memory[pc + 1];
 	//uint8_t* value = &(memory[(address + yReg) & 0xFF]);
@@ -69,7 +69,7 @@ uint8_t CPU::absolute() {
 	uint16_t address = (highByte << 8) | lowByte;
 	uint8_t value = readMemory(address);
 
-	incrementCycle(2);
+	cycles += 2;
 	return value;
 }
 
@@ -80,7 +80,7 @@ uint16_t CPU::absolutePtr() {
 
 	uint16_t address = (highByte << 8) | lowByte;
 
-	incrementCycle(2);
+	cycles += 2;
 	return address;
 }
 
@@ -94,11 +94,11 @@ uint8_t CPU::absoluteX() {
 
 	if ((lowByte + xReg) > 0xFF)
 	{
-		incrementCycle(1);
+		cycles++;
 		cyclesElapsed--;
 	}
 
-	incrementCycle(2);
+	cycles += 2;
 	return value;
 }
 
@@ -111,10 +111,10 @@ uint16_t CPU::absoluteXPtr() {
 
 	if ((lowByte + xReg) > 0xFF)
 	{
-		incrementCycle(1);
+		cycles++;
 	}
 
-	incrementCycle(2);
+	cycles += 2;
 	return (address + xReg) & 0xFFFF;
 }
 
@@ -128,11 +128,11 @@ uint8_t CPU::absoluteY() {
 
 	if ((lowByte + yReg) > 0xFF)
 	{
-		incrementCycle(1);
+		cycles++;
 		cyclesElapsed--;
 	}
 
-	incrementCycle(2);
+	cycles += 2;
 	return value;
 }
 
@@ -146,10 +146,10 @@ uint16_t CPU::absoluteYPtr() {
 
 	if ((lowByte + yReg) > 0xFF)
 	{
-		incrementCycle(1);
+		cycles++;
 	}
 
-	incrementCycle(2);
+	cycles += 2;
 	return (address + yReg) & 0xFFFF;
 }
 
@@ -163,7 +163,7 @@ uint8_t CPU::indirectX() {
 	uint16_t address = (highByte << 8) | lowByte;
 	uint8_t value = readMemory(address);
 
-	incrementCycle(4);
+	cycles += 4;
 	return value;
 }
 
@@ -176,7 +176,7 @@ uint16_t CPU::indirectXPtr() {
 
 	uint16_t address = (highByte << 8) | lowByte;
 
-	incrementCycle(4);
+	cycles += 4;
 	return address;
 }
 
@@ -192,11 +192,11 @@ uint8_t CPU::indirectY() {
 
 	if ((lowByte + yReg) > 0xFF)
 	{
-		incrementCycle(1);
+		cycles++;
 		cyclesElapsed--;
 	}
 
-	incrementCycle(3);
+	cycles += 3;
 	return value;
 }
 
@@ -212,10 +212,10 @@ uint16_t CPU::indirectYPtr() {
 
 	if ((lowByte + yReg) > 0xFF)
 	{
-		incrementCycle(1);
+		cycles++;
 	}
 
-	incrementCycle(3);
+	cycles += 3;
 	return (address + yReg) & 0xFFFF;
 }
 

@@ -79,8 +79,7 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 		{
 			this->oam[byteIndex] = cpu->memory.at(sourceAddress + byteIndex);
 		}
-		//cpu->cycles += 513;
-		cpu->incrementCycle(513);
+		cpu->cycles += 513;
 		regOamDma = data;
 		break;
 	}
