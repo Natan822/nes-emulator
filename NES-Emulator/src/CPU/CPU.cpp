@@ -263,13 +263,11 @@ void CPU::step() {
 		{
 			handleInterrupt('N');
 			nmiInterrupt = false;
-			cycles += 7;
 		}
 		if (irqInterrupt && !getFlag('I'))
 		{
 			handleInterrupt('I');
 			irqInterrupt = false;
-			cycles += 7;
 		}
 		currentInstruction = instructionsTable[memory[pc]];
 	}
@@ -297,6 +295,8 @@ void CPU::reset() {
 }
 
 void CPU::handleInterrupt(char interruptType) {
+	cycles += 7;
+
 	uint8_t lowBytePc = pc & 0xFF;
 	uint8_t highBytePc = pc >> 8;
 
@@ -305,35 +305,30 @@ void CPU::handleInterrupt(char interruptType) {
 	push(status);
 
 	setFlag('I', 1);
+	uint16_t interruptAddress;
 	switch (interruptType)
 	{
 	// IRQ interrupt
 	case 'I':
 	{
-		uint8_t lowByteVectorAddress = memory.at(IRQ_VECTOR_ADDRESS);
-		uint8_t highByteVectorAddress = memory.at(IRQ_VECTOR_ADDRESS + 1);
-		uint16_t vectorAddress = (highByteVectorAddress << 8) | lowByteVectorAddress;
-		pc = vectorAddress;
-
+		interruptAddress = IRQ_VECTOR_ADDRESS;
 		break;
 	}
 	// NMI interrupt
 	case 'N':
 	{
-		uint8_t lowByteVectorAddress = memory.at(NMI_VECTOR_ADDRESS);
-		uint8_t highByteVectorAddress = memory.at(NMI_VECTOR_ADDRESS + 1);
-		uint16_t vectorAddress = (highByteVectorAddress << 8) | lowByteVectorAddress;
-		pc = vectorAddress;
-
+		interruptAddress = NMI_VECTOR_ADDRESS;
 		break;
 	}
 	// BRK interrupt
 	/*
 		BRK is handled by OP_00NN()
 	*/
-	default:
-		break;
 	}
+	uint8_t lowByteVectorAddress = memory.at(interruptAddress);
+	uint8_t highByteVectorAddress = memory.at(interruptAddress + 1);
+	uint16_t vectorAddress = (highByteVectorAddress << 8) | lowByteVectorAddress;
+	pc = vectorAddress;
 }
 
 void CPU::printInfo() {
