@@ -296,6 +296,7 @@ void CPU::reset() {
 
 void CPU::handleInterrupt(char interruptType) {
 	cycles += 7;
+	cyclesElapsed -= 7;
 
 	uint8_t lowBytePc = pc & 0xFF;
 	uint8_t highBytePc = pc >> 8;
