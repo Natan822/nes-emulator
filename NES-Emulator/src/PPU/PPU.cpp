@@ -156,7 +156,7 @@ void PPU::renderSprite(int spriteIndex, int x, int y, int paletteIndex, bool vFl
 	}
 }
 
-bool PPU::renderSpriteRow(int spriteIndex, int x, int y, int paletteIndex, bool vFlip, bool hFlip, bool isBehindBackground) {
+bool PPU::renderSpritePixel(int spriteIndex, int x, int y, int paletteIndex, bool vFlip, bool hFlip, bool isBehindBackground) {
 	bool hitDetected = false;
 	uint16_t addressSprite = (spriteIndex * 16) + spritePatternTableAddress;;
 
@@ -169,29 +169,27 @@ bool PPU::renderSpriteRow(int spriteIndex, int x, int y, int paletteIndex, bool 
 
 	uint8_t byteMask = hFlip ? 0x1 : 0x80;
 
-	for (int bit = 0; bit < 8; bit++)
+	int bit = (dot - 1) - x;
+	byteMask = hFlip ? byteMask << bit : byteMask >> bit;
+	if (x + bit >= VIDEO_WIDTH) return hitDetected;
+
+	uint8_t firstPlaneBit = (firstPlaneByte & byteMask) ? 1 : 0;
+	uint8_t secondPlaneBit = (secondPlaneByte & byteMask) ? 1 : 0;
+
+	uint8_t pixelBits = (secondPlaneBit << 1) | firstPlaneBit;
+	if (pixelBits != 0)
 	{
-		if (x + bit >= VIDEO_WIDTH) break;
-
-		uint8_t firstPlaneBit = (firstPlaneByte & byteMask) ? 1 : 0;
-		uint8_t secondPlaneBit = (secondPlaneByte & byteMask) ? 1 : 0;
-
-		uint8_t pixelBits = (secondPlaneBit << 1) | firstPlaneBit;
-		if (pixelBits != 0)
+		uint8_t pixelValue = this->memory.at(PALETTES_ADDRESS + pixelBits + (4 * paletteIndex) + 0x10);
+		int pixelColor = getPixelColor(pixelValue);
+		if (!hitDetected)
 		{
-			uint8_t pixelValue = this->memory.at(PALETTES_ADDRESS + pixelBits + (4 * paletteIndex) + 0x10);
-			int pixelColor = getPixelColor(pixelValue);
-			if (!hitDetected)
-			{
-				hitDetected = backgroundPixelBits.at(x + bit + (VIDEO_WIDTH * scanlines)) != 0;
-			}
-			if (!isBehindBackground || !hitDetected && enableSprites)
-			{
-				// Here "bit" works as an X offset and "byte" works as a Y offset for the sprite coordinates
-				setPixel((x + bit), scanlines, pixelColor);
-			}
+			hitDetected = backgroundPixelBits.at(x + bit + (VIDEO_WIDTH * scanlines)) != 0;
 		}
-		byteMask = hFlip ? byteMask << 1 : byteMask >> 1;
+		if (!isBehindBackground || !hitDetected && enableSprites)
+		{
+			// Here "bit" works as an X offset and "byte" works as a Y offset for the sprite coordinates
+			setPixel((x + bit), scanlines, pixelColor);
+		}
 	}
 	return hitDetected;
 }
@@ -645,7 +643,7 @@ void PPU::renderScanline() {
 void PPU::handleSpriteZero() {
 	uint8_t yPosition = oam[0] + 1;
 	uint8_t xPosition = oam[3];
-	if (scanlines >= yPosition && scanlines - yPosition < 8 && (dot - 1) == xPosition + 8)
+	if (scanlines >= yPosition && scanlines - yPosition < 8 && ((dot - 1) - xPosition < 8) && (dot - 1) >= xPosition)
 	{
 		uint8_t tileIndex = oam[1];
 		uint8_t attributes = oam[2];
@@ -654,7 +652,7 @@ void PPU::handleSpriteZero() {
 		bool isBehindBackground = attributes & 0x20;
 		bool vFlip = attributes & 0x80;
 		bool hFlip = attributes & 0x40;
-		if (renderSpriteRow(tileIndex, xPosition, yPosition, paletteIndex, vFlip, hFlip, isBehindBackground))
+		if (renderSpritePixel(tileIndex, xPosition, yPosition, paletteIndex, vFlip, hFlip, isBehindBackground))
 		{
 			// Set sprite 0 hit flag
 			regPpuStatus |= 0x40;

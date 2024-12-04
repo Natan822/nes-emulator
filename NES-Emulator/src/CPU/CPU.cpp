@@ -455,26 +455,3 @@ void CPU::setMapper(uint16_t mapperNumber) {
 	}
 	this->ppu.mapper = this->mapper;
 }
-
-void CPU::stepPpu() {
-	unsigned int currentPpuCycleCount = this->ppu.cycles;
-	unsigned int steps = currentPpuCycleCount - previousPpuCycleCount;
-	//std::cout << "steps: " << steps << std::endl;
-	for (int i = 0; i < steps; i++)
-	{
-		this->ppu.step(this);
-	}
-	previousPpuCycleCount = currentPpuCycleCount;
-}
-
-void CPU::stepPpu(int steps) {
-	for (int i = 0; i < steps; i++)
-	{
-		this->ppu.step(this);
-	}
-}
-
-void CPU::incrementCycle(int _cycles) {
-	this->cycles += _cycles;
-	//stepPpu(_cycles * 3);
-}

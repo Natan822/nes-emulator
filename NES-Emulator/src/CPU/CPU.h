@@ -99,16 +99,12 @@ public:
 	OPCODE table[0xFF + 1]{};
 
 	unsigned int cycles{};
-	unsigned int previousPpuCycleCount{};
-	void stepPpu();
-	void stepPpu(int steps);
 
 	bool irqInterrupt{};
 	bool nmiInterrupt{};
 
 	void loadROM(std::string filePath);
 	void cycle();
-	void incrementCycle(int cycles);
 	
 	void step();
 
