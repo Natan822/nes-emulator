@@ -442,44 +442,68 @@ void PPU::preRender() {
 }
 
 void PPU::render() {
+	if (dot == 0)
+	{
+		// Load first tile's data into shift registers
+
+		uint16_t tileAddress = 0x2000 | (vRegister & 0xFFF);
+		uint8_t tileIndex = this->memoryRead(tileAddress);
+
+		uint16_t addressSprite = backgroundPatternTableAddress + tileIndex * 16;
+
+		int fineY = (vRegister & 0x7000) >> 12;
+		uint8_t currentFirstPlaneByte = this->memoryRead(addressSprite + fineY);
+		uint8_t currentSecondPlaneByte = this->memoryRead(addressSprite + fineY + 8);
+
+		firstPlaneByteData = secondPlaneByteData = 0;
+		firstPlaneByteData = currentFirstPlaneByte << 8;
+		secondPlaneByteData = currentSecondPlaneByte << 8;
+
+		uint16_t attributeByteAddr = 0x23C0 | (vRegister & 0x0C00) | ((vRegister >> 4) & 0x38) | ((vRegister >> 2) & 0x07);
+		this->currentAttributeByte = this->memoryRead(attributeByteAddr);
+	}
+
 	if (dot > 0 && dot <= 256 && enableBackground)
 	{
 		int x = dot - 1;
 		int y = scanlines;
 
+		// BG's leftmost 8 pixels are hidden
 		if (x < 8 && !showLeftmostBackground)
 		{
 			int pixelColor = getPixelColor(this->memory.at(PALETTES_ADDRESS));
 			setPixel(x, y, pixelColor);
 
-			xRegister++;
-			if (xRegister == 8)
+			if (x == 8)
 			{
-				xRegister = 0;
 				incrementCoarseX();
 			}
 			return;
 		}
 
-		uint16_t tileAddress = 0x2000 | (vRegister & 0xFFF);
-		uint16_t attributeByteAddr = 0x23C0 | (vRegister & 0x0C00) | ((vRegister >> 4) & 0x38) | ((vRegister >> 2) & 0x07);
+		// Tile is changed
+		if (((x + xRegister) & 0x7) == 0)
+		{
+			// Update attribute byte
+			this->coarseX = vRegister & 0x1F;
+			this->coarseY = (vRegister & 0x3E0) >> 5;
+			uint16_t attributeByteAddr = 0x23C0 | (vRegister & 0x0C00) | ((vRegister >> 4) & 0x38) | ((vRegister >> 2) & 0x07);
+			this->currentAttributeByte = this->memoryRead(attributeByteAddr);
+		}
 
-		uint8_t tileIndex = this->memoryRead(tileAddress);
-		uint8_t attributeByte = this->memoryRead(attributeByteAddr);
+		if ((x & 0x7) == 0)
+		{
+			loadShiftRegisters();
+		}
 
-		uint16_t addressSprite = backgroundPatternTableAddress + tileIndex * 16;
+		int paletteIndex = getPaletteIndex((coarseX * 8) % 32, (coarseY * 8) % 32, this->currentAttributeByte);
 
-		int coarseX = vRegister & 0x1F;
-		int coarseY = (vRegister & 0x3E0) >> 5;
-		int paletteIndex = getPaletteIndex((coarseX * 8) % 32, (coarseY * 8) % 32, attributeByte);
+		uint16_t byteMask = 0x8000 >> xRegister;
+		uint8_t firstPlaneBit = (firstPlaneByteData & byteMask) ? 1 : 0;
+		uint8_t secondPlaneBit = (secondPlaneByteData & byteMask) ? 1 : 0;
 
-		int fineY = (vRegister & 0x7000) >> 12;
-		uint8_t firstPlaneByte = this->memoryRead(addressSprite + fineY);
-		uint8_t secondPlaneByte = this->memoryRead(addressSprite + fineY + 8);
-
-		uint8_t byteMask = 0x80 >> xRegister;
-		uint8_t firstPlaneBit = (firstPlaneByte & byteMask) ? 1 : 0;
-		uint8_t secondPlaneBit = (secondPlaneByte & byteMask) ? 1 : 0;
+		firstPlaneByteData <<= 1;
+		secondPlaneByteData <<= 1;
 
 		uint8_t pixelBits = (secondPlaneBit << 1) | firstPlaneBit;
 
@@ -497,15 +521,6 @@ void PPU::render() {
 		setPixel(x, y, pixelColor);
 		backgroundPixelBits.at(backgroundIndex) = pixelBits;
 		backgroundIndex++;
-
-		byteMask >>= 1;
-
-		xRegister++;
-		if (xRegister == 8)
-		{
-			xRegister = 0;
-			incrementCoarseX();
-		}
 
 		if (enableSprites)
 		{
@@ -552,92 +567,20 @@ void PPU::defineRenderState() {
 	}
 }
 
+void PPU::loadShiftRegisters() {
+	incrementCoarseX();
+	uint16_t tileAddress = 0x2000 | (vRegister & 0xFFF);
 
-void PPU::renderScanline() {
-	for (int dot = 0; dot < 341; dot++)
-	{
-		if (dot > 0 && dot <= 256)
-		{
+	uint8_t tileIndex = this->memoryRead(tileAddress);
 
-			int x = dot - 1;
-			int y = scanlines;
+	uint16_t addressSprite = backgroundPatternTableAddress + tileIndex * 16;
 
-			if (x < 8 && !showLeftmostBackground)
-			{
-				int pixelColor = getPixelColor(this->memory.at(PALETTES_ADDRESS));
-				setPixel(x, y, pixelColor);
+	int fineY = (vRegister & 0x7000) >> 12;
+	uint8_t nextFirstPlaneByte = this->memoryRead(addressSprite + fineY);
+	uint8_t nextSecondPlaneByte = this->memoryRead(addressSprite + fineY + 8);
 
-				xRegister++;
-				if (xRegister == 8)
-				{
-					xRegister = 0;
-					incrementCoarseX();
-				}
-				continue;
-			}
-
-			uint16_t tileAddress = 0x2000 | (vRegister & 0xFFF);
-			uint16_t attributeByteAddr = 0x23C0 | (vRegister & 0x0C00) | ((vRegister >> 4) & 0x38) | ((vRegister >> 2) & 0x07);
-
-			uint8_t tileIndex = this->memoryRead(tileAddress);
-			uint8_t attributeByte = this->memoryRead(attributeByteAddr);
-
-			uint16_t addressSprite = backgroundPatternTableAddress + tileIndex * 16;
-
-			int coarseX = vRegister & 0x1F;
-			int coarseY = (vRegister & 0x3E0) >> 5;
-			int paletteIndex = getPaletteIndex((coarseX * 8) % 32, (coarseY * 8) % 32, attributeByte);
-
-			int fineY = (vRegister & 0x7000) >> 12;
-			uint8_t firstPlaneByte = this->memoryRead(addressSprite + fineY);
-			uint8_t secondPlaneByte = this->memoryRead(addressSprite + fineY + 8);
-
-			uint8_t byteMask = 0x80 >> xRegister;
-			uint8_t firstPlaneBit = (firstPlaneByte & byteMask) ? 1 : 0;
-			uint8_t secondPlaneBit = (secondPlaneByte & byteMask) ? 1 : 0;
-
-			uint8_t pixelBits = (secondPlaneBit << 1) | firstPlaneBit;
-
-			uint8_t pixelValue;
-			if (pixelBits == 0)
-			{
-				pixelValue = this->memory.at(PALETTES_ADDRESS);
-			}
-			else
-			{
-				pixelValue = this->memory.at(PALETTES_ADDRESS + pixelBits + (4 * paletteIndex));
-			}
-
-			int pixelColor = getPixelColor(pixelValue);
-			setPixel(x, y, pixelColor);
-			backgroundPixelBits.at(backgroundIndex) = pixelBits;
-			backgroundIndex++;
-
-			byteMask >>= 1;
-
-			xRegister++;
-			if (xRegister == 8)
-			{
-				xRegister = 0;
-				incrementCoarseX();
-			}
-
-			if (dot == 256)
-			{
-				incrementY();
-			}
-		}
-		else if (dot == 257)
-		{
-			vRegister &= ~0x41F;
-			vRegister |= (tRegister & 0x41F);
-		}
-	}
-	if (enableSprites)
-	{
-		handleSpriteZero();
-	}
-	scanlines++;
+	this->firstPlaneByteData |= nextFirstPlaneByte;
+	this->secondPlaneByteData |= nextSecondPlaneByte;
 }
 
 void PPU::handleSpriteZero() {

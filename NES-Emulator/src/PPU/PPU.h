@@ -49,12 +49,6 @@ public:
 	};
 	RenderState renderState;
 
-	int scrollX{};
-	int coarseX{};
-
-	int scrollY{};
-	int coarseY{};
-
 	// Variables controlled by PPUCTRL
 	int baseNametableAddress{};
 	int spritePatternTableAddress{};
@@ -123,6 +117,16 @@ public:
 
 	std::chrono::high_resolution_clock::time_point lastFrameTime;
 private:
+	void loadShiftRegisters(); // Load tiles data into shift registers
+	// Shift registers that hold the current and next tiles data
+	uint16_t firstPlaneByteData{};
+	uint16_t secondPlaneByteData{};
+
+	uint8_t currentAttributeByte{};
+
+	int coarseX{};
+	int coarseY{};
+
 	void preRender();
 	void render();
 	void postRender(CPU* cpu);
@@ -145,7 +149,6 @@ private:
 	void updatePPUCTRL();
 	void updatePPUMASK();
 	void updatePPUSCROLL();
-
 
 	int emphasizeRed(int color);
 	int emphasizeGreen(int color);
