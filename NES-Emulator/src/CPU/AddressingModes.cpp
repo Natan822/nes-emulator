@@ -44,7 +44,7 @@ uint16_t CPU::zeroPageXPtr() {
 }
 
 uint8_t CPU::zeroPageY() {
-	cycles++;
+	cycles += 2;
 
 	uint8_t address = readMemory(pc + 1);
 	uint8_t value = readMemory((address + yReg) & 0xFF);
