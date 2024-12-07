@@ -468,23 +468,11 @@ void PPU::render() {
 		int x = dot - 1;
 		int y = scanlines;
 
-		// BG's leftmost 8 pixels are hidden
-		if (x < 8 && !showLeftmostBackground)
-		{
-			int pixelColor = getPixelColor(this->memory.at(PALETTES_ADDRESS));
-			setPixel(x, y, pixelColor);
-
-			if (x == 8)
-			{
-				incrementCoarseX();
-			}
-			return;
-		}
-
 		// Tile is changed
 		if (((x + xRegister) & 0x7) == 0)
 		{
 			// Update attribute byte
+
 			this->coarseX = vRegister & 0x1F;
 			this->coarseY = (vRegister & 0x3E0) >> 5;
 			uint16_t attributeByteAddr = 0x23C0 | (vRegister & 0x0C00) | ((vRegister >> 4) & 0x38) | ((vRegister >> 2) & 0x07);
@@ -508,7 +496,7 @@ void PPU::render() {
 		uint8_t pixelBits = (secondPlaneBit << 1) | firstPlaneBit;
 
 		uint8_t pixelValue;
-		if (pixelBits == 0)
+		if (pixelBits == 0 || (x < 8 && !showLeftmostBackground))
 		{
 			pixelValue = this->memory.at(PALETTES_ADDRESS);
 		}
