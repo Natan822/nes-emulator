@@ -411,6 +411,14 @@ void PPU::step(CPU* cpu) {
 }
 
 void PPU::preRender() {
+	if (dot == 339 && isOddFrame && (enableBackground || enableSprites))
+	{
+		dot = 0;
+		scanlines = 0;
+		this->renderState = RenderState::RENDER;
+		return;
+	}
+
 	if (dot == 1)
 	{
 		this->backgroundIndex = 0;
@@ -418,27 +426,12 @@ void PPU::preRender() {
 		this->regPpuStatus &= ~0xE0;
 	}
 
-	/*else if ((dot <= 256 || dot >= 328) && dot % 8 == 0 && (enableBackground || enableSprites))
-	{
-		xRegister++;
-		if (xRegister == 8)
-		{
-			xRegister = 0;
-			incrementCoarseX();
-		}
-	}*/
-
 	else if (dot >= 280 && dot <= 304 && (enableBackground || enableSprites))
 	{
 		// Repeatedly copy the vertical bits from t to v
 		vRegister &= 0x41F;
-		vRegister |= tRegister & 0x3DF;
+		vRegister |= tRegister & 0x7BE0;
 	}
-
-	/*if (this->enableBackground)
-	{
-		this->vRegister = this->tRegister;
-	}*/
 }
 
 void PPU::render() {
@@ -537,6 +530,8 @@ void PPU::postRender(CPU* cpu) {
 		{
 			cpu->nmiInterrupt = true;
 		}
+
+		isOddFrame = !isOddFrame;
 	}
 }
 

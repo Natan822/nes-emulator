@@ -117,7 +117,11 @@ public:
 
 	std::chrono::high_resolution_clock::time_point lastFrameTime;
 private:
-	void loadShiftRegisters(); // Load tiles data into shift registers
+
+	bool isOddFrame{};
+
+	// Load tiles data into shift registers
+	void loadShiftRegisters(); 
 	// Shift registers that hold the current and next tiles data
 	uint16_t firstPlaneByteData{};
 	uint16_t secondPlaneByteData{};
