@@ -1,6 +1,7 @@
 #include <fstream>
 #include <stdint.h>
 #include <string>
+#include <sstream>
 #include <vector>
 #include <memory>
 
@@ -448,6 +449,14 @@ void CPU::setMapper(uint16_t mapperNumber) {
 	case 3:
 		this->mapper = std::make_shared<Mapper003>(this, &this->ppu);
 		break;
+	default:
+	{
+		std::ostringstream errorMessage;
+		errorMessage <<
+			"Unsupported Mapper " << std::dec << static_cast<int>(mapperNumber);
+		throw std::runtime_error(errorMessage.str());
+		break;
+	}
 	}
 	this->ppu.mapper = this->mapper;
 }
