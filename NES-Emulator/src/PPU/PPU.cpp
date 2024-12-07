@@ -567,7 +567,7 @@ void PPU::loadShiftRegisters() {
 }
 
 void PPU::handleSpriteZero() {
-	uint8_t yPosition = oam[0] + 1;
+	uint16_t yPosition = oam[0] + 1; // 16 bits in order to prevent overflowing from 0xFF to 0x00
 	uint8_t xPosition = oam[3];
 	if (scanlines >= yPosition && scanlines - yPosition < 8 && ((dot - 1) - xPosition < 8) && (dot - 1) >= xPosition)
 	{
