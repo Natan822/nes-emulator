@@ -60,6 +60,9 @@
     <ClCompile Include="src\Cartrige\Cartridge.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Mappers\Mapper002.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\CPU\CPU.h">
@@ -90,6 +93,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Cartrige\Cartridge.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Mappers\Mapper002.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

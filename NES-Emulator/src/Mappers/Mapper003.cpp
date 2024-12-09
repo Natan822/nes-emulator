@@ -14,7 +14,6 @@ uint8_t Mapper003::prgRead(uint16_t address) const {
 }
 void Mapper003::prgWrite(uint16_t address, uint8_t data) {
 	this->bankSelect = data & 0x3;
-	std::cout << std::hex << static_cast<int>(bankSelect) << std::endl;
 }
 
 uint8_t Mapper003::chrRead(uint16_t address) const {

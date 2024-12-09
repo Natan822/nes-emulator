@@ -12,12 +12,13 @@
 #include "../Controller/Controller.h"
 #include "../PPU/PPU.h"
 #include "../Mappers/Mapper.h"
+#include "../Mappers/Mapper002.h"
 #include "../Mappers/Mapper003.h"
 
 CPU::CPU(PPU& ppu, Controller& controller) : 
 	ppu(ppu), 
 	controller(controller),
-	memory(0x8000)
+	memory(0xFFFF + 1)
 {
 	sp = STACK_START_ADDRESS & 0xFF;
 
@@ -435,6 +436,9 @@ void CPU::setMapper(uint16_t mapperNumber) {
 	{
 	case 0:
 		this->mapper = std::make_shared<Mapper>(this, &this->ppu);
+		break;
+	case 2:
+		this->mapper = std::make_shared<Mapper002>(this, &this->ppu);
 		break;
 	case 3:
 		this->mapper = std::make_shared<Mapper003>(this, &this->ppu);

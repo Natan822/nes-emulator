@@ -144,6 +144,7 @@
     <ClCompile Include="src\Input\Input.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\Mappers\Mapper.cpp" />
+    <ClCompile Include="src\Mappers\Mapper002.cpp" />
     <ClCompile Include="src\Mappers\Mapper003.cpp" />
     <ClCompile Include="src\NES\NES.cpp" />
     <ClCompile Include="src\PPU\BusPPU.cpp" />
@@ -157,6 +158,7 @@
     <ClInclude Include="src\Graphics\Graphics.h" />
     <ClInclude Include="src\Input\Input.h" />
     <ClInclude Include="src\Mappers\Mapper.h" />
+    <ClInclude Include="src\Mappers\Mapper002.h" />
     <ClInclude Include="src\Mappers\Mapper003.h" />
     <ClInclude Include="src\NES\NES.h" />
     <ClInclude Include="src\PPU\PPU.h" />
