@@ -4,9 +4,16 @@ Cartridge::Cartridge(int _prgSize, int _chrSize)
 	:
 	prgSize(_prgSize),
 	chrSize(_chrSize),
-	prg(_prgSize * 0x4000),
-	chr(_chrSize * 0x2000)
-{}
+	prg(_prgSize * 0x4000)
+{
+	if (_chrSize == 0) {
+		chr = std::vector<uint8_t>(0x2000);
+	}
+	else
+	{
+		chr = std::vector<uint8_t>(0x2000 * _chrSize);
+	}
+}
 
 Cartridge::~Cartridge() {}
 
