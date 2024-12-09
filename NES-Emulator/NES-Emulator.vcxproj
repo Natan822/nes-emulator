@@ -133,6 +133,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Cartrige\Cartridge.cpp" />
     <ClCompile Include="src\Controller\Controller.cpp" />
     <ClCompile Include="src\CPU\AddressingModes.cpp" />
     <ClCompile Include="src\CPU\BusCPU.cpp" />
@@ -149,6 +150,7 @@
     <ClCompile Include="src\PPU\PPU.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Cartrige\Cartridge.h" />
     <ClInclude Include="src\Controller\Controller.h" />
     <ClInclude Include="src\CPU\CPU.h" />
     <ClInclude Include="src\Debug\DebugPPU.h" />

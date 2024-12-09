@@ -28,7 +28,6 @@ NES::~NES() {
 
 void NES::loadROM(std::string path) {
 	try {
-		ppu->loadROM(path);
 		cpu->loadROM(path);
 		isRomLoaded = true;
 	}

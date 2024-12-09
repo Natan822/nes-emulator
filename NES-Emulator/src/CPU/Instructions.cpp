@@ -6,7 +6,7 @@
 void CPU::invalid() {
 	std::ostringstream errorMessage;
 	errorMessage << 
-		"Invalid or unimplemented OPCODE: 0x" << std::hex << static_cast<int>(this->memory[pc]) << " at PC: 0x"  << this->pc << " CPU-CYC: " << std::dec << this->cycles;
+		"Invalid or unimplemented OPCODE: 0x" << std::hex << static_cast<int>(this->readMemory(pc)) << " at PC: 0x"  << this->pc << " CPU-CYC: " << std::dec << this->cycles;
 
 	std::cerr << errorMessage.str() << std::endl;
 	throw std::runtime_error(errorMessage.str());
@@ -224,7 +224,7 @@ void CPU::OP_1ENN00() {
 	ASL(address);
 
 	// Make sure ASL(absolute, X) takes 7 cycles even if page crossing doesn't occur
-	if ((memory[pc + 1] + xReg) <= 0xFF)
+	if ((readMemory(pc + 1) + xReg) <= 0xFF)
 	{
 		cycles++;
 	}
@@ -283,7 +283,7 @@ void CPU::BRANCH() {
 	cycles++;
 	cyclesElapsed--;
 
-	int8_t signedBranchValue = static_cast<int8_t>(memory[pc - 1]);
+	int8_t signedBranchValue = static_cast<int8_t>(readMemory(pc - 1));
 
 	// Page boundary crossed
 	if (((pc & 0xFF) + signedBranchValue) > 0xFF)
@@ -386,8 +386,8 @@ void CPU::OP_00NN() {
 	push(status);
 	setFlag('I', 1);
 
-	uint8_t lowByte = memory[0xFFFE];
-	uint8_t highByte = memory[0xFFFF];
+	uint8_t lowByte = readMemory(0xFFFE);
+	uint8_t highByte = readMemory(0xFFFF);
 
 	pc = (highByte << 8) | (lowByte);
 	cycles += 5;
@@ -556,7 +556,7 @@ void CPU::OP_DENN00() {
 	DEC(address);
 
 	// Make sure DEC(absolute, X) always takes 7 cycles even if page crossing doesn't occur
-	if ((memory[pc + 1] + xReg) <= 0xFF)
+	if ((readMemory(pc + 1) + xReg) <= 0xFF)
 	{
 		cycles++;
 	}
@@ -696,7 +696,7 @@ void CPU::OP_FENN00() {
 	INC(address);
 
 	// Make sure INC(absolute, X) always takes 7 cycles even if page crossing doesn't occur
-	if ((memory[pc + 1] + xReg) <= 0xFF)
+	if ((readMemory(pc + 1) + xReg) <= 0xFF)
 	{
 		cycles++;
 	}
@@ -708,8 +708,8 @@ void CPU::JMP(uint16_t address) {
 }
 
 void CPU::OP_4CNN00() {
-	uint8_t lowByte = memory[pc + 1];
-	uint8_t highByte = memory[pc + 2];
+	uint8_t lowByte = readMemory(pc + 1);
+	uint8_t highByte = readMemory(pc + 2);
 
 	uint16_t address = (highByte << 8) | lowByte;
 	JMP(address);
@@ -718,23 +718,21 @@ void CPU::OP_4CNN00() {
 }
 
 void CPU::OP_6CNN00() {
-	uint8_t lowBytePtr = memory[pc + 1];
-	uint8_t highBytePtr = memory[pc + 2];
+	uint8_t lowBytePtr = readMemory(pc + 1);
+	uint8_t highBytePtr = readMemory(pc + 2);
 
 	uint16_t addressPtr = (highBytePtr << 8) | lowBytePtr;
 
 	uint16_t address{};
-	uint8_t lowByte = memory.at(addressPtr);
+	uint8_t lowByte = readMemory(addressPtr);
 	if (lowBytePtr == 0xFF)
 	{
-		uint8_t highByte = memory.at(addressPtr - 0xFF);
-
+		uint8_t highByte = readMemory(addressPtr - 0xFF);
 		address = (highByte << 8) | lowByte;
 	}
 	else
 	{
-		uint8_t highByte = memory.at(addressPtr + 1);
-
+		uint8_t highByte = readMemory(addressPtr + 1);
 		address = (highByte << 8) | lowByte;
 	}
 	JMP(address);
@@ -743,8 +741,8 @@ void CPU::OP_6CNN00() {
 }
 
 void CPU::OP_20NN00() {
-	uint8_t lowByte = memory[pc + 1];
-	uint8_t highByte = memory[pc + 2];
+	uint8_t lowByte = readMemory(pc + 1);
+	uint8_t highByte = readMemory(pc + 2);
 
 	uint16_t address = (highByte << 8) | lowByte;
 
@@ -955,7 +953,7 @@ void CPU::OP_5ENN00() {
 	LSR(address);
 
 	// Make sure LSR(absolute, X) always takes 7 cycles even if page crossing doesn't occur
-	if ((memory[pc + 1] + xReg) <= 0xFF)
+	if ((readMemory(pc + 1) + xReg) <= 0xFF)
 	{
 		cycles++;
 	}
@@ -1154,7 +1152,7 @@ void CPU::OP_3ENN00() {
 	ROL(address);
 
 	// Make sure ROL(absolute, X) always takes 7 cycles even if page crossing doesn't occur
-	if ((memory[pc + 1] + xReg) <= 0xFF)
+	if ((readMemory(pc + 1) + xReg) <= 0xFF)
 	{
 		cycles++;
 	}
@@ -1213,7 +1211,7 @@ void CPU::OP_7ENN00() {
 	ROR(address);
 
 	// Make sure ROR(absolute, X) takes 7 cycles even if page crossing doesn't occur
-	if ((memory[pc + 1] + xReg) <= 0xFF)
+	if ((readMemory(pc + 1) + xReg) <= 0xFF)
 	{
 		cycles++;
 	}
@@ -1342,7 +1340,7 @@ void CPU::OP_9DNN00() {
 	STA(address);
 
 	// Make sure STA(absolute, X) takes 5 cycles even if page crossing doesn't occur
-	if ((memory[pc + 1] + xReg) <= 0xFF)
+	if ((readMemory(pc + 1) + xReg) <= 0xFF)
 	{
 		cycles++;
 	}

@@ -23,7 +23,7 @@ uint8_t CPU::zeroPage() {
 uint16_t CPU::zeroPagePtr() {
 	cycles++;
 
-	uint16_t address = memory[pc + 1];
+	uint16_t address = readMemory(pc + 1);
 	return address;
 }
 
@@ -39,7 +39,7 @@ uint8_t CPU::zeroPageX() {
 uint16_t CPU::zeroPageXPtr() {
 	cycles += 2;
 
-	uint8_t address = memory[pc + 1];
+	uint8_t address = readMemory(pc + 1);
 	return (address + xReg) & 0xFF;
 }
 
@@ -55,7 +55,7 @@ uint8_t CPU::zeroPageY() {
 uint16_t CPU::zeroPageYPtr() {
 	cycles += 2;
 
-	uint8_t address = memory[pc + 1];
+	uint8_t address = readMemory(pc + 1);
 	//uint8_t* value = &(memory[(address + yReg) & 0xFF]);
 
 	return (address + yReg) & 0xFF;

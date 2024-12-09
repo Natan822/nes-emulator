@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include "CPU.h"
+#include "../Cartrige/Cartridge.h"
 #include "../Controller/Controller.h"
 #include "../PPU/PPU.h"
 #include "../Mappers/Mapper.h"
@@ -16,7 +17,7 @@
 CPU::CPU(PPU& ppu, Controller& controller) : 
 	ppu(ppu), 
 	controller(controller),
-	memory(0xFFFF + 1)
+	memory(0x8000)
 {
 	sp = STACK_START_ADDRESS & 0xFF;
 
@@ -203,36 +204,25 @@ void CPU::loadROM(std::string filePath) {
 	prgSize = static_cast<int>(static_cast<unsigned char>(buffer[4]));
 	chrSize = static_cast<int>(static_cast<unsigned char>(buffer[5]));
 
-	if (prgSize == 2)
-	{
-		for (int i = 0; i < 32768; i++)
-		{
-			memory.at(PRG_START_ADDRESS + i) = buffer[i + 16];
-		}
-	}
-	else if (prgSize == 1)
-	{
-		for (int i = 0; i < 16384; i++)
-		{
-			memory.at(PRG_START_ADDRESS + i) = buffer[i + 16];
-		}
-		for (int i = 16384; i < 32768; i++)
-		{
-			memory.at(PRG_START_ADDRESS + i) = buffer[i + 16 - 16384];
-		}
-	}
+	ppu.mirrorType = buffer[6] & 0x1 ? PPU::VERTICAL : PPU::HORIZONTAL;
+
+	this->cartridge = std::make_shared<Cartridge>(prgSize, chrSize);
+	this->ppu.cartridge = this->cartridge;
+
+	this->cartridge->loadPrg(buffer);
+	this->cartridge->loadChr(buffer);
 
 	uint16_t mapperNumber = (buffer[7] & 0xF0) | ((buffer[6] & 0xF0) >> 4);
 	setMapper(mapperNumber);
 
 	delete[] buffer;
 
-	uint8_t lowByteStartAddress = memory.at(RESET_VECTOR_ADDRESS);
-	uint8_t highByteStartAddress = memory.at(RESET_VECTOR_ADDRESS + 1);
+	uint8_t lowByteStartAddress = readMemory(RESET_VECTOR_ADDRESS);
+	uint8_t highByteStartAddress = readMemory(RESET_VECTOR_ADDRESS + 1);
 
 	uint16_t startAddress = (highByteStartAddress << 8) | lowByteStartAddress;
 	pc = startAddress;
-	currentInstruction = instructionsTable[memory[pc]];
+	currentInstruction = instructionsTable[readMemory(pc)];
 }
 
 void CPU::cycle() {
@@ -270,7 +260,7 @@ void CPU::step() {
 			handleInterrupt('I');
 			irqInterrupt = false;
 		}
-		currentInstruction = instructionsTable[memory[pc]];
+		currentInstruction = instructionsTable[readMemory(pc)];
 	}
 	else
 	{
@@ -327,14 +317,14 @@ void CPU::handleInterrupt(char interruptType) {
 		BRK is handled by OP_00NN()
 	*/
 	}
-	uint8_t lowByteVectorAddress = memory.at(interruptAddress);
-	uint8_t highByteVectorAddress = memory.at(interruptAddress + 1);
+	uint8_t lowByteVectorAddress = readMemory(interruptAddress);
+	uint8_t highByteVectorAddress = readMemory(interruptAddress + 1);
 	uint16_t vectorAddress = (highByteVectorAddress << 8) | lowByteVectorAddress;
 	pc = vectorAddress;
 }
 
 void CPU::printInfo() {
-	std::cout << std::hex << pc << " " << static_cast<int>(memory[pc]) << std::endl;
+	std::cout << std::hex << pc << " " << static_cast<int>(readMemory(pc)) << std::endl;
 	std::cout << "A:" << static_cast<int>(aReg);
 	std::cout << " X:" << static_cast<int>(xReg);
 	std::cout << " Y:" << static_cast<int>(yReg);
@@ -455,7 +445,6 @@ void CPU::setMapper(uint16_t mapperNumber) {
 		errorMessage <<
 			"Unsupported Mapper " << std::dec << static_cast<int>(mapperNumber);
 		throw std::runtime_error(errorMessage.str());
-		break;
 	}
 	}
 	this->ppu.mapper = this->mapper;

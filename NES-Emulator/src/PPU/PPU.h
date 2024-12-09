@@ -19,6 +19,7 @@ const int ATTRIBUTE_TABLE_OFFSET = 960;
 
 class CPU;
 class Mapper;
+class Cartridge;
 
 class PPU {
 public:
@@ -89,8 +90,6 @@ public:
 	unsigned int scanlines{};
 	unsigned int dot{};
 
-	void loadROM(std::string filePath);
-
 	// Load pattern table into video
 	void loadPatternTable();
 
@@ -107,6 +106,7 @@ public:
 
 	void step(CPU* cpu);
 
+	std::shared_ptr<Cartridge> cartridge;
 	std::shared_ptr<Mapper> mapper;
 
 	uint8_t memoryRead(uint16_t address);
@@ -162,6 +162,6 @@ private:
 	int getPixel(int x, int y);
 
 	void mirrorPalettes();
-	void writePalettes(uint8_t data);
-	uint8_t readPalettes();
+	void writePalettes(uint16_t address, uint8_t data);
+	uint8_t readPalettes(uint16_t address);
 };

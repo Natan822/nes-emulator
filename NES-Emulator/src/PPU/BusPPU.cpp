@@ -27,7 +27,7 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 
 	case OAMDATA:
 		// Write to OAM
-		this->oam.at(cpu->memory.at(OAMADDR)) = data;
+		this->oam.at(regOamAddr) = data;
 		// Increment OAMADDR
 		cpu->memory.at(OAMADDR)++;
 		regOamAddr++;
@@ -59,14 +59,7 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 		regPpuAddr = data;
 		break;
 	case PPUDATA:
-		if (vRegister >= PALETTES_ADDRESS)
-		{
-			writePalettes(data);
-		}
-		else
-		{
-			memoryWrite(vRegister, data);
-		}
+		memoryWrite(vRegister, data);
 		vramIncrease(cpu);
 		regPpuData = data;
 		break;
@@ -77,7 +70,7 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 		// Copies from source address to OAM
 		for (int byteIndex = 0; byteIndex < 256; byteIndex++)
 		{
-			this->oam[byteIndex] = cpu->memory.at(sourceAddress + byteIndex);
+			this->oam[byteIndex] = cpu->readMemory(sourceAddress + byteIndex);
 		}
 		cpu->cycles += 513;
 		cpu->cyclesElapsed -= 513;
@@ -132,7 +125,7 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
 	{
 		if (vRegister >= PALETTES_ADDRESS)
 		{
-			readBuffer = readPalettes();
+			readBuffer = readPalettes(vRegister);
 			data = readBuffer;
 		}
 		else
@@ -202,7 +195,11 @@ uint8_t PPU::memoryRead(uint16_t address)
 void PPU::memoryWrite(uint16_t address, uint8_t data)
 {
 	address &= 0x3FFF;
-	if (address < 0x2000)
+	if (address >= 0x3F00)
+	{
+		writePalettes(address, data);
+	}
+	else if (address < 0x2000)
 	{
 		this->mapper->chrWrite(address, data);
 	}
@@ -324,8 +321,8 @@ void PPU::mirrorPalettes() {
 	}
 }
 
-void PPU::writePalettes(uint8_t data) {
-	if (vRegister <= 0x3F1F)
+void PPU::writePalettes(uint16_t address, uint8_t data) {
+	if (address <= 0x3F1F)
 	{
 		uint8_t lastDigit = vRegister & 0xF;
 		// Backdrop color
@@ -336,28 +333,28 @@ void PPU::writePalettes(uint8_t data) {
 		}
 		else
 		{
-			this->memory[vRegister] = data;
+			this->memory[address] = data;
 		}
 	}
 	else
 	{
-		uint8_t mirroredByte = (vRegister & 0xFF) % 0x20;
+		uint8_t mirroredByte = (address & 0xFF) % 0x20;
 		this->memory[PALETTES_ADDRESS | mirroredByte] = data;
 	}
 }
 
-uint8_t PPU::readPalettes() {
-	if (vRegister <= 0x3F1F)
+uint8_t PPU::readPalettes(uint16_t address) {
+	if (address <= 0x3F1F)
 	{
 		// Backdrop color
-		if ((vRegister & 0xFF) % 4 == 0)
+		if ((address & 0xFF) % 4 == 0)
 		{
 			return this->memory[PALETTES_ADDRESS];
 		}
 
-		return this->memory[vRegister];
+		return this->memory[address];
 	}
 
-	uint8_t mirroredByte = (vRegister & 0xFF) % 0x20;
-	return this->memory[(vRegister & 0x3F00) | mirroredByte];
+	uint8_t mirroredByte = (address & 0xFF) % 0x20;
+	return this->memory[(address & 0x3F00) | mirroredByte];
 }

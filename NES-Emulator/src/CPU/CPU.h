@@ -18,6 +18,7 @@
 class PPU;
 class Controller;
 class Mapper;
+class Cartridge;
 
 class CPU {
 
@@ -112,6 +113,8 @@ public:
 
 	uint8_t writeMemory(uint16_t address, uint8_t data);
 	uint8_t readMemory(uint16_t address);
+
+	std::shared_ptr<Cartridge> cartridge;
 private:
 
 	std::shared_ptr<Mapper> mapper;

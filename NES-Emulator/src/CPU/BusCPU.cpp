@@ -21,7 +21,7 @@ uint8_t CPU::writeMemory(uint16_t address, uint8_t data) {
 	}
 	else if (address >= 0x8000)
 	{
-		this->mapper->cpuWrite(address, data);
+		this->mapper->prgWrite(address, data);
 		return data;
 	}
 	memory.at(address) = data;
@@ -49,7 +49,7 @@ uint8_t CPU::readMemory(uint16_t address) {
 
 	else if (address >= 0x8000)
 	{
-		return this->mapper->cpuRead(address);
+		return this->mapper->prgRead(address);
 	}
 
 	return memory.at(address);

@@ -4,6 +4,7 @@
 #include <vector>
 #include "../CPU/CPU.h"
 #include "PPU.h"
+#include "../Cartrige/Cartridge.h"
 #include "../Graphics/Graphics.h"
 #include "../Mappers/Mapper.h"
 #include "../Mappers/Mapper003.h"
@@ -27,46 +28,6 @@ PPU::PPU() :
 }
 
 PPU::~PPU() {}
-
-void PPU::loadROM(std::string filePath) {
-	std::ifstream file(filePath, std::ios::binary | std::ios::ate);
-
-	if (!file.is_open())
-	{
-		throw std::runtime_error("Could not open file: " + filePath);
-	}
-
-	std::streampos size = file.tellg();
-	char* buffer = new char[size];
-
-	file.seekg(0, std::ios::beg);
-	file.read(buffer, size);
-	file.close();
-
-	mirrorType = buffer[6] & 0x1 ? VERTICAL : HORIZONTAL;
-
-	prgSize = static_cast<int>(buffer[4]);
-	chrSize = static_cast<int>(buffer[5]);
-
-	// Starts at 16 because the header bytes occupy the first 16 bytes
-	for (int i = 16; i < ((8192 * chrSize) & 0x2000) + 16; i++)
-	{	
-		memory.at(i - 16) = buffer[(prgSize * 16384) + i];
-	}
-	for (int i = 16; i < (8192 * chrSize) + 16; i++)
-	{
-		chr.at(i - 16) = buffer[(prgSize * 16384) + i];
-	}
-
-	delete[] buffer;
-
-	//// Temporary default palette table
-	//this->memory[PALETTES_ADDRESS] = 0x0E;
-	//for (int i = 1; i < 4; i++)
-	//{
-	//	this->memory[PALETTES_ADDRESS + i] = 0x15 + i;
-	//}
-}
 
 void PPU::loadPatternTable() {
 	int videoX = 0;
