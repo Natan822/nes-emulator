@@ -248,8 +248,9 @@ void CPU::cycle() {
 void CPU::step() {
 	if (cyclesElapsed == currentInstruction.totalCycles)
 	{
-		cyclesElapsed = 0;
+		cyclesElapsed = 1;
 		execute();
+		cycles += currentInstruction.totalCycles;
 
 		if (nmiInterrupt)
 		{
@@ -272,9 +273,7 @@ void CPU::step() {
 void CPU::execute() {
 	//printInfo();
 
-	// Every instruction takes at least 2 cycles
-	cycles += 2;
-	//std::cout << "instruction executed: " << currentInstruction.instructionName << " | PC = 0x" << std::hex << pc << " | CPU-CYC = " << std::dec << cycles << std::endl;
+	//std::cout << "instruction executed: " << currentInstruction.instructionName << " | PC = 0x" << std::hex << pc << " | CPU-CYC = " << std::dec << cycles << " PPU-CYC:" << ppu.cycles << std::endl;
 	(this->*currentInstruction.function)();
 }
 

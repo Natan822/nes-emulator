@@ -53,19 +53,23 @@ void NES::start() {
 	int masterClock = 0;
 	while (!quit)
 	{
-		if (masterClock % 12 == 0)
-		{
-			cpu->step();
-		}
-		if (masterClock % 4 == 0)
-		{
-			ppu->step(cpu);
-		}
-		masterClock++;
-		if (masterClock > 12)
-		{
-			masterClock = 0;
-		}
+		cpu->step();
+		ppu->step(cpu);
+		ppu->step(cpu);
+		ppu->step(cpu);
+		//if (masterClock % 12 == 0)
+		//{
+		//	cpu->step();
+		//}
+		//if (masterClock % 4 == 0)
+		//{
+		//	ppu->step(cpu);
+		//}
+		//masterClock++;
+		//if (masterClock >= 12)
+		//{
+		//	masterClock = 0;
+		//}
 	}
 	Graphics::shutdown();
 }
