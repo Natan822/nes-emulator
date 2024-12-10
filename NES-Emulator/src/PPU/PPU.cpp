@@ -51,15 +51,18 @@ void PPU::renderOAM() {
 	for (int oamByte = 252; oamByte >= 4; oamByte -= 4)
 	{
 		uint16_t yPosition  = oam.at(oamByte) + 1; // 16 bits in order to prevent overflowing from 0xFF to 0x00
-		uint8_t tileIndex  = oam.at(oamByte + 1);
-		uint8_t attributes = oam.at(oamByte + 2);
-		uint8_t xPosition  = oam.at(oamByte + 3);
+		if (yPosition < 240)
+		{
+			uint8_t tileIndex = oam.at(oamByte + 1);
+			uint8_t attributes = oam.at(oamByte + 2);
+			uint8_t xPosition = oam.at(oamByte + 3);
 
-		uint8_t paletteIndex = attributes & 0x3;
-		bool isBehindBackground = attributes & 0x20;
-		bool hFlip = attributes & 0x40;
-		bool vFlip = attributes & 0x80;
-		renderSprite(tileIndex, xPosition, yPosition, paletteIndex, vFlip, hFlip, isBehindBackground);
+			uint8_t paletteIndex = attributes & 0x3;
+			bool isBehindBackground = attributes & 0x20;
+			bool hFlip = attributes & 0x40;
+			bool vFlip = attributes & 0x80;
+			renderSprite(tileIndex, xPosition, yPosition, paletteIndex, vFlip, hFlip, isBehindBackground);
+		}
 	}
 }
 
@@ -71,12 +74,33 @@ int PPU::getPixel(int x, int y) {
 }
 
 void PPU::renderSprite(int spriteIndex, int x, int y, int paletteIndex, bool vFlip, bool hFlip, bool isBehindBackground) {
-	uint16_t addressSprite = (spriteIndex * 16) + spritePatternTableAddress;
+	uint16_t addressSprite;
+	if (spriteHeight == 8) // 8x8
+	{
+		addressSprite = (spriteIndex * 16) + spritePatternTableAddress;
+	}
+	else // 8x16
+	{
+		int patternTable = (spriteIndex & 0x1) ? 0x1000 : 0x0;
+		if (patternTable == 0x1000)
+		{
+			addressSprite = ((spriteIndex - 1) * 16) + patternTable;
+		}
+		else
+		{
+			addressSprite = (spriteIndex * 16) + patternTable;
+		}
+	}
+
 	for (int byte = 0; byte < spriteHeight; byte++)
 	{
 		if (y + byte >= VIDEO_HEIGHT) break;
 
 		int yOffset = vFlip ? (spriteHeight - 1) - byte : byte;
+		if (yOffset >= 8)
+		{
+			yOffset += 8;
+		}
 		uint8_t firstPlaneByte = this->memoryRead(addressSprite + yOffset);
 		uint8_t secondPlaneByte = this->memoryRead(addressSprite + yOffset + 8);
 
@@ -119,12 +143,32 @@ void PPU::renderSprite(int spriteIndex, int x, int y, int paletteIndex, bool vFl
 
 bool PPU::renderSpritePixel(int spriteIndex, int x, int y, int paletteIndex, bool vFlip, bool hFlip, bool isBehindBackground) {
 	bool hitDetected = false;
-	uint16_t addressSprite = (spriteIndex * 16) + spritePatternTableAddress;;
+	uint16_t addressSprite;
+	if (spriteHeight == 8) // 8x8
+	{
+		addressSprite = (spriteIndex * 16) + spritePatternTableAddress;
+	}
+	else // 8x16
+	{
+		int patternTable = (spriteIndex & 0x1) ? 0x1000 : 0x0;
+		if (patternTable == 0x1000)
+		{
+			addressSprite = ((spriteIndex - 1) * 16) + patternTable;
+		}
+		else
+		{
+			addressSprite = (spriteIndex * 16) + patternTable;
+		}
+	}
 
 	int byte = scanlines - y;
 	if (y + byte >= VIDEO_HEIGHT) return hitDetected;
 
-	int yOffset = vFlip ? 7 - byte : byte;
+	int yOffset = vFlip ? (spriteHeight - 1) - byte : byte;
+	if (yOffset >= 8)
+	{
+		yOffset += 8;
+	}
 	uint8_t firstPlaneByte = this->memoryRead(addressSprite + yOffset);
 	uint8_t secondPlaneByte = this->memoryRead(addressSprite + yOffset + 8);
 
