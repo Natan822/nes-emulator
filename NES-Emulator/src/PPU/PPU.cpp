@@ -358,6 +358,7 @@ void PPU::step(CPU* cpu) {
 		break;
 	}
 
+	cycles++;
 	dot++;
 	if (dot == 341)
 	{
