@@ -117,6 +117,7 @@ public:
 
 	std::chrono::high_resolution_clock::time_point lastFrameTime;
 private:
+	int spriteHeight{};
 
 	bool isOddFrame{};
 

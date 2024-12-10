@@ -261,6 +261,9 @@ void PPU::updatePPUCTRL() {
 
 	// Check background pattern table address
 	backgroundPatternTableAddress = regPpuCtrl & 0x10 ? 0x1000 : 0;
+
+	// Check sprite size(8x8 or 8x16)
+	spriteHeight = (regPpuCtrl & 0x20) ? 16 : 8;
 }
 
 void PPU::updatePPUMASK() {
