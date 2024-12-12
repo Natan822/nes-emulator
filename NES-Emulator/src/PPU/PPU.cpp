@@ -81,14 +81,13 @@ void PPU::renderSprite(int spriteIndex, int x, int y, int paletteIndex, bool vFl
 	}
 	else // 8x16
 	{
-		int patternTable = (spriteIndex & 0x1) ? 0x1000 : 0x0;
-		if (patternTable == 0x1000)
+		if (spriteIndex & 0x1)
 		{
-			addressSprite = ((spriteIndex - 1) * 16) + patternTable;
+			addressSprite = ((spriteIndex - 1) * 16) + 0x1000;
 		}
 		else
 		{
-			addressSprite = (spriteIndex * 16) + patternTable;
+			addressSprite = (spriteIndex * 16);
 		}
 	}
 
@@ -150,14 +149,13 @@ bool PPU::renderSpritePixel(int spriteIndex, int x, int y, int paletteIndex, boo
 	}
 	else // 8x16
 	{
-		int patternTable = (spriteIndex & 0x1) ? 0x1000 : 0x0;
-		if (patternTable == 0x1000)
+		if (spriteIndex & 0x1)
 		{
-			addressSprite = ((spriteIndex - 1) * 16) + patternTable;
+			addressSprite = ((spriteIndex - 1) * 16) + 0x1000;
 		}
 		else
 		{
-			addressSprite = (spriteIndex * 16) + patternTable;
+			addressSprite = (spriteIndex * 16);
 		}
 	}
 
