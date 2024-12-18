@@ -517,14 +517,14 @@ void PPU::render() {
 void PPU::postRender(CPU* cpu) {
 	if (scanlines == 241 && dot == 1)
 	{
-		auto delta = std::chrono::duration<float, std::chrono::microseconds::period>
-			(std::chrono::high_resolution_clock::now() - lastFrameTime).count();
-		if (delta < 16000)
-		{
-			std::this_thread::sleep_for(std::chrono::duration<double, std::micro>
-				(16000 - delta));
-		}
-		lastFrameTime = std::chrono::high_resolution_clock::now();
+		//auto delta = std::chrono::duration<float, std::chrono::microseconds::period>
+		//	(std::chrono::high_resolution_clock::now() - lastFrameTime).count();
+		//if (delta < 16000)
+		//{
+		//	std::this_thread::sleep_for(std::chrono::duration<double, std::micro>
+		//		(16000 - delta));
+		//}
+		//lastFrameTime = std::chrono::high_resolution_clock::now();
 		this->renderFrame();
 		Input::inputProcessing(&cpu->controller);
 

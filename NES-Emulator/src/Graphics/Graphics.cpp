@@ -18,6 +18,7 @@ namespace Graphics {
 		texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, textureWidth, textureHeight);
 
 		loadMapTable();
+		SDL_RenderSetVSync(renderer, 1);
 	}
 
 	void update(const void* buffer, int pitch) {
