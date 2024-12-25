@@ -8,6 +8,8 @@ class Controller;
 
 class NES {
 public:
+	static bool isRunning;
+
 	PPU* ppu;
 	Controller* controller;
 	CPU* cpu;

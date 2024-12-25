@@ -9,6 +9,8 @@
 #include <iostream>
 #include <thread>
 
+bool NES::isRunning = false;
+
 NES::NES() : NES(1, 1) {}
 NES::NES(int _windowScale) : NES(_windowScale, 1) {}
 NES::NES(int _windowScale, double speed) 
@@ -50,8 +52,9 @@ void NES::start() {
 	auto lastFrameTime = std::chrono::high_resolution_clock::now();
 	double delta;
 
+	isRunning = true;
 	int masterClock = 0;
-	while (!quit)
+	while (isRunning)
 	{
 		cpu->step();
 		ppu->step(cpu);
