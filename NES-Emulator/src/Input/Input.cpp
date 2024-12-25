@@ -1,4 +1,5 @@
 #include "../Controller/Controller.h"
+#include "../NES/NES.h"
 #include "SDL.h"
 #include "Input.h"
 #include "../Graphics/Graphics.h"
@@ -14,7 +15,7 @@ namespace Input {
 			switch (event.type)
 			{
 			case SDL_QUIT:
-				quit = true;
+				NES::isRunning = false;
 				break;
 			case SDL_KEYDOWN:
 				handleKeyDown(controller, event, &quit);
@@ -31,7 +32,10 @@ namespace Input {
 		switch (event.key.keysym.sym)
 		{
 		case SDLK_ESCAPE:
-			*quit = true;
+			NES::isRunning = false;
+			break;
+		case SDLK_p:
+			pause();
 			break;
 		case SDLK_w:
 			controller->buttonPress('U');
@@ -89,4 +93,33 @@ namespace Input {
 			break;
 		}
 	}
+
+	void pause() {
+		bool isPaused = true;
+		SDL_Event event;
+		while (isPaused)
+		{
+			SDL_WaitEvent(&event);
+			if (event.type == SDL_QUIT)
+			{
+				NES::isRunning = false;
+				isPaused = false;
+			}
+			else if (event.type == SDL_KEYDOWN)
+			{
+				switch (event.key.keysym.sym)
+				{
+				case SDLK_p:
+					isPaused = false;
+					break;
+
+				case SDLK_ESCAPE:
+					NES::isRunning = false;
+					isPaused = false;
+					break;
+				}
+			}
+		}
+	}
+
 }
