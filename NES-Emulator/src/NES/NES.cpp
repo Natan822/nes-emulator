@@ -1,5 +1,7 @@
+#include "../APU/APU.h"
 #include "../CPU/CPU.h"
 #include "../PPU/PPU.h"
+#include "../Audio/Audio.h"
 #include "../Graphics/Graphics.h"
 #include "../Input/Input.h"
 #include "../Controller/Controller.h"
@@ -9,18 +11,22 @@
 #include <iostream>
 #include <thread>
 
+bool NES::isRunning = false;
+
 NES::NES() : NES(1, 1) {}
 NES::NES(int _windowScale) : NES(_windowScale, 1) {}
-NES::NES(int _windowScale, double speed) 
-	:	ppu(new PPU()),
-		controller(new Controller()),
-		cpu(new CPU(*ppu, *controller)),
-		windowScale(_windowScale),
-		isRomLoaded(false),
-		frameDelay(16000.0 / speed)
+NES::NES(int _windowScale, double speed) :
+	apu(new APU()),
+	ppu(new PPU()),
+	controller(new Controller()),
+	cpu(new CPU(*ppu, *controller, *apu)),
+	windowScale(_windowScale),
+	isRomLoaded(false),
+	frameDelay(16000.0 / speed)
 {}
 
 NES::~NES() {
+	delete apu;
 	delete ppu;
 	delete cpu;
 	delete controller;
@@ -43,16 +49,21 @@ void NES::start() {
 		return;
 	}
 	Graphics::initialize((VIDEO_WIDTH * windowScale), (VIDEO_HEIGHT * windowScale), VIDEO_WIDTH, VIDEO_HEIGHT);
+	Audio::initialize();
 
 	int oldCycles = 0;
-	bool quit = false;
-
 	auto lastFrameTime = std::chrono::high_resolution_clock::now();
 	double delta;
 
+	isRunning = true;
 	int masterClock = 0;
-	while (!quit)
+	while (isRunning)
 	{
+		apu->step(cpu);
+		cpu->step();
+		ppu->step(cpu);
+		ppu->step(cpu);
+		ppu->step(cpu);
 		cpu->step();
 		ppu->step(cpu);
 		ppu->step(cpu);

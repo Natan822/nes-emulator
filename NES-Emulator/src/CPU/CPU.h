@@ -15,6 +15,7 @@
 #define PPUDATA 0x2007
 #define OAMDMA 0x4014
 
+class APU;
 class PPU;
 class Controller;
 class Mapper;
@@ -90,8 +91,10 @@ public:
 	int chrSize{}; // CHR ROM size in 8 KiB units(0 = board uses CHR RAM)
 	
 	CPU(PPU& ppu, Controller& controller);
+	CPU(PPU& ppu, Controller& controller, APU& apu);
 	~CPU();
 
+	APU& apu;
 	PPU& ppu;
 	Controller& controller;
 	uint8_t controllerInput{};

@@ -2,12 +2,16 @@
 
 #include <string>
 
+class APU;
 class CPU;
 class PPU;
 class Controller;
 
 class NES {
 public:
+	static bool isRunning;
+
+	APU* apu;
 	PPU* ppu;
 	Controller* controller;
 	CPU* cpu;

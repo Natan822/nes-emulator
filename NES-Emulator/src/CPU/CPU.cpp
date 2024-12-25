@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include "CPU.h"
+#include "../APU/APU.h"
 #include "../Cartrige/Cartridge.h"
 #include "../Controller/Controller.h"
 #include "../PPU/PPU.h"
@@ -15,7 +16,8 @@
 #include "../Mappers/Mapper002.h"
 #include "../Mappers/Mapper003.h"
 
-CPU::CPU(PPU& ppu, Controller& controller) : 
+CPU::CPU(PPU& ppu, Controller& controller, APU& apu) : 
+	apu(apu),
 	ppu(ppu), 
 	controller(controller),
 	memory(0xFFFF + 1)

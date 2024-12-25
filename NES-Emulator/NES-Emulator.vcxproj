@@ -133,6 +133,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\APU\APU.cpp" />
+    <ClCompile Include="src\APU\BusAPU.cpp" />
+    <ClCompile Include="src\APU\APU.h" />
+    <ClCompile Include="src\Audio\Audio.cpp" />
     <ClCompile Include="src\Cartrige\Cartridge.cpp" />
     <ClCompile Include="src\Controller\Controller.cpp" />
     <ClCompile Include="src\CPU\AddressingModes.cpp" />
@@ -151,6 +155,7 @@
     <ClCompile Include="src\PPU\PPU.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Audio\Audio.h" />
     <ClInclude Include="src\Cartrige\Cartridge.h" />
     <ClInclude Include="src\Controller\Controller.h" />
     <ClInclude Include="src\CPU\CPU.h" />

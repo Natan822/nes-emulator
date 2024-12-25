@@ -9,6 +9,8 @@
 #include "../Mappers/Mapper.h"
 #include "../Mappers/Mapper003.h"
 #include "../Input/Input.h"
+#include "../Audio/Audio.h"
+#include "../APU/APU.h"
 
 #include <iostream>
 #include <chrono>
@@ -527,6 +529,16 @@ void PPU::postRender(CPU* cpu) {
 		//lastFrameTime = std::chrono::high_resolution_clock::now();
 		this->renderFrame();
 		Input::inputProcessing(&cpu->controller);
+		SDL_QueueAudio(Audio::device, &cpu->apu.soundBuffer, Audio::audioBufferSize);
+		for (int i = 0; i < 735; i++)
+		{	
+			if (cpu->apu.soundBuffer.at(i) != 0)
+			{
+				int a = 2;
+			}
+			cpu->apu.soundBuffer.at(i) = 0;
+		}
+
 
 		// Set VBlank flag
 		this->regPpuStatus |= 0x80;

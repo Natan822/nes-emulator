@@ -1,6 +1,7 @@
 #include "../Controller/Controller.h"
 #include "SDL.h"
 #include "Input.h"
+#include "../Graphics/Graphics.h"
 
 namespace Input {
 	bool inputProcessing(Controller* controller) {
