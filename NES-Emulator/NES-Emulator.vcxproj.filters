@@ -54,13 +54,34 @@
     <ClCompile Include="src\CPU\BusCPU.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Debug\DebugPPU.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Cartrige\Cartridge.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Mappers\Mapper002.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\APU\APU.h">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\APU\BusAPU.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\APU\APU.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Audio\Audio.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\APU\Pulse.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\APU\Envelope.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\APU\Divider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\App.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -89,13 +110,16 @@
     <ClInclude Include="src\Mappers\Mapper003.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Debug\DebugPPU.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\Cartrige\Cartridge.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Mappers\Mapper002.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Audio\Audio.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\App.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

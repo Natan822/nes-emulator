@@ -1,7 +1,9 @@
+#include "../APU/APU.h"
 #include "../PPU/PPU.h"
 #include "../Controller/Controller.h"
 #include "../Mappers/Mapper.h"
 #include "CPU.h"
+#include <iostream>
 
 uint8_t CPU::writeMemory(uint16_t address, uint8_t data) {
 	// PPU registers and mirrors
@@ -18,6 +20,11 @@ uint8_t CPU::writeMemory(uint16_t address, uint8_t data) {
 	else if (address == 0x4016)
 	{
 		controllerInput = this->controller.getInput();
+	}
+	// APU Registers
+	else if (address >= 0x4000 && address <= 0x4017)
+	{
+		return apu.writeMemoryApu(address, data);
 	}
 	else if (address >= 0x8000)
 	{
@@ -45,6 +52,11 @@ uint8_t CPU::readMemory(uint16_t address) {
 		uint8_t data = controllerInput & 0x1;
 		controllerInput >>= 1;
 		return data;
+	}
+	// APU Registers
+	else if (address >= 0x4000 && address <= 0x4017)
+	{
+		return apu.readMemoryApu(address);
 	}
 
 	else if (address >= 0x8000)

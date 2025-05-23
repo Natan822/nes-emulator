@@ -25,8 +25,11 @@ void Cartridge::loadPrg(char* buffer) {
 }
 
 void Cartridge::loadChr(char* buffer) {
-	for (int i = 0; i < chr.size(); i++)
+	if (chrSize != 0)
 	{
-		chr.at(i) = buffer[(prgSize * 0x4000) + i + 16];
+		for (int i = 0; i < chr.size(); i++)
+		{
+			chr.at(i) = buffer[(prgSize * 0x4000) + i + 16];
+		}
 	}
 }

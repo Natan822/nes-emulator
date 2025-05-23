@@ -9,6 +9,8 @@
 #include "../Mappers/Mapper.h"
 #include "../Mappers/Mapper003.h"
 #include "../Input/Input.h"
+#include "../Audio/Audio.h"
+#include "../APU/APU.h"
 
 #include <iostream>
 #include <chrono>
@@ -24,7 +26,6 @@ PPU::PPU() :
 {
 	//cycles = 21;
 	isHighByte = true;
-	lastFrameTime = std::chrono::high_resolution_clock::now();
 }
 
 PPU::~PPU() {}
@@ -373,7 +374,7 @@ void PPU::incrementY() {
 	}
 }
 
-void PPU::step(CPU* cpu) {
+void PPU::step(CPU* cpu, bool updateFrame) {
 
 	if (dot == 256 && (enableBackground || enableSprites) && renderState != POST_RENDER)
 	{
@@ -396,7 +397,7 @@ void PPU::step(CPU* cpu) {
 		render();
 		break;
 	case POST_RENDER:
-		postRender(cpu);
+		postRender(cpu, updateFrame);
 		break;
 	}
 
@@ -514,18 +515,14 @@ void PPU::render() {
 	}
 }
 
-void PPU::postRender(CPU* cpu) {
+
+void PPU::postRender(CPU* cpu, bool updateFrame) {
 	if (scanlines == 241 && dot == 1)
 	{
-		//auto delta = std::chrono::duration<float, std::chrono::microseconds::period>
-		//	(std::chrono::high_resolution_clock::now() - lastFrameTime).count();
-		//if (delta < 16000)
-		//{
-		//	std::this_thread::sleep_for(std::chrono::duration<double, std::micro>
-		//		(16000 - delta));
-		//}
-		//lastFrameTime = std::chrono::high_resolution_clock::now();
-		this->renderFrame();
+		if (updateFrame)
+		{
+			this->renderFrame();
+		}
 		Input::inputProcessing(&cpu->controller);
 
 		// Set VBlank flag

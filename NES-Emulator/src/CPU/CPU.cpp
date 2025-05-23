@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include "CPU.h"
+#include "../APU/APU.h"
 #include "../Cartrige/Cartridge.h"
 #include "../Controller/Controller.h"
 #include "../PPU/PPU.h"
@@ -15,7 +16,8 @@
 #include "../Mappers/Mapper002.h"
 #include "../Mappers/Mapper003.h"
 
-CPU::CPU(PPU& ppu, Controller& controller) : 
+CPU::CPU(PPU& ppu, Controller& controller, APU& apu) : 
+	apu(apu),
 	ppu(ppu), 
 	controller(controller),
 	memory(0xFFFF + 1)
@@ -27,10 +29,9 @@ CPU::CPU(PPU& ppu, Controller& controller) :
 		instructionsTable[i] = Instruction{ &CPU::invalid, 0, "Unknown", IMMEDIATE };
 	}
 
-	status = 0x24;
-	pc = 0xC000;
+	startRegisters();
 
-	//cycles = 7;
+	cycles = 7;
 
 	instructionsTable[0x00] = Instruction{ &CPU::OP_00NN, 7, "BRK", IMPLIED };
 	instructionsTable[0x01] = Instruction{ &CPU::OP_01NN, 6, "ORA ($nn,X)", INDIRECTX };
@@ -187,6 +188,26 @@ CPU::CPU(PPU& ppu, Controller& controller) :
 
 CPU::~CPU() {}
 
+void CPU::startRegisters()
+{
+	pc = 0xC000;
+
+	aReg = 0;
+	xReg = 0;
+	yReg = 0;
+
+	status = 0x34;
+	sp = 0xFD;
+}
+
+void CPU::resetRegisters()
+{
+	setFlag('I', 1);
+	sp -= 3;
+
+	pc = RESET_VECTOR_ADDRESS;
+}
+
 void CPU::loadROM(std::string filePath) {
 	std::ifstream file(filePath, std::ios::binary | std::ios::ate);
 
@@ -274,15 +295,13 @@ void CPU::execute() {
 	//printInfo();
 
 	//std::cout << "instruction executed: " << currentInstruction.instructionName << " | PC = 0x" << std::hex << pc << " | CPU-CYC = " << std::dec << cycles << " PPU-CYC:" << ppu.cycles << std::endl;
+	
+	//std::cout << std::endl;
 	(this->*currentInstruction.function)();
 }
 
 void CPU::reset() {
-	aReg = 0;
-	xReg = 0;
-	yReg = 0;
-	status = 0x20;
-	pc = RESET_VECTOR_ADDRESS;
+	resetRegisters();
 }
 
 void CPU::handleInterrupt(char interruptType) {

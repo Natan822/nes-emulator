@@ -105,6 +105,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>D:\sdl2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -133,28 +134,36 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\APU\APU.cpp" />
+    <ClCompile Include="src\APU\BusAPU.cpp" />
+    <ClCompile Include="src\APU\APU.h" />
+    <ClCompile Include="src\APU\Divider.cpp" />
+    <ClCompile Include="src\APU\Envelope.cpp" />
+    <ClCompile Include="src\APU\Pulse.cpp" />
+    <ClCompile Include="src\Audio\Audio.cpp" />
     <ClCompile Include="src\Cartrige\Cartridge.cpp" />
     <ClCompile Include="src\Controller\Controller.cpp" />
     <ClCompile Include="src\CPU\AddressingModes.cpp" />
     <ClCompile Include="src\CPU\BusCPU.cpp" />
     <ClCompile Include="src\CPU\CPU.cpp" />
     <ClCompile Include="src\CPU\Instructions.cpp" />
-    <ClCompile Include="src\Debug\DebugPPU.cpp" />
     <ClCompile Include="src\Graphics\Graphics.cpp" />
     <ClCompile Include="src\Input\Input.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\Mappers\Mapper.cpp" />
     <ClCompile Include="src\Mappers\Mapper002.cpp" />
     <ClCompile Include="src\Mappers\Mapper003.cpp" />
+    <ClCompile Include="src\App.cpp" />
     <ClCompile Include="src\NES\NES.cpp" />
     <ClCompile Include="src\PPU\BusPPU.cpp" />
     <ClCompile Include="src\PPU\PPU.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\App.h" />
+    <ClInclude Include="src\Audio\Audio.h" />
     <ClInclude Include="src\Cartrige\Cartridge.h" />
     <ClInclude Include="src\Controller\Controller.h" />
     <ClInclude Include="src\CPU\CPU.h" />
-    <ClInclude Include="src\Debug\DebugPPU.h" />
     <ClInclude Include="src\Graphics\Graphics.h" />
     <ClInclude Include="src\Input\Input.h" />
     <ClInclude Include="src\Mappers\Mapper.h" />
