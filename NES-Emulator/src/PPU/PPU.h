@@ -104,7 +104,7 @@ public:
 	void renderScanline();
 	void renderOAM();
 
-	void step(CPU* cpu);
+	void step(CPU* cpu, bool updateFrame = true);
 
 	std::shared_ptr<Cartridge> cartridge;
 	std::shared_ptr<Mapper> mapper;
@@ -115,8 +115,8 @@ public:
 	uint8_t getPaletteIndex(int xQuadrant, int yQuadrant, uint8_t attributeByte);
 	int getPixelColor(int pixelValue);
 
-	std::chrono::high_resolution_clock::time_point lastFrameTime;
 private:
+
 	int spriteHeight{};
 
 	bool isOddFrame{};
@@ -134,7 +134,7 @@ private:
 
 	void preRender();
 	void render();
-	void postRender(CPU* cpu);
+	void postRender(CPU* cpu, bool updateFrame);
 
 	void defineRenderState();
 

@@ -119,6 +119,8 @@ public:
 
 	std::shared_ptr<Cartridge> cartridge;
 private:
+	void startRegisters();
+	void resetRegisters();
 
 	std::shared_ptr<Mapper> mapper;
 	void setMapper(uint16_t mapperNumber);

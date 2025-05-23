@@ -24,7 +24,6 @@ uint8_t CPU::writeMemory(uint16_t address, uint8_t data) {
 	// APU Registers
 	else if (address >= 0x4000 && address <= 0x4017)
 	{
-		std::cout << "write apu: " << static_cast<int>(data) << std::endl;
 		return apu.writeMemoryApu(address, data);
 	}
 	else if (address >= 0x8000)

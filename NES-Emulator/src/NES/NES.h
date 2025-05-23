@@ -24,6 +24,7 @@ public:
 	void loadROM(std::string path);
 	void start();
 
+	void clock(bool updateFrame = true);
 private:
 	int windowScale;
 	double frameDelay;

@@ -42,6 +42,15 @@ void NES::loadROM(std::string path) {
 	}
 }
 
+void NES::clock(bool updateFrame)
+{
+	apu->clock(cpu, updateFrame);
+	cpu->step();
+	ppu->step(cpu, updateFrame);
+	ppu->step(cpu, updateFrame);
+	ppu->step(cpu, updateFrame);
+}
+
 void NES::start() {
 	if (!isRomLoaded)
 	{
@@ -49,7 +58,6 @@ void NES::start() {
 		return;
 	}
 	Graphics::initialize((VIDEO_WIDTH * windowScale), (VIDEO_HEIGHT * windowScale), VIDEO_WIDTH, VIDEO_HEIGHT);
-	Audio::initialize();
 
 	int oldCycles = 0;
 	auto lastFrameTime = std::chrono::high_resolution_clock::now();
@@ -57,17 +65,20 @@ void NES::start() {
 
 	isRunning = true;
 	int masterClock = 0;
+
+	for (int i = 0; i < 21; i++)
+	{
+		ppu->step(cpu);
+	}
+
+	Audio::initialize();
+	int framesToSkip = 2;
+	SDL_PauseAudioDevice(Audio::device, 0);
+
 	while (isRunning)
 	{
-		apu->step(cpu);
-		cpu->step();
-		ppu->step(cpu);
-		ppu->step(cpu);
-		ppu->step(cpu);
-		cpu->step();
-		ppu->step(cpu);
-		ppu->step(cpu);
-		ppu->step(cpu);
+		clock();
+		
 		//if (masterClock % 12 == 0)
 		//{
 		//	cpu->step();
