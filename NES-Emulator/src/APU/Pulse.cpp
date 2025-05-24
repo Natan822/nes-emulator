@@ -66,7 +66,24 @@ void APU::Pulse::clock(bool isPulse1) {
 }
 
 void APU::Pulse::sweepClock() {
-	if (sweep.divider.counter == 0 && sweep.enabledFlag && sweep.shiftCount != 0)
+	if (sweep.reloadFlag)
+	{
+		sweep.divider.counter = sweep.divider.period;
+		sweep.reloadFlag = false;
+	}
+	else if (sweep.divider.counter > 0)
+	{
+		sweep.divider.counter--;
+	}
+	else
+	{
+		sweep.divider.counter = sweep.divider.period;
+		if (sweep.enabledFlag && !isSweepMuting())
+		{
+			initialTimer = sweep.targetPeriod;
+		}
+	}
+	/*if (sweep.divider.counter == 0 && sweep.enabledFlag && sweep.shiftCount != 0)
 	{
 		if (!isSweepMuting())
 		{
@@ -81,11 +98,11 @@ void APU::Pulse::sweepClock() {
 	else
 	{
 		sweep.divider.counter--;
-	}
+	}*/
 }
 
 void APU::Pulse::lengthCounterClock() {
-	if (isEnabled && lengthCounter > 0 && !envelope.loopFlag)
+	if (lengthCounter > 0 && !envelope.loopFlag)
 	{
 		lengthCounter--;
 	}
