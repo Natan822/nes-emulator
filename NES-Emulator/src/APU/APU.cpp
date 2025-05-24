@@ -102,8 +102,8 @@ void APU::halfStep(CPU* cpu) {
 	}
 	currentCycleState = CycleState::ACTIVE;
 
-	pulse1.updateSweep(true);
-	pulse2.updateSweep(false);
+	pulse1.updateTargetPeriod(true);
+	pulse2.updateTargetPeriod(false);
 
 	samplesSum += mixerOutput();
 	samplesCount++;

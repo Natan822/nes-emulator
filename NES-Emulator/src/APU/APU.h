@@ -57,7 +57,7 @@ class APU {
 		void update(uint16_t address, uint8_t data);
 
 		void sweepClock();
-		void updateSweep(bool isPulse1); // Update sweep's target period
+		void updateTargetPeriod(bool isPulse1); // Update sweep's target period
 		bool isSweepMuting();
 	};
 

@@ -16,18 +16,17 @@ void APU::Pulse::update(uint16_t address, uint8_t data) {
 		break;
 	case 1:
 		sweep.enabledFlag = data & 0x80;
-		sweep.divider.period = (data & 0x70) >> 4;
+		sweep.divider.period = ((data & 0x70) >> 4) + 1;
 		sweep.negateFlag = data & 0x8;
 		sweep.shiftCount = data & 0x7;
 
 		sweep.reloadFlag = true;
-		updateSweep(address < 0x4004);
+		updateTargetPeriod(address < 0x4004);
 		break;
 	case 2:
 		initialTimer &= 0x700;
 		initialTimer |= data;
 	
-		updateSweep(address < 0x4004);
 		break;
 	case 3:
 		if (isEnabled)
@@ -36,8 +35,6 @@ void APU::Pulse::update(uint16_t address, uint8_t data) {
 		}
 		initialTimer &= 0xFF;
 		initialTimer |= (data & 0x7) << 8;
-
-		updateSweep(address < 0x4004);
 
 		envelope.startFlag = true;
 		sequencerPosition = 0x80;
@@ -62,43 +59,24 @@ void APU::Pulse::clock(bool isPulse1) {
 		sequencerOutput = dutyTable[duty] & sequencerPosition;
 	}
 
-	updateSweep(isPulse1);
+	updateTargetPeriod(isPulse1);
 }
 
 void APU::Pulse::sweepClock() {
+	sweep.divider.counter--;
+	if (sweep.divider.counter == 0)
+	{
+		if (sweep.shiftCount > 0 && sweep.enabledFlag && initialTimer >= 8 && sweep.targetPeriod <= 0x7FF)
+		{
+			initialTimer = sweep.targetPeriod;
+		}
+		sweep.divider.counter = sweep.divider.period;
+	}
 	if (sweep.reloadFlag)
 	{
 		sweep.divider.counter = sweep.divider.period;
 		sweep.reloadFlag = false;
 	}
-	else if (sweep.divider.counter > 0)
-	{
-		sweep.divider.counter--;
-	}
-	else
-	{
-		sweep.divider.counter = sweep.divider.period;
-		if (sweep.enabledFlag && !isSweepMuting())
-		{
-			initialTimer = sweep.targetPeriod;
-		}
-	}
-	/*if (sweep.divider.counter == 0 && sweep.enabledFlag && sweep.shiftCount != 0)
-	{
-		if (!isSweepMuting())
-		{
-			initialTimer = sweep.targetPeriod;
-		}
-	}
-	if (sweep.divider.counter == 0 || sweep.reloadFlag)
-	{
-		sweep.divider.counter = sweep.divider.period;
-		sweep.reloadFlag = false;
-	}
-	else
-	{
-		sweep.divider.counter--;
-	}*/
 }
 
 void APU::Pulse::lengthCounterClock() {
@@ -108,7 +86,7 @@ void APU::Pulse::lengthCounterClock() {
 	}
 }
 
-void APU::Pulse::updateSweep(bool isPulse1) {
+void APU::Pulse::updateTargetPeriod(bool isPulse1) {
 	uint16_t changeAmount = initialTimer >> sweep.shiftCount;
 	if (sweep.negateFlag)
 	{
@@ -126,7 +104,7 @@ void APU::Pulse::updateSweep(bool isPulse1) {
 
 // Ref.: https://forums.nesdev.org/viewtopic.php?f=3&t=13767
 bool APU::Pulse::isSweepMuting() {
-	if (initialTimer < 8 || sweep.targetPeriod > 0x7FF)
+	if (initialTimer < 8 || (!sweep.negateFlag && sweep.targetPeriod > 0x7FF))
 	{
 		return true;
 	}
