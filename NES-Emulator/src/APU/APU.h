@@ -83,8 +83,8 @@ public:
 	void halfStep(CPU* cpu);
 	void step(CPU* cpu);
 
-	float cycles{};
-	CycleState currentCycleState{};
+	float m_cycles{};
+	CycleState m_currentCycleState{};
 
 	void feedAudioBuffer(float data);
 	float mixerOutput(); // APU Mixer
@@ -92,24 +92,24 @@ public:
 private:
 	bool m_updateFrame{};
 	//constexpr static float samplesPerFrame = 1789773.0 / 44100.0;
-	int samplesPerFrame = 40;
+	int m_samplesPerFrame = 40;
 
-	float samplesSum{};
-	float samplesCount{};
+	float m_samplesSum{};
+	float m_samplesCount{};
 	void outputSamples();
 
-	bool enableDMC{};
-	bool enableNoise{};
-	bool enableTriangle{};
-	bool enablePulse1{};
-	bool enablePulse2{};
+	bool m_enableDMC{};
+	bool m_enableNoise{};
+	bool m_enableTriangle{};
+	bool m_enablePulse1{};
+	bool m_enablePulse2{};
 
 	// Frame Counter flags
-	bool sequencerMode{}; // 0 = 4-step sequence; 1 = 5-step sequence
-	bool interruptInhibit{};
-	bool frameInterrupt{};
-	bool shouldResetFrameCounter{};
-	int8_t cyclesUntilReset{};
+	bool m_sequencerMode{}; // 0 = 4-step sequence; 1 = 5-step sequence
+	bool m_interruptInhibit{};
+	bool m_frameInterrupt{};
+	bool m_shouldResetFrameCounter{};
+	int8_t m_cyclesUntilReset{};
 	void resetFrameCounter();
 
 	void quarterFrame();

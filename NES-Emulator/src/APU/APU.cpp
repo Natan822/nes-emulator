@@ -44,7 +44,7 @@ APU::APU()
 		tndTable[i] = 163.67 / (24329.0 / i + 100);
 	}
 
-	currentCycleState = CycleState::IDLE;
+	m_currentCycleState = CycleState::IDLE;
 }
 
 APU::~APU() {}
@@ -52,7 +52,7 @@ APU::~APU() {}
 void APU::clock(CPU* cpu, bool updateFrame)
 {
 	m_updateFrame = updateFrame;
-	if (currentCycleState == CycleState::IDLE)
+	if (m_currentCycleState == CycleState::IDLE)
 	{
 		halfStep(cpu);
 	}
@@ -63,25 +63,25 @@ void APU::clock(CPU* cpu, bool updateFrame)
 }
 
 void APU::halfStep(CPU* cpu) {
-	cycles += 0.5f;
+	m_cycles += 0.5f;
 	// Mode 0
-	if (sequencerMode == 0)
+	if (m_sequencerMode == 0)
 	{
-		if (cycles == 3728.5 || cycles == 7456.5 || cycles == 11185.5)
+		if (m_cycles == 3728.5 || m_cycles == 7456.5 || m_cycles == 11185.5)
 		{
 			quarterFrame();
-			if (cycles == 7456.5)
+			if (m_cycles == 7456.5)
 			{
 				halfFrame();
 			}
 		}
-		else if (cycles == 14914.5)
+		else if (m_cycles == 14914.5)
 		{
 			quarterFrame();
 			halfFrame();
-			if (!interruptInhibit)
+			if (!m_interruptInhibit)
 			{
-				frameInterrupt = true;
+				m_frameInterrupt = true;
 				cpu->irqInterrupt = true;
 			}
 		}
@@ -89,66 +89,65 @@ void APU::halfStep(CPU* cpu) {
 	// Mode 1
 	else
 	{
-		if (cycles == 3728.5 || cycles == 7456.5 || cycles == 11185.5 || cycles == 18640.5)
+		if (m_cycles == 3728.5 || m_cycles == 7456.5 || m_cycles == 11185.5 || m_cycles == 18640.5)
 		{
 			quarterFrame();
 
-			if (cycles == 7456.5 || cycles == 18640.5)
+			if (m_cycles == 7456.5 || m_cycles == 18640.5)
 			{
 				halfFrame();
 			}
 
 		}
 	}
-	currentCycleState = CycleState::ACTIVE;
+	m_currentCycleState = CycleState::ACTIVE;
 
 	pulse1.updateTargetPeriod(true);
 	pulse2.updateTargetPeriod(false);
 
-	samplesSum += mixerOutput();
-	samplesCount++;
-	if (samplesCount >= samplesPerFrame) // 40 CPU cycles
+	m_samplesSum += mixerOutput();
+	m_samplesCount++;
+	if (m_samplesCount >= m_samplesPerFrame) // 40 CPU cycles
 	{
 		outputSamples();
 	}
 	
-	if (shouldResetFrameCounter)
+	if (m_shouldResetFrameCounter)
 	{
 		resetFrameCounter();
 	}
 }
 
 void APU::step(CPU* cpu) {
-	cycles += 0.5f;
+	this->m_cycles += 0.5f;
 
+	if (this->m_cycles >= 14914.0 && m_sequencerMode == 0)
+	{
+		if (!m_interruptInhibit)
+		{
+			m_frameInterrupt = true;
+			cpu->irqInterrupt = true;
+		}
+	}
+	if ((this->m_cycles >= 14915.0 && m_sequencerMode == 0) || (this->m_cycles == 18641.0 && m_sequencerMode == 1))
+	{
+		this->m_cycles = 1;
+	}
 	pulse1.clock(true);
 	pulse2.clock(false);
 
-	if (this->cycles >= 14914 && sequencerMode == 0)
-	{
-		if (!interruptInhibit)
-		{
-			frameInterrupt = true;
-			cpu->irqInterrupt = true;
-		}
-		if ((this->cycles == 14915 && sequencerMode == 0) || (this->cycles == 18641 && sequencerMode == 1))
-		{
-			this->cycles = 1;
-		}
-	}
-
-	samplesSum += mixerOutput();
-	samplesCount++;
-	if (samplesCount >= samplesPerFrame) // 40 CPU cycles
+	m_samplesSum += mixerOutput();
+	m_samplesCount++;
+	if (m_samplesCount >= m_samplesPerFrame) // 40 CPU cycles
 	{
 		outputSamples();
 	}
-	if (shouldResetFrameCounter)
+	if (m_shouldResetFrameCounter)
 	{
 		resetFrameCounter();
 	}
 
-	currentCycleState = CycleState::IDLE;
+	m_currentCycleState = CycleState::IDLE;
 }
 
 #ifdef DEBUG_AUDIO
@@ -189,11 +188,11 @@ void APU::feedAudioBuffer(float data) {
 
 void APU::outputSamples()
 {
-	feedAudioBuffer(samplesSum / static_cast<float>(samplesCount));
+	feedAudioBuffer(m_samplesSum / static_cast<float>(m_samplesCount));
 	//feedAudioBuffer(mixerOutput());
-	samplesCount = 0;
-	samplesSum = 0;
-	samplesPerFrame = samplesPerFrame == 40 ? 41 : 40;
+	m_samplesCount = 0;
+	m_samplesSum = 0;
+	m_samplesPerFrame = m_samplesPerFrame == 40 ? 41 : 40;
 }
 
 float APU::mixerOutput() {
@@ -234,18 +233,13 @@ void APU::halfFrame() {
 }
 
 void APU::resetFrameCounter() {
-	if (cyclesUntilReset == 0)
+	if (m_cyclesUntilReset == 0)
 	{
-		cycles = 0;
-		if (sequencerMode)
-		{
-			quarterFrame();
-			halfFrame();
-		}
-		shouldResetFrameCounter = false;
+		m_cycles = 0;
+		m_shouldResetFrameCounter = false;
 	}
 	else
 	{
-		cyclesUntilReset--;
+		m_cyclesUntilReset--;
 	}
 }

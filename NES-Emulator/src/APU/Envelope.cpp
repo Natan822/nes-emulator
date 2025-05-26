@@ -18,15 +18,16 @@ void APU::Envelope::clock() {
 	}
 	else
 	{
-		if (divider.clock() && loopFlag)
+		divider.counter--;
+		if (divider.counter < 0)
 		{
-			if (decayLevelCounter > 0)
+			divider.counter = divider.period;
+			if (divider.counter > 0)
 			{
-				decayLevelCounter--;
+				divider.counter--;
 			}
-			else
+			else if (loopFlag)
 			{
-				//loopFlag = true;
 				decayLevelCounter = 15;
 			}
 		}
