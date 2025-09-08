@@ -53,7 +53,7 @@ class CPU {
 	struct Instruction {
 		OPCODE function;
 		int totalCycles;
-		std::string instructionName;
+		std::string mnemonic;
 		AddressingMode addressingMode;
 	};
 
