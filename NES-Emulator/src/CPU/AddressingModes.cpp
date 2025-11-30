@@ -163,10 +163,10 @@ uint8_t CPU::indirectY() {
 	uint16_t address = ((highByte << 8) | lowByte);
 	uint8_t value = readMemory((address + yReg) & 0xFFFF);
 
-	if ((lowByte + yReg) > 0xFF)
-	{
-		cyclesElapsed--;
-	}
+	//if ((lowByte + yReg) > 0xFF)
+	//{
+	//	cyclesElapsed--;
+	//}
 
 	return value;
 }

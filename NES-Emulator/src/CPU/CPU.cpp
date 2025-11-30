@@ -16,6 +16,8 @@
 #include "../Mappers/Mapper002.h"
 #include "../Mappers/Mapper003.h"
 
+//#define CPU_DEBUG
+
 CPU::CPU(PPU& ppu, Controller& controller, APU& apu) : 
 	apu(apu),
 	ppu(ppu), 
@@ -245,6 +247,9 @@ void CPU::loadROM(std::string filePath) {
 	uint16_t startAddress = (highByteStartAddress << 8) | lowByteStartAddress;
 	pc = startAddress;
 	currentInstruction = instructionsTable[readMemory(pc)];
+#ifdef CPU_DEBUG
+	printInfo();
+#endif // CPU_DEBUG
 }
 
 void CPU::cycle() {
@@ -284,6 +289,19 @@ void CPU::step() {
 			irqInterrupt = false;
 		}
 		currentInstruction = instructionsTable[readMemory(pc)];
+#ifdef CPU_DEBUG
+		printInfo();
+#endif // CPU_DEBUG
+		if (currentInstruction.addressingMode == AddressingMode::INDIRECTY)
+		{
+			uint8_t addressPtr = readMemory(pc + 1);
+			uint8_t lowByte = readMemory(addressPtr);
+			if ((lowByte + yReg) > 0xFF)
+			{
+				cyclesElapsed--;
+				cycles++;
+			}
+		}
 	}
 	else
 	{
@@ -292,11 +310,6 @@ void CPU::step() {
 }
 
 void CPU::execute() {
-	//printInfo();
-
-	//std::cout << "instruction executed: " << currentInstruction.instructionName << " | PC = 0x" << std::hex << pc << " | CPU-CYC = " << std::dec << cycles << " PPU-CYC:" << ppu.cycles << std::endl;
-	
-	//std::cout << std::endl;
 	(this->*currentInstruction.function)();
 }
 
@@ -343,7 +356,7 @@ void CPU::handleInterrupt(char interruptType) {
 }
 
 void CPU::printInfo() {
-	std::cout << std::hex << pc << " " << static_cast<int>(readMemory(pc)) << std::endl;
+	std::cout << std::hex << pc << " " << static_cast<int>(readMemory(pc)) << " " << currentInstruction.mnemonic << std::endl;
 	std::cout << "A:" << static_cast<int>(aReg);
 	std::cout << " X:" << static_cast<int>(xReg);
 	std::cout << " Y:" << static_cast<int>(yReg);
