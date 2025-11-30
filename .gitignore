@@ -398,7 +398,9 @@ FodyWeavers.xsd
 *.sln.iml
 
 *.py
-*.txt
+links.txt
 
 *.dll
 sdl2/
+Main.cpp
+build/
