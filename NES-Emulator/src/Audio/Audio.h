@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <vector>
 #include <queue>
-#include "SDL.h"
+#include <SDL3/SDL.h>
 
 namespace Audio {
 	constexpr int SAMPLE_RATE = 44100;
@@ -11,11 +11,13 @@ namespace Audio {
 	constexpr int audioBufferSize = BUFFER_SIZE * sizeof(float);
 
 	extern SDL_AudioDeviceID device;
+	extern SDL_AudioStream* stream;
 
 	extern std::vector<float> soundBuffer;
 	extern std::queue<float> soundQueue;
 	extern int index;
 
-	void initialize();
+	void init();
+	void initAudioStream(const SDL_AudioSpec* srcSpec, const SDL_AudioSpec* destSpec);
 }
 

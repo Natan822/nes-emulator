@@ -1,5 +1,6 @@
-#include "SDL.h"
+#include <SDL3/SDL.h>
 #include <vector>
+#include <iostream>
 #include "../PPU/PPU.h"
 #include "Graphics.h"
 
@@ -12,19 +13,43 @@ namespace Graphics {
 	int colorsMapTable[0x3F + 1];
 
 	void initialize(int windowWidth, int windowHeight, int textureWidth, int textureHeight) {
-		SDL_Init(SDL_INIT_EVERYTHING);
+		SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS);
+
+		/* SDL2
 		window = SDL_CreateWindow("NES Emulator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windowWidth, windowHeight, SDL_WINDOW_SHOWN);
 		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-		texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, textureWidth, textureHeight);
+		*/
+
+		window = SDL_CreateWindow("NES Emulator", windowWidth, windowHeight, 0);
+		if (window == NULL) {
+			std::cerr << "ERROR (Graphics): Failed to create SDL_Window\n";
+			std::cerr << "SDL: " << SDL_GetError() << std::endl;
+			return;
+		}
+		SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+
+		renderer = SDL_CreateRenderer(window, NULL);
+		if (renderer == NULL) {
+			std::cerr << "ERROR (Graphics): Failed to create SDL_Renderer\n";
+			std::cerr << "SDL: " << SDL_GetError() << std::endl;
+			return;
+		}
+
+		texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING, textureWidth, textureHeight);
+		if (texture == NULL) {
+			std::cerr << "ERROR (Graphics): Failed to create SDL_Texture\n";
+			std::cerr << "SDL: " << SDL_GetError() << std::endl;
+			return;
+		}
 
 		loadMapTable();
-		SDL_RenderSetVSync(renderer, 1);
+		SDL_SetRenderVSync(renderer, 1);
 	}
 
 	void update(const void* buffer, int pitch) {
 		SDL_UpdateTexture(texture, NULL, buffer, pitch);
 		SDL_RenderClear(renderer);
-		SDL_RenderCopy(renderer, texture, NULL, NULL);
+		SDL_RenderTexture(renderer, texture, NULL, NULL);
 		SDL_RenderPresent(renderer);
 	}
 

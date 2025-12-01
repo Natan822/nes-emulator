@@ -404,3 +404,4 @@ links.txt
 sdl2/
 Main.cpp
 build/
+.vscode/

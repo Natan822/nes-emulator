@@ -72,5 +72,5 @@ add_executable(NES-Emulator
 target_link_libraries(
     NES-Emulator
     PRIVATE
-    SDL2::SDL2
+    SDL3::SDL3
 )

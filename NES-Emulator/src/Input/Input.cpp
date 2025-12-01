@@ -1,6 +1,6 @@
 #include "../Controller/Controller.h"
 #include "../NES/NES.h"
-#include "SDL.h"
+#include <SDL3/SDL.h>
 #include "Input.h"
 #include "../Graphics/Graphics.h"
 
@@ -14,13 +14,13 @@ namespace Input {
 		{
 			switch (event.type)
 			{
-			case SDL_QUIT:
+			case SDL_EVENT_QUIT:
 				NES::isRunning = false;
 				break;
-			case SDL_KEYDOWN:
+			case SDL_EVENT_KEY_DOWN:
 				handleKeyDown(controller, event, &quit);
 				break;
-			case SDL_KEYUP:
+			case SDL_EVENT_KEY_UP:
 				handleKeyUp(controller, event);
 				break;
 			}
@@ -29,66 +29,66 @@ namespace Input {
 	}
 
 	void handleKeyDown(Controller* controller, SDL_Event event, bool* quit) {
-		switch (event.key.keysym.sym)
+		switch (event.key.key)
 		{
 		case SDLK_ESCAPE:
 			NES::isRunning = false;
 			break;
-		case SDLK_p:
+		case SDLK_P:
 			pause();
 			break;
-		case SDLK_w:
+		case SDLK_W:
 			controller->buttonPress('U');
 			break;
-		case SDLK_s:
+		case SDLK_S:
 			controller->buttonPress('D');
 			break;
-		case SDLK_a:
+		case SDLK_A:
 			controller->buttonPress('L');
 			break;
-		case SDLK_d:
+		case SDLK_D:
 			controller->buttonPress('R');
 			break;
-		case SDLK_o:
+		case SDLK_O:
 			controller->buttonPress('S');
 			break;
-		case SDLK_i:
+		case SDLK_I:
 			controller->buttonPress('E');
 			break;
-		case SDLK_k:
+		case SDLK_K:
 			controller->buttonPress('B');
 			break;
-		case SDLK_l:
+		case SDLK_L:
 			controller->buttonPress('A');
 			break;
 		}
 	}
 
 	void handleKeyUp(Controller* controller, SDL_Event event) {
-		switch (event.key.keysym.sym)
+		switch (event.key.key)
 		{
-		case SDLK_w:
+		case SDLK_W:
 			controller->buttonRelease('U');
 			break;
-		case SDLK_s:
+		case SDLK_S:
 			controller->buttonRelease('D');
 			break;
-		case SDLK_a:
+		case SDLK_A:
 			controller->buttonRelease('L');
 			break;
-		case SDLK_d:
+		case SDLK_D:
 			controller->buttonRelease('R');
 			break;
-		case SDLK_o:
+		case SDLK_O:
 			controller->buttonRelease('S');
 			break;
-		case SDLK_i:
+		case SDLK_I:
 			controller->buttonRelease('E');
 			break;
-		case SDLK_k:
+		case SDLK_K:
 			controller->buttonRelease('B');
 			break;
-		case SDLK_l:
+		case SDLK_L:
 			controller->buttonRelease('A');
 			break;
 		}
@@ -100,16 +100,16 @@ namespace Input {
 		while (isPaused)
 		{
 			SDL_WaitEvent(&event);
-			if (event.type == SDL_QUIT)
+			if (event.type == SDL_EVENT_QUIT)
 			{
 				NES::isRunning = false;
 				isPaused = false;
 			}
-			else if (event.type == SDL_KEYDOWN)
+			else if (event.type == SDL_EVENT_KEY_DOWN)
 			{
-				switch (event.key.keysym.sym)
+				switch (event.key.key)
 				{
-				case SDLK_p:
+				case SDLK_P:
 					isPaused = false;
 					break;
 

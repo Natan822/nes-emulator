@@ -71,9 +71,11 @@ void NES::start() {
 		ppu->step(cpu);
 	}
 
-	Audio::initialize();
+	Audio::init();
 	int framesToSkip = 2;
-	SDL_PauseAudioDevice(Audio::device, 0);
+	/* SDL2
+	 SDL_PauseAudioDevice(Audio::device, 0);
+	*/
 
 	while (isRunning)
 	{

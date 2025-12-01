@@ -1,9 +1,11 @@
 #include "../Audio/Audio.h"
-#include "SDL.h"
+#include <SDL3/SDL.h>
 #include "../CPU/CPU.h"
 #include "APU.h"
 #include "../App.h"
 #include <iostream>
+
+//#define DEBUG_AUDIO
 
 const uint8_t APU::dutyTable[4] =
 {
@@ -165,13 +167,22 @@ void APU::feedAudioBuffer(float data) {
 		phase -= 1.0;
 	}
 
+	/* SDL2
 	SDL_QueueAudio(Audio::device, &sample, sizeof(float));
+	*/
+	SDL_PutAudioStreamData(Audio::stream, &sample, sizeof(float));
 #else
-	SDL_QueueAudio(Audio::device, &data, sizeof(float));
+/* SDL2
+SDL_QueueAudio(Audio::device, &data, sizeof(float));
+*/
+	SDL_PutAudioStreamData(Audio::stream, &data, sizeof(float));
 #endif // DEBUG_AUDIO
 
 	m_samplesFed++;
-	int samplesQueued = SDL_GetQueuedAudioSize(Audio::device) / sizeof(float);
+	/* SDL2
+	 int samplesQueued = SDL_GetQueuedAudioSize(Audio::device) / sizeof(float);
+	*/
+	int samplesQueued = SDL_GetAudioStreamAvailable(Audio::stream);
 	if (samplesQueued != 0 && samplesQueued % 735 == 0 && m_updateFrame)
 	{
 		if (samplesQueued < 735 * 1.5)
