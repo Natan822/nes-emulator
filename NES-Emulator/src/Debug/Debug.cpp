@@ -120,6 +120,15 @@ namespace Debug
         }
     }
 
+    void eventHandler(SDL_Event *event)
+    {
+        ImGui_ImplSDL3_ProcessEvent(event);
+        if (event->type == SDL_EVENT_WINDOW_CLOSE_REQUESTED)
+        {
+            quit = true;
+        }
+    }
+
     namespace Nametables
     {
         extern std::atomic<bool> shouldUpdateNametables(false);
@@ -162,7 +171,7 @@ namespace Debug
                 SDL_UpdateTexture(nametableTextures.at(i), NULL, nametableFrameBuffers.at(i).data(), sizeof(uint32_t) * NAMETABLE_WIDTH);
             }
         }
-        
+
         void updateNametablesTextures()
         {
             for (int i = 0; i < 4; i++)

@@ -14,6 +14,7 @@ namespace Debug
     void init(int width, int height, NES* targetNes);
     void renderLoop();
     void shutdown();
+    void eventHandler(SDL_Event* event);
 
     extern bool quit;
 

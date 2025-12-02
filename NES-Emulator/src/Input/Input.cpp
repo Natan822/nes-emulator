@@ -5,33 +5,43 @@
 #include "Input.h"
 #include "../Graphics/Graphics.h"
 
-namespace Input {
-	void inputProcessing(Controller* controller) {
+namespace Input
+{
+	void inputProcessing(Controller *controller)
+	{
 		SDL_Event event;
 
-		while (SDL_PollEvent(&event)) 
+		while (SDL_PollEvent(&event))
 		{
-			switch (event.type)
+			// Emulator window
+			if (event.window.windowID == SDL_GetWindowID(Graphics::window))
 			{
-			case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
-				// Close emulator window
-				if (event.window.windowID == SDL_GetWindowID(Graphics::window)) {
+				switch (event.type)
+				{
+				case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
 					NES::isRunning = false;
+					Debug::quit = true;
+					break;
+
+				case SDL_EVENT_KEY_DOWN:
+					handleKeyDown(controller, event);
+					break;
+
+				case SDL_EVENT_KEY_UP:
+					handleKeyUp(controller, event);
+					break;
 				}
-				// Close debug window
-				Debug::quit = true;
-				break;
-			case SDL_EVENT_KEY_DOWN:
-				handleKeyDown(controller, event);
-				break;
-			case SDL_EVENT_KEY_UP:
-				handleKeyUp(controller, event);
-				break;
+			}
+			// Debug window
+			else
+			{
+				Debug::eventHandler(&event);
 			}
 		}
 	}
 
-	void handleKeyDown(Controller* controller, SDL_Event event) {
+	void handleKeyDown(Controller *controller, SDL_Event event)
+	{
 		switch (event.key.key)
 		{
 		case SDLK_ESCAPE:
@@ -67,7 +77,8 @@ namespace Input {
 		}
 	}
 
-	void handleKeyUp(Controller* controller, SDL_Event event) {
+	void handleKeyUp(Controller *controller, SDL_Event event)
+	{
 		switch (event.key.key)
 		{
 		case SDLK_W:
@@ -97,7 +108,8 @@ namespace Input {
 		}
 	}
 
-	void pause() {
+	void pause()
+	{
 		bool isPaused = true;
 		SDL_Event event;
 		while (isPaused)
