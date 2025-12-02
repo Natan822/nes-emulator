@@ -32,6 +32,10 @@ set(CPU_FILES
     ./CPU/Instructions.cpp
 )
 
+set(DEBUG_FILES
+    ./Debug/Debug.cpp
+)
+
 set(GRAPHICS_FILES
     ./Graphics/Graphics.cpp
 )
@@ -62,6 +66,7 @@ add_executable(NES-Emulator
     ${CARTRIDGE_FILES}
     ${CONTROLLER_FILES}
     ${CPU_FILES}
+    ${DEBUG_FILES}
     ${GRAPHICS_FILES}
     ${INPUT_FILES}
     ${MAPPER_FILES}
@@ -73,4 +78,5 @@ target_link_libraries(
     NES-Emulator
     PRIVATE
     SDL3::SDL3
+    imgui
 )

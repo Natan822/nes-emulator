@@ -4,7 +4,8 @@
 #include "../Mappers/Mapper003.h"
 #include <iostream>
 
-uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
+uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU *cpu)
+{
 	switch (address)
 	{
 	case PPUCTRL:
@@ -55,7 +56,7 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 		{
 			vRegister &= 0x7FFF;
 		}
-		
+
 		regPpuAddr = data;
 		break;
 	case PPUDATA:
@@ -85,7 +86,8 @@ uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU* cpu) {
 	return data;
 }
 
-uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
+uint8_t PPU::readMemoryPpu(uint16_t address, CPU *cpu)
+{
 	uint8_t data;
 	switch (address)
 	{
@@ -149,14 +151,16 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU* cpu) {
 
 uint8_t PPU::memoryRead(uint16_t address)
 {
+	uint8_t dataRead = 0;
 	address &= 0x3FFF;
+
 	// CHR
 	if (address < 0x2000)
 	{
-		return this->mapper->chrRead(address);
+		dataRead = this->mapper->chrRead(address);
 	}
 	// Nametables
-	if (address < 0x3000)
+	else if (address < 0x3000)
 	{
 		switch (mirrorType)
 		{
@@ -164,32 +168,42 @@ uint8_t PPU::memoryRead(uint16_t address)
 			// Nametable 2
 			if (address >= 0x2400 && address < 0x2800)
 			{
-				return this->memory.at(address & 0x23FF); // Mirror of Nametable 1
+				dataRead = this->memory.at(address & 0x23FF); // Mirror of Nametable 1
 			}
 			// Nametable 4
-			if (address >= 0x2C00)
+			else if (address >= 0x2C00)
 			{
-				return this->memory.at(address & 0x2BFF); // Mirror of Nametable 3
+				dataRead = this->memory.at(address & 0x2BFF); // Mirror of Nametable 3
 			}
 			// Nametables 1 and 3
-			return this->memory.at(address);
+			else
+			{
+				dataRead = this->memory.at(address);
+			}
 
 		case PPU::VERTICAL:
 			// Nametable 3
 			if (address >= 0x2800 && address < 0x2C00)
 			{
-				return this->memory.at(address & 0x27FF); // Mirror of Nametable 1
+				dataRead = this->memory.at(address & 0x27FF); // Mirror of Nametable 1
 			}
 			// Nametable 4
-			if (address >= 0x2C00)
+			else if (address >= 0x2C00)
 			{
-				return this->memory.at(address & 0x27FF); // Mirror of Nametable 2
+				dataRead = this->memory.at(address & 0x27FF); // Mirror of Nametable 2
 			}
 			// Nametables 1 and 2
-			return this->memory.at(address);
+			else
+			{
+				dataRead = this->memory.at(address);
+			}
 		}
 	}
-	return this->memory.at(address);
+	else
+	{
+		dataRead = this->memory.at(address);
+	}
+	return dataRead;
 }
 
 void PPU::memoryWrite(uint16_t address, uint8_t data)
@@ -251,7 +265,8 @@ void PPU::memoryWrite(uint16_t address, uint8_t data)
 	}
 }
 
-void PPU::updatePPUCTRL() {
+void PPU::updatePPUCTRL()
+{
 	// Update nametable selection
 	tRegister &= ~0xC00;
 	tRegister |= ((regPpuCtrl & 0x3) << 10);
@@ -266,7 +281,8 @@ void PPU::updatePPUCTRL() {
 	spriteHeight = (regPpuCtrl & 0x20) ? 16 : 8;
 }
 
-void PPU::updatePPUMASK() {
+void PPU::updatePPUMASK()
+{
 	isGrayscale = regPpuMask & 0x1;
 	showLeftmostBackground = regPpuMask & 0x2;
 	showLeftmostSprites = regPpuMask & 0x4;
@@ -277,7 +293,8 @@ void PPU::updatePPUMASK() {
 	isBlueEmphasized = regPpuMask & 0x80;
 }
 
-void PPU::updatePPUSCROLL() {
+void PPU::updatePPUSCROLL()
+{
 	// First write
 	if (isHighByte)
 	{
@@ -295,7 +312,8 @@ void PPU::updatePPUSCROLL() {
 	isHighByte = !isHighByte;
 }
 
-void PPU::vramIncrease(CPU* cpu) {
+void PPU::vramIncrease(CPU *cpu)
+{
 	// Check VRAM address increment mode
 	if (regPpuCtrl & 0x4)
 	{
@@ -311,7 +329,8 @@ void PPU::vramIncrease(CPU* cpu) {
 	}
 }
 
-void PPU::mirrorPalettes() {
+void PPU::mirrorPalettes()
+{
 	int paletteIndex = 0;
 	for (int i = 0; i <= 0xDF; i++)
 	{
@@ -324,7 +343,8 @@ void PPU::mirrorPalettes() {
 	}
 }
 
-void PPU::writePalettes(uint16_t address, uint8_t data) {
+void PPU::writePalettes(uint16_t address, uint8_t data)
+{
 	if (address <= 0x3F1F)
 	{
 		uint8_t lastDigit = vRegister & 0xF;
@@ -346,7 +366,8 @@ void PPU::writePalettes(uint16_t address, uint8_t data) {
 	}
 }
 
-uint8_t PPU::readPalettes(uint16_t address) {
+uint8_t PPU::readPalettes(uint16_t address)
+{
 	if (address <= 0x3F1F)
 	{
 		// Backdrop color

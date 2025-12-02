@@ -11,6 +11,7 @@
 #include "../Input/Input.h"
 #include "../Audio/Audio.h"
 #include "../APU/APU.h"
+#include "../Debug/Debug.h"
 
 #include <iostream>
 #include <chrono>
@@ -20,7 +21,7 @@
 PPU::PPU() : 
 	video(VIDEO_WIDTH * VIDEO_HEIGHT),
 	backgroundPixelBits(VIDEO_WIDTH * VIDEO_HEIGHT),
-	memory(0x3FFF + 1),
+	memory(),
 	oam(256),
 	chr(0xFFFF + 1)
 {
@@ -45,6 +46,7 @@ void PPU::renderFrame() {
 	{
 		renderOAM();
 	}
+	Debug::Nametables::updatePpuMem(this->memory);
 	Graphics::update(this->video.data(), (sizeof(this->video[0]) * VIDEO_WIDTH));
 }
 

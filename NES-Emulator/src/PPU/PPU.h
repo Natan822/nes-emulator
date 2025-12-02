@@ -1,9 +1,11 @@
 #pragma once
 
+#include <array>
 #include <memory>
 #include <string>
 #include <vector>
 #include <chrono>
+#include <mutex>
 
 const int VIDEO_HEIGHT = 240;
 const int VIDEO_WIDTH = 256;
@@ -66,7 +68,7 @@ public:
 	bool isBlueEmphasized{};
 
 	// Address Space
-	std::vector<uint8_t> memory;
+	std::array<uint8_t, 0x4000> memory;
 	// OAM Address Space
 	std::vector<uint8_t> oam;
 	// CHR memory

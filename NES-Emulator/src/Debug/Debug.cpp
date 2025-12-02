@@ -1,0 +1,195 @@
+#include "Debug.h"
+#include "../PPU/PPU.h"
+#include "../NES/NES.h"
+#include <array>
+#include <cstdint>
+#include <cstdio>
+#include <iostream>
+#include <imgui.h>
+#include <imgui_impl_sdl3.h>
+#include <imgui_impl_sdlrenderer3.h>
+#include <thread>
+#include <chrono>
+
+namespace Debug
+{
+    bool quit = false;
+
+    SDL_Window *window = NULL;
+    SDL_Renderer *renderer = NULL;
+
+    SDL_Texture *nametablesTexturesArea = NULL;
+
+    const int NAMETABLE_WIDTH = 256;
+    const int NAMETABLE_HEIGHT = 240;
+
+    NES *nes = NULL;
+
+    int windowWidth = 0;
+    int windowHeight = 0;
+
+    void init(int width, int height, NES *targetNes)
+    {
+        nes = targetNes;
+        SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
+
+        window = SDL_CreateWindow("NES Emulator - Debug Window", width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+        if (window == NULL)
+        {
+            std::cerr << "ERROR (Debug): Failed to create SDL_Window\n";
+            std::cerr << "SDL: " << SDL_GetError() << std::endl;
+            return;
+        }
+        SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+        windowWidth = width;
+        windowHeight = height;
+
+        renderer = SDL_CreateRenderer(window, NULL);
+        if (renderer == NULL)
+        {
+            std::cerr << "ERROR (Debug): Failed to create SDL_Renderer\n";
+            std::cerr << "SDL: " << SDL_GetError() << std::endl;
+            return;
+        }
+
+        nametablesTexturesArea = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING, NAMETABLE_WIDTH * 2, NAMETABLE_HEIGHT * 2);
+        if (nametablesTexturesArea == NULL)
+        {
+            std::cerr << "ERROR (Debug): Failed to create SDL_Texture\n";
+            std::cerr << "SDL: " << SDL_GetError() << std::endl;
+            return;
+        }
+
+        Nametables::init();
+
+        SDL_ShowWindow(window);
+        SDL_SetRenderVSync(renderer, 1);
+
+        ImGui::CreateContext();
+        ImGuiIO &io = ImGui::GetIO();
+        io.ConfigFlags = ImGuiConfigFlags_NavEnableKeyboard;
+        io.IniFilename = nullptr;
+
+        ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
+        ImGui_ImplSDLRenderer3_Init(renderer);
+    }
+
+    void renderLoop()
+    {
+        while (!quit)
+        {
+            ImGui_ImplSDLRenderer3_NewFrame();
+            ImGui_ImplSDL3_NewFrame();
+            ImGui::NewFrame();
+
+            SDL_GetWindowSize(window, &windowWidth, &windowHeight);
+
+            ImGui::SetNextWindowSize(ImVec2(windowWidth, windowHeight));
+            ImGui::SetNextWindowPos(ImVec2(0, 0));
+
+            Nametables::updateAllNametables();
+            Nametables::updateNametablesTextures();
+
+            ImGui::Begin("Debug Window");
+
+            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(0), ImVec2(NAMETABLE_WIDTH, NAMETABLE_HEIGHT));
+            ImGui::SameLine();
+            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(1), ImVec2(NAMETABLE_WIDTH, NAMETABLE_HEIGHT));
+            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(2), ImVec2(NAMETABLE_WIDTH, NAMETABLE_HEIGHT));
+            ImGui::SameLine();
+            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(3), ImVec2(NAMETABLE_WIDTH, NAMETABLE_HEIGHT));
+
+            ImGui::End();
+            ImGui::Render();
+
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+            SDL_RenderClear(renderer);
+            ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
+            SDL_RenderPresent(renderer);
+        }
+    }
+
+    namespace Nametables
+    {
+        extern std::atomic<bool> shouldUpdateNametables(false);
+        extern std::array<uint8_t, 0x4000> ppuMem{};
+
+        std::array<SDL_Texture *, 4> nametableTextures{};
+        std::array<std::array<uint32_t, NAMETABLE_WIDTH * NAMETABLE_HEIGHT>, 4> nametableFrameBuffers;
+
+        void init()
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                nametableTextures.at(i) = SDL_CreateTexture(
+                    renderer,
+                    SDL_PIXELFORMAT_XRGB8888,
+                    SDL_TEXTUREACCESS_STREAMING,
+                    NAMETABLE_WIDTH,
+                    NAMETABLE_HEIGHT);
+
+                if (nametableTextures.at(i) == NULL)
+                {
+                    std::cerr << "ERROR (Graphics): Failed to create SDL_Texture for nametable " << i + 1 << "\n";
+                    std::cerr << "SDL: " << SDL_GetError() << std::endl;
+                    return;
+                }
+            }
+        }
+
+        void updatePpuMem(std::array<uint8_t, 0x4000> ppuMemSnapshot)
+        {
+            std::copy(ppuMemSnapshot.begin(), ppuMemSnapshot.end(), ppuMem.begin());
+            shouldUpdateNametables.store(true);
+        }
+
+        void updateAllNametables()
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                updateNametable(i);
+                SDL_UpdateTexture(nametableTextures.at(i), NULL, nametableFrameBuffers.at(i).data(), sizeof(uint32_t) * NAMETABLE_WIDTH);
+            }
+        }
+        
+        void updateNametablesTextures()
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                SDL_RenderTexture(renderer, nametableTextures.at(i), NULL, NULL);
+            }
+        }
+
+        void updateNametable(int nametableIndex)
+        {
+            for (int i = 0; i < 960; i++)
+            {
+                uint16_t tileAddress = 0x2000 + (0x400 * nametableIndex) + i;
+                uint8_t tileIndex = nes->ppu->memoryRead(tileAddress);
+
+                uint16_t addressSprite = nes->ppu->backgroundPatternTableAddress + tileIndex * 16;
+
+                for (int y = 0; y < 8; y++)
+                {
+                    uint8_t firstPlaneByte = nes->ppu->memoryRead(addressSprite);
+                    uint8_t secondPlaneByte = nes->ppu->memoryRead(addressSprite + 8);
+
+                    uint8_t byteMask = 0x80;
+                    for (int x = 0; x < 8; x++)
+                    {
+                        int pixelColor = ((secondPlaneByte & byteMask) | (firstPlaneByte & byteMask)) ? 0xFFFFFFFF : 0x0;
+                        int pixelX = ((i * 8) % NAMETABLE_WIDTH) + x;
+                        int pixelY = ((i / 32) * 8) + y;
+
+                        setNametablePixel(nametableIndex, pixelX, pixelY, pixelColor);
+                    }
+                }
+            }
+        }
+
+        void setNametablePixel(int nametableIndex, int x, int y, int pixelColor)
+        {
+            nametableFrameBuffers.at(nametableIndex).at((y * NAMETABLE_WIDTH) + x) = pixelColor;
+        }
+    };
+}

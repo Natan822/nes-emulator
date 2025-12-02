@@ -1,5 +1,6 @@
 #include "App.h"
 #include "NES/NES.h"
+#include "Debug/Debug.h"
 #include <memory>
 #include <thread>
 
@@ -22,6 +23,13 @@ namespace App
 		lastFrameTime = std::chrono::high_resolution_clock::now();
 	}
 
+	void initDebugWindow()
+	{
+		Debug::init(550, 550, nes.get());
+		std::thread debugWindowThread(Debug::renderLoop);
+		debugWindowThread.detach();
+	}
+
 	void run(std::string path)
 	{
 		int windowScale = 3;
@@ -29,6 +37,7 @@ namespace App
 		bool displayPatternTables = false;
 
 		nes = std::make_unique<NES>(windowScale, speed);
+		initDebugWindow();
 		nes->loadROM(path);
 		nes->start();
 	}
