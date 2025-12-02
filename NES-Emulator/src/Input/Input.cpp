@@ -6,9 +6,7 @@
 #include "../Graphics/Graphics.h"
 
 namespace Input {
-	bool inputProcessing(Controller* controller) {
-		bool quit = false;
-
+	void inputProcessing(Controller* controller) {
 		SDL_Event event;
 
 		while (SDL_PollEvent(&event)) 
@@ -24,17 +22,16 @@ namespace Input {
 				Debug::quit = true;
 				break;
 			case SDL_EVENT_KEY_DOWN:
-				handleKeyDown(controller, event, &quit);
+				handleKeyDown(controller, event);
 				break;
 			case SDL_EVENT_KEY_UP:
 				handleKeyUp(controller, event);
 				break;
 			}
 		}
-		return quit;
 	}
 
-	void handleKeyDown(Controller* controller, SDL_Event event, bool* quit) {
+	void handleKeyDown(Controller* controller, SDL_Event event) {
 		switch (event.key.key)
 		{
 		case SDLK_ESCAPE:
