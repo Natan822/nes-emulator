@@ -46,7 +46,6 @@ void PPU::renderFrame() {
 	{
 		renderOAM();
 	}
-	Debug::Nametables::updatePpuMem(this->memory);
 	Graphics::update(this->video.data(), (sizeof(this->video[0]) * VIDEO_WIDTH));
 }
 

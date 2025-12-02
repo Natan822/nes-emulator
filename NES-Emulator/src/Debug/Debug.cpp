@@ -131,9 +131,6 @@ namespace Debug
 
     namespace Nametables
     {
-        extern std::atomic<bool> shouldUpdateNametables(false);
-        extern std::array<uint8_t, 0x4000> ppuMem{};
-
         std::array<SDL_Texture *, 4> nametableTextures{};
         std::array<std::array<uint32_t, NAMETABLE_WIDTH * NAMETABLE_HEIGHT>, 4> nametableFrameBuffers;
 
@@ -155,12 +152,6 @@ namespace Debug
                     return;
                 }
             }
-        }
-
-        void updatePpuMem(std::array<uint8_t, 0x4000> ppuMemSnapshot)
-        {
-            std::copy(ppuMemSnapshot.begin(), ppuMemSnapshot.end(), ppuMem.begin());
-            shouldUpdateNametables.store(true);
         }
 
         void updateAllNametables()

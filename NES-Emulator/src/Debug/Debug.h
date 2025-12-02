@@ -20,13 +20,10 @@ namespace Debug
 
     namespace Nametables
     {
-        extern std::atomic<bool> shouldUpdateNametables;
-        extern std::array<uint8_t, 0x4000> ppuMem;
         extern std::array<SDL_Texture *, 4> nametableTextures;
 
         void init();
 
-        void updatePpuMem(std::array<uint8_t, 0x4000> ppuMem);
         void updateAllNametables();
         void updateLoop();
         void updateNametable(int nametableIndex);
