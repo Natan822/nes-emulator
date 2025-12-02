@@ -107,6 +107,17 @@ namespace Debug
             ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
             SDL_RenderPresent(renderer);
         }
+        shutdown();
+    }
+
+    void shutdown()
+    {
+        SDL_DestroyWindow(window);
+        SDL_DestroyRenderer(renderer);
+        for (int i = 0; i < Nametables::nametableTextures.size(); i++)
+        {
+            SDL_DestroyTexture(Nametables::nametableTextures.at(i));
+        }
     }
 
     namespace Nametables

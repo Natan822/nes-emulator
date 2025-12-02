@@ -1,8 +1,10 @@
 #pragma once
 
 class PPU;
-
+struct SDL_Window;
 namespace Graphics {
+	extern SDL_Window* window;
+
 	extern int colorsMapTable[0x3F + 1];
 
 	void initialize(int windowWidth, int windowHeight, int textureWidth, int textureHeight);

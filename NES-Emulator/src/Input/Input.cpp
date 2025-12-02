@@ -1,5 +1,6 @@
 #include "../Controller/Controller.h"
 #include "../NES/NES.h"
+#include "../Debug/Debug.h"
 #include <SDL3/SDL.h>
 #include "Input.h"
 #include "../Graphics/Graphics.h"
@@ -14,8 +15,13 @@ namespace Input {
 		{
 			switch (event.type)
 			{
-			case SDL_EVENT_QUIT:
-				NES::isRunning = false;
+			case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+				// Close emulator window
+				if (event.window.windowID == SDL_GetWindowID(Graphics::window)) {
+					NES::isRunning = false;
+				}
+				// Close debug window
+				Debug::quit = true;
 				break;
 			case SDL_EVENT_KEY_DOWN:
 				handleKeyDown(controller, event, &quit);

@@ -8,9 +8,14 @@
 class NES;
 namespace Debug
 {
+    extern SDL_Window *window;
+
     // Init Debug Window
     void init(int width, int height, NES* targetNes);
     void renderLoop();
+    void shutdown();
+
+    extern bool quit;
 
     namespace Nametables
     {
