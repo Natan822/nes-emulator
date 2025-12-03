@@ -180,6 +180,7 @@ uint8_t PPU::memoryRead(uint16_t address)
 			{
 				dataRead = this->memory.at(address);
 			}
+			break;
 
 		case PPU::VERTICAL:
 			// Nametable 3
@@ -197,6 +198,7 @@ uint8_t PPU::memoryRead(uint16_t address)
 			{
 				dataRead = this->memory.at(address);
 			}
+			break;
 		}
 	}
 	else
