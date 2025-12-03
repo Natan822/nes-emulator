@@ -18,8 +18,6 @@ namespace Debug
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
 
-    SDL_Texture *nametablesTexturesArea = NULL;
-
     const int NAMETABLE_WIDTH = 256;
     const int NAMETABLE_HEIGHT = 240;
 
@@ -48,14 +46,6 @@ namespace Debug
         if (renderer == NULL)
         {
             std::cerr << "ERROR (Debug): Failed to create SDL_Renderer\n";
-            std::cerr << "SDL: " << SDL_GetError() << std::endl;
-            return;
-        }
-
-        nametablesTexturesArea = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING, NAMETABLE_WIDTH * 2, NAMETABLE_HEIGHT * 2);
-        if (nametablesTexturesArea == NULL)
-        {
-            std::cerr << "ERROR (Debug): Failed to create SDL_Texture\n";
             std::cerr << "SDL: " << SDL_GetError() << std::endl;
             return;
         }
