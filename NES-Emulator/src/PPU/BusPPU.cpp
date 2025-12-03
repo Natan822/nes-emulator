@@ -3,6 +3,7 @@
 #include "../Mappers/Mapper.h"
 #include "../Mappers/Mapper003.h"
 #include <iostream>
+#include <mutex>
 
 uint8_t PPU::writeMemoryPpu(uint16_t address, uint8_t data, CPU *cpu)
 {
@@ -151,6 +152,8 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU *cpu)
 
 uint8_t PPU::memoryRead(uint16_t address)
 {
+	std::shared_lock<std::shared_mutex> lock(busMutex);
+
 	uint8_t dataRead = 0;
 	address &= 0x3FFF;
 
@@ -210,6 +213,8 @@ uint8_t PPU::memoryRead(uint16_t address)
 
 void PPU::memoryWrite(uint16_t address, uint8_t data)
 {
+	std::unique_lock<std::shared_mutex> lock(busMutex);
+
 	address &= 0x3FFF;
 	if (address >= 0x3F00)
 	{

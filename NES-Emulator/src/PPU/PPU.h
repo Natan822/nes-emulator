@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 #include <chrono>
-#include <mutex>
+#include <shared_mutex>
 
 const int VIDEO_HEIGHT = 240;
 const int VIDEO_WIDTH = 256;
@@ -91,6 +91,8 @@ public:
 	unsigned int cycles{};
 	unsigned int scanlines{};
 	unsigned int dot{};
+
+	std::shared_mutex busMutex;
 
 	// Load pattern table into video
 	void loadPatternTable();

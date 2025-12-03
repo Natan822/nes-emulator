@@ -23,7 +23,8 @@ PPU::PPU() :
 	backgroundPixelBits(VIDEO_WIDTH * VIDEO_HEIGHT),
 	memory(),
 	oam(256),
-	chr(0xFFFF + 1)
+	chr(0xFFFF + 1),
+	busMutex()
 {
 	//cycles = 21;
 	isHighByte = true;
