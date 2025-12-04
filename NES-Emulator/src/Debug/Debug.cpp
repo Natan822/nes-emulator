@@ -77,7 +77,7 @@ namespace Debug
             ImGui::SetNextWindowSize(ImVec2(windowWidth, windowHeight));
             ImGui::SetNextWindowPos(ImVec2(0, 0));
 
-            Nametables::updateAllNametables();
+			Nametables::updateAllNametables();
             Nametables::updateNametablesTextures();
 
             ImGui::Begin("Debug Window");
@@ -163,12 +163,34 @@ namespace Debug
 
         void updateNametable(int nametableIndex)
         {
+            const uint16_t BASE_NAMETABLE_ADDRESS = 0x2000 + (0x400 * nametableIndex);
+            const uint16_t BASE_ATTR_TABLE_ADDRESS = BASE_NAMETABLE_ADDRESS + 960;
+
+            uint16_t currentAttrByteAddress = 0;
+            uint8_t attrByte = 0;
             for (int i = 0; i < 960; i++)
             {
-                uint16_t tileAddress = 0x2000 + (0x400 * nametableIndex) + i;
+                uint16_t tileAddress = BASE_NAMETABLE_ADDRESS + i;
                 uint8_t tileIndex = nes->ppu->memoryRead(tileAddress);
 
                 uint16_t addressSprite = nes->ppu->backgroundPatternTableAddress + tileIndex * 16;
+
+                int tileX = i % 32;
+                int tileY = i / 32;
+
+                uint16_t attrByteAddress = BASE_ATTR_TABLE_ADDRESS + (tileX / 4);
+                attrByteAddress = attrByteAddress + ((tileY / 4) * 8);
+
+                // Reduce reads from PPU memory
+                if (attrByteAddress != currentAttrByteAddress)
+                {
+                    attrByte = nes->ppu->memoryRead(attrByteAddress);
+                    currentAttrByteAddress = attrByteAddress;
+                }
+
+                int xQuadrant = (tileX % 4) * 8;
+                int yQuadrant = (tileY % 4) * 8;
+                int paletteIndex = nes->ppu->getPaletteIndex(xQuadrant, yQuadrant, attrByte);
 
                 for (int y = 0; y < 8; y++)
                 {
@@ -178,10 +200,30 @@ namespace Debug
                     uint8_t byteMask = 0x80;
                     for (int x = 0; x < 8; x++)
                     {
+                        uint8_t pixelBits = (((secondPlaneByte & byteMask) ? 1 : 0) << 1) | (firstPlaneByte & byteMask ? 1 : 0);
+
+                        if (secondPlaneByte != 0 || firstPlaneByte != 0) 
+                        {
+                            int a = 0;
+                        }
+
+                        byteMask >>= 1;
+                        uint8_t pixelValue;
+                        if (pixelBits == 0)
+                        {
+                            pixelValue = nes->ppu->memoryRead(PALETTES_ADDRESS);
+                        }
+                        else
+                        {
+                            pixelValue = nes->ppu->memoryRead(PALETTES_ADDRESS + pixelBits + (4 * paletteIndex));
+                        }
+
+                        int pixelColor = nes->ppu->getPixelColor(pixelValue);
+                        /*
                         int pixelColor = ((secondPlaneByte & byteMask) | (firstPlaneByte & byteMask)) ? 0xFFFFFFFF : 0x0;
+                        */
                         int pixelX = ((i * 8) % NAMETABLE_WIDTH) + x;
                         int pixelY = ((i / 32) * 8) + y;
-
                         setNametablePixel(nametableIndex, pixelX, pixelY, pixelColor);
                     }
                 }
