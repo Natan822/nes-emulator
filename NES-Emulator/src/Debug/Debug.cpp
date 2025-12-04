@@ -163,6 +163,8 @@ namespace Debug
 
         void updateNametable(int nametableIndex)
         {
+            std::array<uint8_t, 0x4000> ppuMemSnapshot = nes->ppu->getMemorySnapshot();
+
             const uint16_t BASE_NAMETABLE_ADDRESS = 0x2000 + (0x400 * nametableIndex);
             const uint16_t BASE_ATTR_TABLE_ADDRESS = BASE_NAMETABLE_ADDRESS + 960;
 
@@ -171,7 +173,7 @@ namespace Debug
             for (int i = 0; i < 960; i++)
             {
                 uint16_t tileAddress = BASE_NAMETABLE_ADDRESS + i;
-                uint8_t tileIndex = nes->ppu->memoryRead(tileAddress);
+                uint8_t tileIndex = ppuMemSnapshot.at(tileAddress);
 
                 uint16_t addressSprite = nes->ppu->backgroundPatternTableAddress + tileIndex * 16;
 
@@ -184,7 +186,7 @@ namespace Debug
                 // Reduce reads from PPU memory
                 if (attrByteAddress != currentAttrByteAddress)
                 {
-                    attrByte = nes->ppu->memoryRead(attrByteAddress);
+                    attrByte = ppuMemSnapshot.at(attrByteAddress);
                     currentAttrByteAddress = attrByteAddress;
                 }
 
@@ -194,23 +196,23 @@ namespace Debug
 
                 for (int y = 0; y < 8; y++)
                 {
-                    uint8_t firstPlaneByte = nes->ppu->memoryRead(addressSprite + y);
-                    uint8_t secondPlaneByte = nes->ppu->memoryRead(addressSprite + y + 8);
+                    uint8_t firstPlaneByte = ppuMemSnapshot.at(addressSprite + y);
+                    uint8_t secondPlaneByte = ppuMemSnapshot.at(addressSprite + y + 8);
 
                     uint8_t byteMask = 0x80;
                     for (int x = 0; x < 8; x++)
                     {
                         uint8_t pixelBits = (((secondPlaneByte & byteMask) ? 1 : 0) << 1) | (firstPlaneByte & byteMask ? 1 : 0);
                         byteMask >>= 1;
-                        
+
                         uint8_t pixelValue;
                         if (pixelBits == 0)
                         {
-                            pixelValue = nes->ppu->memoryRead(PALETTES_ADDRESS);
+                            pixelValue = ppuMemSnapshot.at(PALETTES_ADDRESS);
                         }
                         else
                         {
-                            pixelValue = nes->ppu->memoryRead(PALETTES_ADDRESS + pixelBits + (4 * paletteIndex));
+                            pixelValue = ppuMemSnapshot.at(PALETTES_ADDRESS + pixelBits + (4 * paletteIndex));
                         }
 
                         int pixelColor = nes->ppu->getPixelColor(pixelValue);

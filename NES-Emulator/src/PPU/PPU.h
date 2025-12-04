@@ -119,6 +119,8 @@ public:
 	uint8_t getPaletteIndex(int xQuadrant, int yQuadrant, uint8_t attributeByte);
 	int getPixelColor(int pixelValue);
 
+	std::array<uint8_t, 0x4000> getMemorySnapshot();
+
 private:
 
 	int spriteHeight{};

@@ -152,8 +152,6 @@ uint8_t PPU::readMemoryPpu(uint16_t address, CPU *cpu)
 
 uint8_t PPU::memoryRead(uint16_t address)
 {
-	std::shared_lock<std::shared_mutex> lock(busMutex);
-
 	uint8_t dataRead = 0;
 	address &= 0x3FFF;
 
@@ -270,6 +268,18 @@ void PPU::memoryWrite(uint16_t address, uint8_t data)
 	{
 		this->memory.at(address) = data;
 	}
+}
+
+std::array<uint8_t, 0x4000> PPU::getMemorySnapshot()
+{
+	std::shared_lock<std::shared_mutex> lock(busMutex);
+
+	std::array<uint8_t, 0x4000> output{};
+	for (size_t i = 0; i < 0x4000; i++)
+	{
+		output[i] = this->memoryRead(i);
+	}
+	return output;
 }
 
 void PPU::updatePPUCTRL()
