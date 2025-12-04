@@ -194,20 +194,15 @@ namespace Debug
 
                 for (int y = 0; y < 8; y++)
                 {
-                    uint8_t firstPlaneByte = nes->ppu->memoryRead(addressSprite);
-                    uint8_t secondPlaneByte = nes->ppu->memoryRead(addressSprite + 8);
+                    uint8_t firstPlaneByte = nes->ppu->memoryRead(addressSprite + y);
+                    uint8_t secondPlaneByte = nes->ppu->memoryRead(addressSprite + y + 8);
 
                     uint8_t byteMask = 0x80;
                     for (int x = 0; x < 8; x++)
                     {
                         uint8_t pixelBits = (((secondPlaneByte & byteMask) ? 1 : 0) << 1) | (firstPlaneByte & byteMask ? 1 : 0);
-
-                        if (secondPlaneByte != 0 || firstPlaneByte != 0) 
-                        {
-                            int a = 0;
-                        }
-
                         byteMask >>= 1;
+                        
                         uint8_t pixelValue;
                         if (pixelBits == 0)
                         {
@@ -219,9 +214,6 @@ namespace Debug
                         }
 
                         int pixelColor = nes->ppu->getPixelColor(pixelValue);
-                        /*
-                        int pixelColor = ((secondPlaneByte & byteMask) | (firstPlaneByte & byteMask)) ? 0xFFFFFFFF : 0x0;
-                        */
                         int pixelX = ((i * 8) % NAMETABLE_WIDTH) + x;
                         int pixelY = ((i / 32) * 8) + y;
                         setNametablePixel(nametableIndex, pixelX, pixelY, pixelColor);
