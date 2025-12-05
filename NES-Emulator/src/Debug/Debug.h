@@ -12,12 +12,17 @@ namespace Debug
     extern bool isInitialized;
 
     // Init Debug Window
-    void init(int width, int height, NES* targetNes);
-    void renderLoop();
+    void init(int width, int height, NES *targetNes);
     void shutdown();
-    void eventHandler(SDL_Event* event);
+    void eventHandler(SDL_Event *event);
 
     extern bool quit;
+
+    namespace Renderer
+    {
+        void renderLoop();
+        void renderNametables();
+    }
 
     namespace Nametables
     {

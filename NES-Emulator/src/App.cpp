@@ -26,8 +26,8 @@ namespace App
 	void initDebugWindow()
 	{
 		Debug::init(550, 550, nes.get());
-		std::thread debugWindowThread(Debug::renderLoop);
-		debugWindowThread.detach();
+		std::thread debugRenderLoopThread(Debug::Renderer::renderLoop);
+		debugRenderLoopThread.detach();
 	}
 
 	void run(std::string path)

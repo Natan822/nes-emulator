@@ -68,47 +68,6 @@ namespace Debug
         isInitialized = true;
     }
 
-    void renderLoop()
-    {
-        while (!nes->isRunning)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(32));
-        }
-
-        while (!quit)
-        {
-            ImGui_ImplSDLRenderer3_NewFrame();
-            ImGui_ImplSDL3_NewFrame();
-            ImGui::NewFrame();
-
-            SDL_GetWindowSize(window, &windowWidth, &windowHeight);
-
-            ImGui::SetNextWindowSize(ImVec2(windowWidth, windowHeight));
-            ImGui::SetNextWindowPos(ImVec2(0, 0));
-
-			Nametables::updateAllNametables();
-            Nametables::updateNametablesTextures();
-
-            ImGui::Begin("Debug Window");
-
-            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(0), ImVec2(NAMETABLE_WIDTH, NAMETABLE_HEIGHT));
-            ImGui::SameLine();
-            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(1), ImVec2(NAMETABLE_WIDTH, NAMETABLE_HEIGHT));
-            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(2), ImVec2(NAMETABLE_WIDTH, NAMETABLE_HEIGHT));
-            ImGui::SameLine();
-            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(3), ImVec2(NAMETABLE_WIDTH, NAMETABLE_HEIGHT));
-
-            ImGui::End();
-            ImGui::Render();
-
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-            SDL_RenderClear(renderer);
-            ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
-            SDL_RenderPresent(renderer);
-        }
-        shutdown();
-    }
-
     void shutdown()
     {
         SDL_DestroyWindow(window);
@@ -126,6 +85,56 @@ namespace Debug
         {
             quit = true;
         }
+    }
+
+    namespace Renderer
+    {
+        void renderLoop()
+        {
+            while (!nes->isRunning)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(32));
+            }
+
+            while (!quit)
+            {
+                ImGui_ImplSDLRenderer3_NewFrame();
+                ImGui_ImplSDL3_NewFrame();
+                ImGui::NewFrame();
+
+                SDL_GetWindowSize(window, &windowWidth, &windowHeight);
+
+                ImGui::SetNextWindowSize(ImVec2(windowWidth, windowHeight));
+                ImGui::SetNextWindowPos(ImVec2(0, 0));
+
+                Nametables::updateAllNametables();
+                Nametables::updateNametablesTextures();
+
+                ImGui::Begin("Debug Window");
+
+                renderNametables();
+
+                ImGui::End();
+                ImGui::Render();
+
+                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+                SDL_RenderClear(renderer);
+                ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
+                SDL_RenderPresent(renderer);
+            }
+            shutdown();
+        }
+
+        void renderNametables()
+        {
+            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(0), ImVec2(NAMETABLE_WIDTH, NAMETABLE_HEIGHT));
+            ImGui::SameLine();
+            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(1), ImVec2(NAMETABLE_WIDTH, NAMETABLE_HEIGHT));
+            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(2), ImVec2(NAMETABLE_WIDTH, NAMETABLE_HEIGHT));
+            ImGui::SameLine();
+            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(3), ImVec2(NAMETABLE_WIDTH, NAMETABLE_HEIGHT));
+        }
+
     }
 
     namespace Nametables
