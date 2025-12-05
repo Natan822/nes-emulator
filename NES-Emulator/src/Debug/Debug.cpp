@@ -89,7 +89,7 @@ namespace Debug
 
     namespace Renderer
     {
-        float nametableScale = 1.0f;
+        float nametableScale = 3.0f;
 
         void renderLoop()
         {
@@ -132,12 +132,38 @@ namespace Debug
 
         void renderNametables()
         {
+            float tileSize = 8 * nametableScale; // 8x8
+            auto handleHover = [](float tileSize) -> void
+            {
+                if (ImGui::IsItemHovered())
+                {
+                    ImVec2 nametableRectMin = ImGui::GetItemRectMin();
+                    ImVec2 mousePos = ImGui::GetMousePos();
+                    ImVec2 relativeMousePos = {mousePos.x - nametableRectMin.x, mousePos.y - nametableRectMin.y};
+
+                    ImVec2 relativeTileRectMin = {static_cast<int>(relativeMousePos.x / tileSize) * tileSize, static_cast<int>(relativeMousePos.y / tileSize) * tileSize};
+                    ImVec2 tileRectMin = {relativeTileRectMin.x + nametableRectMin.x, relativeTileRectMin.y + nametableRectMin.y};
+                    ImVec2 tileRectMax = {tileRectMin.x + tileSize, tileRectMin.y + tileSize};
+                    
+                    ImDrawList *drawlist = ImGui::GetForegroundDrawList();
+                    ImU32 rectColor = IM_COL32(255, 255, 255, 255);
+                    drawlist->AddRect(tileRectMin, tileRectMax, rectColor, 0.0f, 0, nametableScale);
+                }
+            };
+
             ImGui::Image((ImTextureID)Nametables::nametableTextures.at(0), ImVec2(NAMETABLE_WIDTH * nametableScale, NAMETABLE_HEIGHT * nametableScale));
+            handleHover(tileSize);
+
             ImGui::SameLine();
             ImGui::Image((ImTextureID)Nametables::nametableTextures.at(1), ImVec2(NAMETABLE_WIDTH * nametableScale, NAMETABLE_HEIGHT * nametableScale));
+            handleHover(tileSize);
+
             ImGui::Image((ImTextureID)Nametables::nametableTextures.at(2), ImVec2(NAMETABLE_WIDTH * nametableScale, NAMETABLE_HEIGHT * nametableScale));
+            handleHover(tileSize);
+
             ImGui::SameLine();
             ImGui::Image((ImTextureID)Nametables::nametableTextures.at(3), ImVec2(NAMETABLE_WIDTH * nametableScale, NAMETABLE_HEIGHT * nametableScale));
+            handleHover(tileSize);
         }
     }
 
