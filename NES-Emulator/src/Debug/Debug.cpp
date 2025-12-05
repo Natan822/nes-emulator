@@ -89,6 +89,8 @@ namespace Debug
 
     namespace Renderer
     {
+        float nametableScale = 1.0f;
+
         void renderLoop()
         {
             while (!nes->isRunning)
@@ -127,14 +129,13 @@ namespace Debug
 
         void renderNametables()
         {
-            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(0), ImVec2(NAMETABLE_WIDTH, NAMETABLE_HEIGHT));
+            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(0), ImVec2(NAMETABLE_WIDTH * nametableScale, NAMETABLE_HEIGHT * nametableScale));
             ImGui::SameLine();
-            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(1), ImVec2(NAMETABLE_WIDTH, NAMETABLE_HEIGHT));
-            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(2), ImVec2(NAMETABLE_WIDTH, NAMETABLE_HEIGHT));
+            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(1), ImVec2(NAMETABLE_WIDTH * nametableScale, NAMETABLE_HEIGHT * nametableScale));
+            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(2), ImVec2(NAMETABLE_WIDTH * nametableScale, NAMETABLE_HEIGHT * nametableScale));
             ImGui::SameLine();
-            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(3), ImVec2(NAMETABLE_WIDTH, NAMETABLE_HEIGHT));
+            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(3), ImVec2(NAMETABLE_WIDTH * nametableScale, NAMETABLE_HEIGHT * nametableScale));
         }
-
     }
 
     namespace Nametables

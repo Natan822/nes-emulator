@@ -20,6 +20,8 @@ namespace Debug
 
     namespace Renderer
     {
+        extern float nametableScale;
+
         void renderLoop();
         void renderNametables();
     }
