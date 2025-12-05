@@ -109,12 +109,15 @@ namespace Debug
                 ImGui::SetNextWindowSize(ImVec2(windowWidth, windowHeight));
                 ImGui::SetNextWindowPos(ImVec2(0, 0));
 
-                Nametables::updateAllNametables();
-                Nametables::updateNametablesTextures();
-
                 ImGui::Begin("Debug Window");
 
-                renderNametables();
+                if (ImGui::TreeNode("Nametables"))
+                {
+                    Nametables::updateAllNametables();
+                    Nametables::updateNametablesTextures();
+                    renderNametables();
+                    ImGui::TreePop();
+                }
 
                 ImGui::End();
                 ImGui::Render();
