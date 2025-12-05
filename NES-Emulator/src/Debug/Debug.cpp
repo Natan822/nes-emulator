@@ -14,6 +14,7 @@
 namespace Debug
 {
     bool quit = false;
+    bool isInitialized = false;
 
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
@@ -29,6 +30,7 @@ namespace Debug
     void init(int width, int height, NES *targetNes)
     {
         nes = targetNes;
+
         SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
 
         window = SDL_CreateWindow("NES Emulator - Debug Window", width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
@@ -62,10 +64,17 @@ namespace Debug
 
         ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
         ImGui_ImplSDLRenderer3_Init(renderer);
+
+        isInitialized = true;
     }
 
     void renderLoop()
     {
+        while (!nes->isRunning)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(32));
+        }
+
         while (!quit)
         {
             ImGui_ImplSDLRenderer3_NewFrame();

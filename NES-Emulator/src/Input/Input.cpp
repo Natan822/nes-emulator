@@ -35,7 +35,10 @@ namespace Input
 			// Debug window
 			else
 			{
-				Debug::eventHandler(&event);
+				if (Debug::isInitialized)
+				{
+					Debug::eventHandler(&event);
+				}
 			}
 		}
 	}

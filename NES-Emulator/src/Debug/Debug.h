@@ -9,6 +9,7 @@ class NES;
 namespace Debug
 {
     extern SDL_Window *window;
+    extern bool isInitialized;
 
     // Init Debug Window
     void init(int width, int height, NES* targetNes);
