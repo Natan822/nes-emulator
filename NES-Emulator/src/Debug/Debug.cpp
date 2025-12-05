@@ -89,7 +89,7 @@ namespace Debug
 
     namespace Renderer
     {
-        float nametableScale = 3.0f;
+        float nametableScale = 1.0f;
 
         void renderLoop()
         {
@@ -132,6 +132,8 @@ namespace Debug
 
         void renderNametables()
         {
+            ImGui::SliderFloat("Scale (0.5 -> 2.0)", &nametableScale, 0.5f, 2.0f);
+
             float tileSize = 8 * nametableScale; // 8x8
             auto handleHover = [](float tileSize) -> void
             {
