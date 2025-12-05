@@ -109,7 +109,7 @@ namespace Debug
                 ImGui::SetNextWindowSize(ImVec2(windowWidth, windowHeight));
                 ImGui::SetNextWindowPos(ImVec2(0, 0));
 
-                ImGui::Begin("Debug Window");
+                ImGui::Begin("Debug Window", NULL, ImGuiWindowFlags_HorizontalScrollbar);
 
                 if (ImGui::TreeNode("Nametables"))
                 {
