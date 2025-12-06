@@ -10,6 +10,7 @@
 #include <imgui_impl_sdlrenderer3.h>
 #include <thread>
 #include <chrono>
+#include <math.h>
 
 namespace Debug
 {
@@ -89,7 +90,14 @@ namespace Debug
 
     namespace Renderer
     {
-        float nametableScale = 1.0f;
+        std::array<ImVec2, 4> nametablesRectMin{};
+        float nametableScale = 1;
+        Tile selectedTile = {NULL, 0, 0};
+
+        float getNametableScale()
+        {
+            return nametableScale;
+        }
 
         void renderLoop()
         {
@@ -130,45 +138,176 @@ namespace Debug
             shutdown();
         }
 
+        int scaleIndex = 1;
+        const float allowedScales[] = {0.5f, 1.0f, 1.25f, 1.5f, 2.0f};
+        const char *labels[] = {"0.5x", "1.0x", "1.25x", "1.5x", "2.0x"};
         void renderNametables()
         {
-            ImGui::SliderFloat("Scale (0.5 -> 2.0)", &nametableScale, 0.5f, 2.0f);
+            if (ImGui::Combo("Scale", &scaleIndex, labels, IM_ARRAYSIZE(labels)))
+            {
+                nametableScale = allowedScales[scaleIndex];
+            }
 
-            float tileSize = 8 * nametableScale; // 8x8
-            auto handleHover = [](float tileSize) -> void
+            float tileSize = 8 * getNametableScale(); // 8x8
+
+            auto highlightTile = [&tileSize](ImVec2 tileAbsolutePos, ImVec2 nametableRectMin) -> void
+            {
+                ImVec2 relativeMousePos = {tileAbsolutePos.x - nametableRectMin.x, tileAbsolutePos.y - nametableRectMin.y};
+
+                ImVec2 relativeTileRectMin = {static_cast<int>(relativeMousePos.x / tileSize) * tileSize, static_cast<int>(relativeMousePos.y / tileSize) * tileSize};
+                ImVec2 tileRectMin = {relativeTileRectMin.x + nametableRectMin.x, relativeTileRectMin.y + nametableRectMin.y};
+                ImVec2 tileRectMax = {tileRectMin.x + tileSize, tileRectMin.y + tileSize};
+
+                ImDrawList *drawlist = ImGui::GetForegroundDrawList();
+                ImU32 rectColor = IM_COL32(255, 255, 255, 255);
+                drawlist->AddRect(tileRectMin, tileRectMax, rectColor, 0.0f, 0, getNametableScale());
+            };
+
+            auto handleHover = [&highlightTile](ImVec2 nametableRectMin) -> void
             {
                 if (ImGui::IsItemHovered())
                 {
-                    ImVec2 nametableRectMin = ImGui::GetItemRectMin();
-                    ImVec2 mousePos = ImGui::GetMousePos();
-                    ImVec2 relativeMousePos = {mousePos.x - nametableRectMin.x, mousePos.y - nametableRectMin.y};
-
-                    ImVec2 relativeTileRectMin = {static_cast<int>(relativeMousePos.x / tileSize) * tileSize, static_cast<int>(relativeMousePos.y / tileSize) * tileSize};
-                    ImVec2 tileRectMin = {relativeTileRectMin.x + nametableRectMin.x, relativeTileRectMin.y + nametableRectMin.y};
-                    ImVec2 tileRectMax = {tileRectMin.x + tileSize, tileRectMin.y + tileSize};
-                    
-                    ImDrawList *drawlist = ImGui::GetForegroundDrawList();
-                    ImU32 rectColor = IM_COL32(255, 255, 255, 255);
-                    drawlist->AddRect(tileRectMin, tileRectMax, rectColor, 0.0f, 0, nametableScale);
+                    highlightTile(ImGui::GetMousePos(), nametableRectMin);
                 }
             };
 
-            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(0), ImVec2(NAMETABLE_WIDTH * nametableScale, NAMETABLE_HEIGHT * nametableScale));
-            handleHover(tileSize);
+            auto handleClick = [&highlightTile, &tileSize](int nametableIndex) -> void
+            {
+                if (ImGui::IsItemClicked())
+                {
+                    ImVec2 mousePos = ImGui::GetMousePos();
+                    ImVec2 nametableRectMin = ImGui::GetItemRectMin();
+
+                    ImVec2 relativeMousePos = {mousePos.x - nametableRectMin.x, mousePos.y - nametableRectMin.y};
+                    ImVec2 relativeTilePos = {static_cast<int>(relativeMousePos.x / tileSize) * tileSize, static_cast<int>(relativeMousePos.y / tileSize) * tileSize};
+
+                    isTileSelected = true;
+                    selectedTile.tileIndex = (relativeTilePos.x / tileSize) + (32 * static_cast<int>(relativeTilePos.y / tileSize));
+                    selectedTile.nametableIndex = nametableIndex;
+                    if (selectedTile.texture == NULL)
+                    {
+                        selectedTile.texture = SDL_CreateTexture(
+                            renderer,
+                            SDL_PIXELFORMAT_XRGB8888,
+                            SDL_TEXTUREACCESS_STREAMING,
+                            selectedTile.width,
+                            selectedTile.height
+                        );
+                    }
+
+                    if (selectedTile.frameBuffer == nullptr)
+                    {
+                        selectedTile.frameBuffer = (int *)malloc(selectedTile.width * selectedTile.height * sizeof(int));
+                    }
+                    updateSelectedTile(selectedTile.tileIndex, selectedTile.nametableIndex);
+                    SDL_UpdateTexture(selectedTile.texture, NULL, selectedTile.frameBuffer, sizeof(int) * selectedTile.width);
+                    SDL_RenderTexture(renderer, selectedTile.texture, NULL, NULL);
+                }
+            };
+
+            ImGui::BeginGroup();
+            ImGui::Image((ImTextureID)Nametables::nametableTextures[0], ImVec2(NAMETABLE_WIDTH * getNametableScale(), NAMETABLE_HEIGHT * getNametableScale()));
+            nametablesRectMin[0] = ImGui::GetItemRectMin();
+            handleHover(nametablesRectMin[0]);
+            handleClick(0);
 
             ImGui::SameLine();
-            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(1), ImVec2(NAMETABLE_WIDTH * nametableScale, NAMETABLE_HEIGHT * nametableScale));
-            handleHover(tileSize);
+            ImGui::Image((ImTextureID)Nametables::nametableTextures[1], ImVec2(NAMETABLE_WIDTH * getNametableScale(), NAMETABLE_HEIGHT * getNametableScale()));
+            nametablesRectMin[1] = ImGui::GetItemRectMin();
+            handleHover(nametablesRectMin[1]);
+            handleClick(1);
 
-            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(2), ImVec2(NAMETABLE_WIDTH * nametableScale, NAMETABLE_HEIGHT * nametableScale));
-            handleHover(tileSize);
+            ImGui::Image((ImTextureID)Nametables::nametableTextures[2], ImVec2(NAMETABLE_WIDTH * getNametableScale(), NAMETABLE_HEIGHT * getNametableScale()));
+            nametablesRectMin[2] = ImGui::GetItemRectMin();
+            handleHover(nametablesRectMin[2]);
+            handleClick(2);
 
             ImGui::SameLine();
-            ImGui::Image((ImTextureID)Nametables::nametableTextures.at(3), ImVec2(NAMETABLE_WIDTH * nametableScale, NAMETABLE_HEIGHT * nametableScale));
-            handleHover(tileSize);
+            ImGui::Image((ImTextureID)Nametables::nametableTextures[3], ImVec2(NAMETABLE_WIDTH * getNametableScale(), NAMETABLE_HEIGHT * getNametableScale()));
+            nametablesRectMin[3] = ImGui::GetItemRectMin();
+            handleHover(nametablesRectMin[3]);
+            handleClick(3);
+            ImGui::EndGroup();
+
+            if (isTileSelected)
+            {
+                ImVec2 absoluteTilePos = {
+                    static_cast<float>(((selectedTile.tileIndex % 32) * tileSize) + nametablesRectMin[selectedTile.nametableIndex].x),
+                    static_cast<float>((selectedTile.tileIndex / 32) * tileSize) + nametablesRectMin[selectedTile.nametableIndex].y
+                };
+                highlightTile(absoluteTilePos, nametablesRectMin[selectedTile.nametableIndex]);
+                ImGui::SameLine();
+                ImGui::BeginGroup();
+                ImGui::Image((ImTextureID)selectedTile.texture, ImVec2(selectedTile.width * 5.0f, selectedTile.height * 5.0f));
+                ImGui::Text("Selected tile: 0x%x", selectedTile.tileIndex);
+                ImGui::Text("Nametable: %d", selectedTile.nametableIndex);
+                ImGui::EndGroup();
+            }
         }
-    }
 
+        void updateSelectedTile(int tileIndex, int nametableIndex)
+        {
+            ppuMemSnapshot = nes->ppu->getMemorySnapshot();
+            const int BASE_NAMETABLE_ADDRESS = 0x2000 + (0x400 * nametableIndex);
+
+            uint16_t tileAddress = BASE_NAMETABLE_ADDRESS + tileIndex;
+            uint8_t tileIndexContent = ppuMemSnapshot.at(tileAddress);
+
+            uint16_t addressSprite = nes->ppu->backgroundPatternTableAddress + tileIndexContent * 16;
+
+            int tileX = tileIndexContent % 32;
+            int tileY = tileIndexContent / 32;
+
+            const int BASE_ATTR_TABLE_ADDRESS = BASE_NAMETABLE_ADDRESS + 960;
+            uint16_t attrByteAddress = BASE_ATTR_TABLE_ADDRESS + (tileX / 4);
+            attrByteAddress = attrByteAddress + ((tileY / 4) * 8);
+            uint8_t attrByte = ppuMemSnapshot.at(attrByteAddress);
+
+            int xQuadrant = (tileX % 4) * 8;
+            int yQuadrant = (tileY % 4) * 8;
+            int paletteIndex = nes->ppu->getPaletteIndex(xQuadrant, yQuadrant, attrByte);
+
+            for (int y = 0; y < 8; y++)
+            {
+                uint8_t firstPlaneByte = ppuMemSnapshot.at(addressSprite + y);
+                uint8_t secondPlaneByte = ppuMemSnapshot.at(addressSprite + y + 8);
+
+                uint8_t byteMask = 0x80;
+                for (int x = 0; x < 8; x++)
+                {
+                    uint8_t pixelBits = (((secondPlaneByte & byteMask) ? 1 : 0) << 1) | (firstPlaneByte & byteMask ? 1 : 0);
+                    byteMask >>= 1;
+
+                    uint8_t pixelValue;
+                    if (pixelBits == 0)
+                    {
+                        pixelValue = ppuMemSnapshot.at(PALETTES_ADDRESS);
+                    }
+                    else
+                    {
+                        pixelValue = ppuMemSnapshot.at(PALETTES_ADDRESS + pixelBits + (4 * paletteIndex));
+                    }
+
+                    int pixelColor = nes->ppu->getPixelColor(pixelValue);
+                    int pixelX = x;
+                    int pixelY = y;
+                    setSelectedTilePixel(pixelX, pixelY, pixelColor);
+                }
+            }
+        }
+
+        void setSelectedTilePixel(int x, int y, int pixelColor)
+        {
+            int pos = x + y * selectedTile.height;
+            if (pos > selectedTile.height * selectedTile.width)
+            {
+                throw std::out_of_range("Pixel index out of range");
+            }
+            selectedTile.frameBuffer[pos] = pixelColor;
+            printf("x = %d, y = %d, color = 0x%x\n",x, y, pixelColor);
+        }
+
+    }
     namespace Nametables
     {
         std::array<SDL_Texture *, 4> nametableTextures{};
@@ -207,14 +346,12 @@ namespace Debug
         {
             for (int i = 0; i < 4; i++)
             {
-                SDL_RenderTexture(renderer, nametableTextures.at(i), NULL, NULL);
+                SDL_RenderTexture(renderer, nametableTextures[i], NULL, NULL);
             }
         }
 
         void updateNametable(int nametableIndex)
         {
-            std::array<uint8_t, 0x4000> ppuMemSnapshot = nes->ppu->getMemorySnapshot();
-
             const uint16_t BASE_NAMETABLE_ADDRESS = 0x2000 + (0x400 * nametableIndex);
             const uint16_t BASE_ATTR_TABLE_ADDRESS = BASE_NAMETABLE_ADDRESS + 960;
 
@@ -276,7 +413,7 @@ namespace Debug
 
         void setNametablePixel(int nametableIndex, int x, int y, int pixelColor)
         {
-            nametableFrameBuffers.at(nametableIndex).at((y * NAMETABLE_WIDTH) + x) = pixelColor;
+            nametableFrameBuffers[nametableIndex].at((y * NAMETABLE_WIDTH) + x) = pixelColor;
         }
     };
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SDL3/SDL.h>
+#include <imgui.h>
 #include <atomic>
 #include <array>
 #include <cstdint>
@@ -10,6 +11,7 @@ namespace Debug
 {
     extern SDL_Window *window;
     extern bool isInitialized;
+    inline std::array<uint8_t, 0x4000> ppuMemSnapshot{};
 
     // Init Debug Window
     void init(int width, int height, NES *targetNes);
@@ -21,9 +23,26 @@ namespace Debug
     namespace Renderer
     {
         extern float nametableScale;
+        extern std::array<ImVec2, 4> nametablesRectMin;
+        inline bool isTileSelected = false;
 
+        struct Tile
+        {
+            SDL_Texture* texture;
+            int nametableIndex;
+            int tileIndex;
+            int* frameBuffer = nullptr;
+            int width = 8;
+            int height = 8;
+        };
+        extern Tile selectedTile;
+
+        void setSelectedTilePixel(int x, int y, int pixelColor);
+
+        float getNametableScale();
         void renderLoop();
         void renderNametables();
+        void updateSelectedTile(int tileIndex, int nametableIndex);
     }
 
     namespace Nametables
