@@ -241,13 +241,13 @@ namespace Debug
                 ImGui::Image((ImTextureID)selectedTile.texture, ImVec2(selectedTile.width * 5.0f, selectedTile.height * 5.0f));
                 ImGui::Text("Selected tile: 0x%x", selectedTile.tileIndex);
                 ImGui::Text("Nametable: %d", selectedTile.nametableIndex);
+                ImGui::Text("Palette Index: %d", selectedTile.paletteIndex);
                 ImGui::EndGroup();
             }
         }
 
         void updateSelectedTile(int tileIndex, int nametableIndex)
         {
-            ppuMemSnapshot = nes->ppu->getMemorySnapshot();
             const int BASE_NAMETABLE_ADDRESS = 0x2000 + (0x400 * nametableIndex);
 
             uint16_t tileAddress = BASE_NAMETABLE_ADDRESS + tileIndex;
@@ -266,6 +266,7 @@ namespace Debug
             int xQuadrant = (tileX % 4) * 8;
             int yQuadrant = (tileY % 4) * 8;
             int paletteIndex = nes->ppu->getPaletteIndex(xQuadrant, yQuadrant, attrByte);
+            selectedTile.paletteIndex = paletteIndex;
 
             for (int y = 0; y < 8; y++)
             {
@@ -352,6 +353,8 @@ namespace Debug
 
         void updateNametable(int nametableIndex)
         {
+            ppuMemSnapshot = nes->ppu->getMemorySnapshot();
+
             const uint16_t BASE_NAMETABLE_ADDRESS = 0x2000 + (0x400 * nametableIndex);
             const uint16_t BASE_ATTR_TABLE_ADDRESS = BASE_NAMETABLE_ADDRESS + 960;
 
