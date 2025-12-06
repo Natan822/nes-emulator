@@ -182,7 +182,7 @@ namespace Debug
                     ImVec2 relativeTilePos = {static_cast<int>(relativeMousePos.x / tileSize) * tileSize, static_cast<int>(relativeMousePos.y / tileSize) * tileSize};
 
                     isTileSelected = true;
-                    selectedTile.tileIndex = (relativeTilePos.x / tileSize) + (32 * static_cast<int>(relativeTilePos.y / tileSize));
+                    selectedTile.indexInNametable = (relativeTilePos.x / tileSize) + (32 * static_cast<int>(relativeTilePos.y / tileSize));
                     selectedTile.nametableIndex = nametableIndex;
                     if (selectedTile.texture == NULL)
                     {
@@ -199,7 +199,7 @@ namespace Debug
                     {
                         selectedTile.frameBuffer = (int *)malloc(selectedTile.width * selectedTile.height * sizeof(int));
                     }
-                    updateSelectedTile(selectedTile.tileIndex, selectedTile.nametableIndex);
+                    updateSelectedTile(selectedTile.indexInNametable, selectedTile.nametableIndex);
                     SDL_UpdateTexture(selectedTile.texture, NULL, selectedTile.frameBuffer, sizeof(int) * selectedTile.width);
                     SDL_RenderTexture(renderer, selectedTile.texture, NULL, NULL);
                 }
@@ -232,15 +232,25 @@ namespace Debug
             if (isTileSelected)
             {
                 ImVec2 absoluteTilePos = {
-                    static_cast<float>(((selectedTile.tileIndex % 32) * tileSize) + nametablesRectMin[selectedTile.nametableIndex].x),
-                    static_cast<float>((selectedTile.tileIndex / 32) * tileSize) + nametablesRectMin[selectedTile.nametableIndex].y
+                    static_cast<float>(((selectedTile.indexInNametable % 32) * tileSize) + nametablesRectMin[selectedTile.nametableIndex].x),
+                    static_cast<float>((selectedTile.indexInNametable / 32) * tileSize) + nametablesRectMin[selectedTile.nametableIndex].y
                 };
                 highlightTile(absoluteTilePos, nametablesRectMin[selectedTile.nametableIndex]);
                 ImGui::SameLine();
                 ImGui::BeginGroup();
                 ImGui::Image((ImTextureID)selectedTile.texture, ImVec2(selectedTile.width * 5.0f, selectedTile.height * 5.0f));
-                ImGui::Text("Selected tile: 0x%x", selectedTile.tileIndex);
+                ImGui::Text("Selected tile: 0x%x", selectedTile.indexInNametable);
                 ImGui::Text("Nametable: %d", selectedTile.nametableIndex);
+                ImGui::Text("Nametable Address: 0x%x", selectedTile.address);
+
+                ImGui::Text("Sprite Index: 0x%x", selectedTile.spriteIndex);
+                ImGui::Text("Sprite Address: 0x%x", selectedTile.spriteAddress);
+                
+                ImGui::Text("Attribute Address: 0x%x", selectedTile.attrAddress);
+                ImGui::Text("Attribute Byte: 0x%x", selectedTile.attrByte);
+                
+                ImGui::Text("Size: %dx%d", selectedTile.width, selectedTile.height);
+
                 ImGui::Text("Palette Index: %d", selectedTile.paletteIndex);
                 ImGui::EndGroup();
             }
@@ -252,16 +262,22 @@ namespace Debug
 
             uint16_t tileAddress = BASE_NAMETABLE_ADDRESS + tileIndex;
             uint8_t tileIndexContent = ppuMemSnapshot.at(tileAddress);
+            selectedTile.spriteIndex = tileIndexContent;
+            selectedTile.address = tileAddress;
 
             uint16_t addressSprite = nes->ppu->backgroundPatternTableAddress + tileIndexContent * 16;
+            selectedTile.spriteAddress = addressSprite;
 
-            int tileX = tileIndexContent % 32;
-            int tileY = tileIndexContent / 32;
+            int tileY = selectedTile.indexInNametable / 32;
+            int tileX = selectedTile.indexInNametable % 32;
 
             const int BASE_ATTR_TABLE_ADDRESS = BASE_NAMETABLE_ADDRESS + 960;
             uint16_t attrByteAddress = BASE_ATTR_TABLE_ADDRESS + (tileX / 4);
             attrByteAddress = attrByteAddress + ((tileY / 4) * 8);
+            selectedTile.attrAddress = attrByteAddress;
+            
             uint8_t attrByte = ppuMemSnapshot.at(attrByteAddress);
+            selectedTile.attrByte = attrByte;
 
             int xQuadrant = (tileX % 4) * 8;
             int yQuadrant = (tileY % 4) * 8;
@@ -290,9 +306,7 @@ namespace Debug
                     }
 
                     int pixelColor = nes->ppu->getPixelColor(pixelValue);
-                    int pixelX = x;
-                    int pixelY = y;
-                    setSelectedTilePixel(pixelX, pixelY, pixelColor);
+                    setSelectedTilePixel(x, y, pixelColor);
                 }
             }
         }
@@ -305,7 +319,6 @@ namespace Debug
                 throw std::out_of_range("Pixel index out of range");
             }
             selectedTile.frameBuffer[pos] = pixelColor;
-            printf("x = %d, y = %d, color = 0x%x\n",x, y, pixelColor);
         }
 
     }

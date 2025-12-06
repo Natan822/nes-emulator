@@ -30,7 +30,16 @@ namespace Debug
         {
             SDL_Texture* texture;
             int nametableIndex;
-            int tileIndex;
+
+            int indexInNametable;
+            int address;
+            
+            int spriteIndex;
+            int spriteAddress;
+
+            int attrAddress;
+            int attrByte;
+
             int paletteIndex = 0;
             int* frameBuffer = nullptr;
             int width = 8;
