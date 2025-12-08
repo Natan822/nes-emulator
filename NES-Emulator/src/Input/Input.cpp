@@ -1,6 +1,6 @@
 #include "../Controller/Controller.h"
 #include "../NES/NES.h"
-#include "../Debug/Debug.h"
+#include "../Debug/Debugger.h"
 #include <SDL3/SDL.h>
 #include "Input.h"
 #include "../Graphics/Graphics.h"
@@ -20,7 +20,7 @@ namespace Input
 				{
 				case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
 					NES::isRunning = false;
-					Debug::quit = true;
+					Debugger::quit = true;
 					break;
 
 				case SDL_EVENT_KEY_DOWN:
@@ -35,9 +35,9 @@ namespace Input
 			// Debug window
 			else
 			{
-				if (Debug::isInitialized)
+				if (Debugger::isInitialized)
 				{
-					Debug::eventHandler(&event);
+					Debugger::eventHandler(&event);
 				}
 			}
 		}
@@ -49,6 +49,7 @@ namespace Input
 		{
 		case SDLK_ESCAPE:
 			NES::isRunning = false;
+			Debugger::quit = true;
 			break;
 		case SDLK_P:
 			pause();

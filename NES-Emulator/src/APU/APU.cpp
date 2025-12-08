@@ -3,6 +3,7 @@
 #include "../CPU/CPU.h"
 #include "APU.h"
 #include "../App.h"
+#include "../NES/NES.h"
 #include <iostream>
 
 //#define DEBUG_AUDIO

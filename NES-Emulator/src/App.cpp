@@ -1,14 +1,14 @@
 #include "App.h"
 #include "NES/NES.h"
-#include "Debug/Debug.h"
+#include "Debug/Debugger.h"
 #include <memory>
 #include <thread>
 
-class NES;
 namespace App
 {
 	std::chrono::high_resolution_clock::time_point lastFrameTime = std::chrono::high_resolution_clock::now();;
 	std::unique_ptr<NES> nes;
+	std::unique_ptr<Debugger> debugger;
 
 	void syncFrame()
 	{
@@ -25,8 +25,12 @@ namespace App
 
 	void initDebugWindow()
 	{
-		Debug::init(750, 750, nes.get());
-		std::thread debugRenderLoopThread(Debug::Renderer::renderLoop);
+		// Debug::init(750, 750, nes.get());
+		// std::thread debugRenderLoopThread(Debug::Renderer::renderLoop);
+		// debugRenderLoopThread.detach();
+
+		debugger = std::make_unique<Debugger>(750, 750, nes.get());
+		std::thread debugRenderLoopThread(&Debugger::startRenderLoop, debugger.get());
 		debugRenderLoopThread.detach();
 	}
 

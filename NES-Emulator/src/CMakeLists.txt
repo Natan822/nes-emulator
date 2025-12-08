@@ -33,7 +33,9 @@ set(CPU_FILES
 )
 
 set(DEBUG_FILES
-    ./Debug/Debug.cpp
+    ./Debug/Debugger.cpp
+    ./Debug/Renderer.cpp
+    ./Debug/NametableViewer.cpp
 )
 
 set(GRAPHICS_FILES
