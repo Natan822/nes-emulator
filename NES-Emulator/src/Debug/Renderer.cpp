@@ -49,7 +49,7 @@ void Renderer::renderLoop()
 
         ImGui::Begin("Debug Window", NULL, ImGuiWindowFlags_HorizontalScrollbar);
 
-        if (ImGui::TreeNode("Nametables"))
+        if (ImGui::TreeNode("Nametables Viewer"))
         {
             m_nametableViewer->updateAllNametables();
             m_nametableViewer->updateNametablesTextures();
