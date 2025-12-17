@@ -3,6 +3,7 @@ This is a work-in-progress NES emulator being made for learning purposes
 
 ## Technologies used
 - **C++ 17**: Programming language
+- **CMake**: Build system
 - [**SDL3**](https://github.com/libsdl-org/SDL): Graphics and audio rendering
 - [**Dear ImGui**](https://github.com/ocornut/imgui): Debugger UI
 
